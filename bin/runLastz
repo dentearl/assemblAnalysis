@@ -1,0 +1,13 @@
+#!/bin/csh -fe
+set T = $1
+set Q = $2
+set FT = $3
+set FQ = $4
+set tmpDir = /scratch/tmp/${FT}
+mkdir -p raw psl ${tmpDir}
+twoBitToFa ${T} ${tmpDir}/${FT}.fa
+twoBitToFa ${Q} ${tmpDir}/${FQ}.fa
+/cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz ${tmpDir}/${FT}.fa     ${tmpDir}/${FQ}.fa     B=0 C=0 E=150 H=0 K=4500 L=3000 M=254 O=600 Q=/scratch/data/blastz/human_chimp.v2.q T=2 Y=15000     > raw/${FT}.${FQ}.lav
+lavToPsl raw/${FT}.${FQ}.lav stdout     | liftUp -type=.psl stdout target.lift error stdin     | liftUp -nohead -pslQ -type=.psl stdout query.lift error stdin 	| gzip -c > psl/${FT}.${FQ}.psl.gz
+rm -f ${tmpDir}/${FT}.fa ${tmpDir}/${FQ}.fa
+rmdir --ignore-fail-on-non-empty ${tmpDir}
