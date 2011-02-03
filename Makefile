@@ -1,4 +1,5 @@
-SHELL:=/bin/bash
+SHELL:=/bin/bash -e
+export SHELLOPTS=pipefail
 # dent earl dearl (a) soe ucsc edu
 # 26 Jan 2011
 ##############################
@@ -29,41 +30,53 @@ ASSEMBLIES_DIR:=${PROJECT_DIR}/assemblies
 REPMASK_DIR:=${PROJECT_DIR}/repeatMasking
 TRF_DIR:=${PROJECT_DIR}/tandemRepeatFinder
 ASSEMBLIES:=$(patsubst %.fa.gz,%,$(notdir $(wildcard ${RAW_DIR}/*.gz)))
+UNIQ:=$(strip $(shell date '+%s' | perl -ple 's/^\d{6}//;')) # last 4 digits of time.
+REPEATMASKER:=/scratch/data/RepeatMasker/RepeatMasker
+HOST=$(shell hostname)
+PPID=$(shell echo $$PPID)
+TMPEXT=${HOST}.${PPID}.tmp
+REPMASKTMP_DIR:=${TMPDIR}/dearlRepMask${TMPEXT}
+TRFTMP_DIR:=${TMPDIR}/dearlTRF${TMPEXT}
 
-# extract files
-${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz
-	mkdir -p ${ASSEMBLIES_DIR}
-	gunzip < $< > $@.tmp
-ifneq ($(strip $(shell grep '>' $@.tmp | perl -ple 's/>(\S+).*/$$1/;' | head | sort -n - | uniq -d )),)
-	@echo "File ${*F}.fa.tmp contains duplicate ids, exiting"
-	@exit 1
-endif
-	mv $@.tmp $@
+all: repeatMask
+	@echo "Work complete"
 
-# remove everything in the header line after the unique int id
-${ASSEMBLIES_DIR}/%.preTRF.fa: ${ASSEMBLIES_DIR}/%.fa
-	perl -ple 's/>(\S+).*/>$$1/g;' < $< > $@.tmp
-	mv $@.tmp $@
+${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
+	@if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/>(\S+).*/$$1/;' | head | sort -n | uniq -d ) ]]; then \
+		echo "File $< contains duplicate ids, exiting" >&2 ; \
+		exit 1; \
+	fi
+	touch $@
 
-# run trf on fasta
-${TRF_DIR}/%.trf.fa: ${ASSEMBLIES_DIR}/%.preTRF.fa
+# extract files, remove everything in the header line after the unique int id
+${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.fa-verified
+	mkdir -p $(dir $@)
+	zcat $< | perl -ple 's/>(\S+).*/>$$1/g;' > $@.${TMPEXT}
+	mv $@.${TMPEXT} $@
+
+# # run trf on fasta, get the .bed
+${TRF_DIR}/%.trf.bed: ${ASSEMBLIES_DIR}/%.fa
 	mkdir -p ${TRF_DIR}
-	trfBig $< $@.tmp
+	mkdir -p ${TRFTMP_DIR}${*F}
+	cd ${TRFTMP_DIR}${*F} && trfBig -bedAt=$@.tmp $< ${TRF_DIR}/${*F}.trf.fa
 	mv $@.tmp $@
+	rm -rf ${TRFTMP_DIR}${*F}
 
-# run repeatMasker on trf output
-${REPMASK_DIR}/%/rmsk.2bit: ${TRF_DIR}/%.trf.fa
-	mkdir -p ${REPMASK_DIR}
-	repeatMasking_doCluster.py --genome $< --lib ${MELIB} --screenOverride --maxJob 400 --chunkSize 75000 --workDir ${REPMASK_DIR}/${*F}
-	mv ${REPMASK_DIR}/${*F}/${*F}.rmsk.2bit $@
+# run repeatMasker on trf'd assemblies
+${REPMASK_DIR}/%/seq.repmask.fa: ${ASSEMBLIES_DIR}/%.fa
+	mkdir -p ${REPMASK_DIR}/${*F}
+	mkdir -p ${REPMASKTMP_DIR}${*F}
+	cd ${REPMASKTMP_DIR}${*F} && ${REPEATMASKER} -lib ${MELIB} -parallel 10 -qq -xsmall -dir ${REPMASK_DIR}/${*F} $<
+	mv ${REPMASK_DIR}/${*F}/${*F}.fa.masked $@
+	rm -rf ${RMKSITMP_DIR}${*F}
 
-# convert 2bit back to fasta
-${ASSEMBLIES_DIR}/%.repmask.fa: ${REPMASK_DIR}/%/rmsk.2bit
-	twoBitToFa $< $@.tmp
-	mv $@.tmp $@
+# soft add the trf masking via .bed to the already repeat masked fasta file
+${ASSEMBLIES_DIR}/%.trf.repmask.fa: ${TRF_DIR}/%.trf.bed ${REPMASK_DIR}/%/seq.repmask.fa
+	maskOutFa -softAdd ${REPMASK_DIR}/${*F}/seq.repmask.fa $< $@.${TMPEXT}
+	mv $@.${TMPEXT} $@
 
-repeatMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a}, .repmask.fa ))
-	echo $^
+repeatMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a}, .trf.repmask.fa ))
+	@echo $^
 
 clean:
-	rm -rf ${ASSEMBLIES_DIR} ${REPMASK_DIR} ${TRF_DIR}
+	rm -rf ${ASSEMBLIES_DIR} ${REPMASK_DIR} ${TRF_DIR} $(wildcard ${RAW_DIR}/*.fa-verified)
