@@ -75,7 +75,12 @@ ${ASSEMBLIES_DIR}/%.trf.repmask.fa: ${TRF_DIR}/%.trf.bed ${REPMASK_DIR}/%/seq.re
 	maskOutFa -softAdd ${REPMASK_DIR}/${*F}/seq.repmask.fa $< $@.${TMPEXT}
 	mv $@.${TMPEXT} $@
 
-repeatMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a}, .trf.repmask.fa ))
+# convert to .2bit to facilitate lastz/chain pipeline
+${ASSEMBLIES_DIR}/%.trf.repmask.2bit: ${ASSEMBLIES_DIR}/%.trf.repmask.fa
+	faToTwoBit $< $@.${TMPEXT}
+	mv $@.${TMPEXT} $@
+
+repeatMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a}, .trf.repmask.2bit ))
 	@echo $^
 
 clean:
