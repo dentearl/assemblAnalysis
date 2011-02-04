@@ -1,6 +1,14 @@
 #!/bin/sh
-
-
+# shell script to prepare a script to run lastz/chain pipeline
+#
+usage()
+{
+    echo -e "$0\nusage: runLastzChain.sh workDir targetFile.2bit queryFile.2bit [near|medium|far]"
+    exit 2
+}
+if [[ $# -lt 3 ]] || [[ $# -gt 4 ]]; then
+    usage
+fi
 export chainNear="-minScore=5000 -linearGap=medium"
 export chainMedium="-minScore=3000 -linearGap=medium"
 export chainFar="-minScore=5000 -linearGap=loose"
@@ -9,18 +17,45 @@ export lastzMedium="B=0 C=0 E=30 H=0 K=3000 L=3000 M=50 O=400 T=1 Y=9400"
 export lastzFar="B=0 C=0 E=30 H=2000 K=2200 L=6000 M=50 O=400 Q=/scratch/data/blastz/HoxD55.q T=2 Y=3400"
 
 # select one of three different parameter sets
-# Near == genomes close to each other
-# Medium == genomes at middle distance from each other
-# Far == genomes distant from each other
-
-export chainParams="$chainNear"
-export lastzParams="$lastzNear"
-
-export WRKDIR="/hive/data/genomes/ce9/bed/testLastz"
-export TNAME=ce9
-export QNAME=cb3
-export TARGET=${WRKDIR}/${TNAME}.2bit
-export QUERY=${WRKDIR}/${QNAME}.2bit
+# near == genomes close to each other
+# medium == genomes at middle distance from each other
+# far == genomes distant from each other
+if [[ $# -eq 4 ]]; then
+    dist=$(echo $4 | tr '[:upper:]' '[:lower:]')
+    if [[ $dist != 'near' && $dist != 'medium' && $dist != 'far' ]]; then
+        usage
+    fi
+else
+    dist='near'
+fi
+case $dist in
+    near ) export chainParams="$chainNear"
+        export lastzParams="$lastzNear";;
+    medium ) export chainParams="$chainMedium"
+        export lastzParams="$lastzMedium";;
+    far ) export chainParams="$chainFar"
+        export lastzParams="$lastzFar";;
+esac
+if [ ! -e $1 ] || [ ! -d $1 ]; then
+    usage
+else
+    export WRKDIR=$1
+    export WRKDIR=${WRKDIR%/} # remove trailing slash
+    #export WRKDIR="/hive/data/genomes/ce9/bed/testLastz"
+fi
+if [ ! -e $2 ] || [ ! -e $3 ]; then
+    usage
+else
+    export TNAME=$( basename $2 .trf.repmask.2bit )
+    #export TNAME=ce9
+    export TARGET=$2
+    export TARGET_DIR=$( dirname $2 )
+    #export TARGET=${WRKDIR}/${TNAME}.2bit
+    export QNAME=$( basename $3 .trf.repmask.2bit )
+    #export QNAME=cb3
+    export QUERY=$3
+    #export QUERY=${WRKDIR}/${QNAME}.2bit
+fi
 
 ls -ld $TARGET $QUERY
 
@@ -36,28 +71,35 @@ mkdir ${QNAME}PartList
 fi
 
 if [ ! -s ${TNAME}.part.list ]; then
-partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
+#partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
+# 5,000 chunks with 1,000 bp overlap
+partitionSequence.pl 5000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
 	-lstDir ${TNAME}PartList > ${TNAME}.part.list
 fi
 if [ ! -s ${QNAME}.part.list ]; then
-partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
+#partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
+partitionSequence.pl 10000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
 	-lstDir ${QNAME}PartList > ${QNAME}.part.list
 fi
 
-grep -v PartList ${TNAME}.part.list > target.list
-for F in ${TNAME}PartList/*.lst
-do
-    cat ${F}
-done >> target.list
+grep --invert-match PartList ${TNAME}.part.list > target.list
+if [ $(ls -1A ${TNAME}PartList/ | wc -l) -gt 0 ]; then
+    for F in ${TNAME}PartList/*.lst
+      do
+      cat ${F}
+    done >> target.list
+fi
 
-grep -v PartList ${QNAME}.part.list > query.list
-for F in ${QNAME}PartList/*.lst
-do
-    cat ${F}
-done >> query.list
+grep --invert-match PartList ${QNAME}.part.list > query.list
+if [ $(ls -1A ${QNAME}PartList/ | wc -l) -gt 0 ]; then
+    for F in ${QNAME}PartList/*.lst
+      do
+      cat ${F}
+    done >> query.list
+fi
 
-./constructLiftFile.pl ${TNAME}.chrom.sizes target.list > target.lift
-./constructLiftFile.pl ${QNAME}.chrom.sizes query.list > query.lift
+constructLiftFile.pl ${TNAME}.chrom.sizes target.list > target.lift
+constructLiftFile.pl ${QNAME}.chrom.sizes query.list > query.lift
 
 echo "#LOOP" > template
 echo 'runLastz $(path1) $(path2) $(file1) $(file2) {check out exists+ psl/$(file1).$(file2).psl.gz}' >> template
@@ -85,20 +127,23 @@ rm -f \${tmpDir}/\${FT}.fa \${tmpDir}/\${FQ}.fa
 rmdir --ignore-fail-on-non-empty \${tmpDir}
 _EOF_
 
-echo "read to run lastz kluster job:"
-echo "gensub2 target.list query.list template jobList"
-echo "para make jobList"
+chmod 755 $WRKDIR/runLastz
 
-echo "when finished, run the commands in chainJobs.csh to perform the chaining"
+# echo "read to run lastz kluster job:"
+# echo "gensub2 target.list query.list template jobList"
+# echo "para make jobList"
+# echo "when finished, run the commands in chainJobs.csh to perform the chaining"
 
 mkdir -p chain
 echo "#!/bin/csh -fe" > chainJobs.csh
-for T in `cat target.list | sed -e "s#${WRKDIR}/##"`
+for T in `cat target.list | sed -e "s#${TARGET_DIR}/##"`
 do
 echo "zcat psl/${T}.*.psl.gz \\"
 echo "    | axtChain -psl -verbose=0 ${chainParams} \\"
 echo -e "\tstdin ${TARGET} ${QUERY} stdout \\"
 echo "   | chainAntiRepeat ${TARGET} ${QUERY} stdin chain/${T}.chain"
 done >> chainJobs.csh
+
+chmod 755 $WRKDIR/chainJobs.csh
 
 echo "find ./chain -name \"*.chain\" | chainMergeSort -inputList=stdin | gzip -c > ${TNAME}.${QNAME}.all.chain.gz" >> chainJobs.csh

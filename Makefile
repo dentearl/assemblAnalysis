@@ -5,40 +5,50 @@ export SHELLOPTS=pipefail
 ##############################
 # EDIT ONLY PROJECT_DIR 
 PROJECT_DIR:=/hive/users/dearl/assemblathon
+BIN_DIR:=/hive/users/dearl/assemblathon/assemblathon/trunk/bin
 # It is assumed that all assemblies will be in fasta format, gzipped
 # and named according to:
 #            mySweetAssembly.fa.gz
 # All assemblies go in the ${PROJECT_DIR}/assemblyArchives directory.
 # Assumed initial directory structure:
 # ${PROJECT_DIR}/
-#     |------ /haplotypes/hap*.fa  # the two haplotypes, repeat masked
-#     |------ /assemblyArchives/*  # all *.fa.gz assembly entrants
-#     |------ /MElibrary/MELib.fa  # The mobile element library to be used in repeat masking
+#     |------ /haplotypes/hap1.trf.repmask.2bit  # hap1, trf'd and repeatMasked
+#     |------ /haplotypes/hap2.trf.repmask.2bit  # hap2. 
+#     |------ /assemblyArchives/*    # all *.fa.gz assembly entrants
+#     |------ /MElibrary/MELib.fa    # The mobile element library to be used in repeat masking
+# The rule structure below explicity contains hap1 and hap2 rules to make
+# the Makefile simpler, though less general.
 #
 # DEPENDENCIES
-#   repeatMasking_doCluster.py
-#   repeatMasker
+#   RepeatMasker
 #   trf - tandem repeat finder
+#   partitionSequence.pl
+#   constructLiftFile.pl
+#   runLastzChain.sh
+#   runPara.sh
 #
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 .SECONDARY: # leave this blank to force make to keep intermediate files
-HAPSDIR:=${PROJECT_DIR}/haplotypes
-MELIB:=${PROJECT_DIR}/MELibrary/MELib.fa
+HAPS_DIR:=${PROJECT_DIR}/haplotypes
 RAW_DIR:=${PROJECT_DIR}/assemblyArchives
+CHAINS_DIR:=${PROJECT_DIR}/chains
+CHAINSCRIPTS_DIR:=${PROJECT_DIR}/chainScripts
 ASSEMBLIES_DIR:=${PROJECT_DIR}/assemblies
 REPMASK_DIR:=${PROJECT_DIR}/repeatMasking
 TRF_DIR:=${PROJECT_DIR}/tandemRepeatFinder
+MELIB:=${PROJECT_DIR}/MELibrary/MELib.fa
 ASSEMBLIES:=$(patsubst %.fa.gz,%,$(notdir $(wildcard ${RAW_DIR}/*.gz)))
+HAPLOTYPES:=$(patsubst %.trf.repmask.2bit,%,$(notdir $(wildcard ${HAPS_DIR}/*.trf.repmask.2bit)))
 UNIQ:=$(strip $(shell date '+%s' | perl -ple 's/^\d{6}//;')) # last 4 digits of time.
 REPEATMASKER:=/scratch/data/RepeatMasker/RepeatMasker
 HOST=$(shell hostname)
 PPID=$(shell echo $$PPID)
-TMPEXT=${HOST}.${PPID}.tmp
-REPMASKTMP_DIR:=${TMPDIR}/dearlRepMask${TMPEXT}
-TRFTMP_DIR:=${TMPDIR}/dearlTRF${TMPEXT}
+tmpExt=${HOST}.${PPID}.tmp
+REPMASKTMP_DIR:=${TMPDIR}/dearlRepMask${tmpExt}
+TRFTMP_DIR:=${TMPDIR}/dearlTRF${tmpExt}
 
-all: repeatMask
+all: chains
 	@echo "Work complete"
 
 ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
@@ -51,12 +61,12 @@ ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
 # extract files, remove everything in the header line after the unique int id
 ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.fa-verified
 	mkdir -p $(dir $@)
-	zcat $< | perl -ple 's/>(\S+).*/>$$1/g;' > $@.${TMPEXT}
-	mv $@.${TMPEXT} $@
+	zcat $< | perl -ple 's/>(\S+).*/>$$1/g;' > $@.${tmpExt}
+	mv $@.${tmpExt} $@
 
 # # run trf on fasta, get the .bed
 ${TRF_DIR}/%.trf.bed: ${ASSEMBLIES_DIR}/%.fa
-	mkdir -p ${TRF_DIR}
+	mkdir -p $(dir $@)
 	mkdir -p ${TRFTMP_DIR}${*F}
 	cd ${TRFTMP_DIR}${*F} && trfBig -bedAt=$@.tmp $< ${TRF_DIR}/${*F}.trf.fa
 	mv $@.tmp $@
@@ -64,7 +74,7 @@ ${TRF_DIR}/%.trf.bed: ${ASSEMBLIES_DIR}/%.fa
 
 # run repeatMasker on trf'd assemblies
 ${REPMASK_DIR}/%/seq.repmask.fa: ${ASSEMBLIES_DIR}/%.fa
-	mkdir -p ${REPMASK_DIR}/${*F}
+	mkdir -p $(dir $@)
 	mkdir -p ${REPMASKTMP_DIR}${*F}
 	cd ${REPMASKTMP_DIR}${*F} && ${REPEATMASKER} -lib ${MELIB} -parallel 10 -qq -xsmall -dir ${REPMASK_DIR}/${*F} $<
 	mv ${REPMASK_DIR}/${*F}/${*F}.fa.masked $@
@@ -72,16 +82,53 @@ ${REPMASK_DIR}/%/seq.repmask.fa: ${ASSEMBLIES_DIR}/%.fa
 
 # soft add the trf masking via .bed to the already repeat masked fasta file
 ${ASSEMBLIES_DIR}/%.trf.repmask.fa: ${TRF_DIR}/%.trf.bed ${REPMASK_DIR}/%/seq.repmask.fa
-	maskOutFa -softAdd ${REPMASK_DIR}/${*F}/seq.repmask.fa $< $@.${TMPEXT}
-	mv $@.${TMPEXT} $@
+	maskOutFa -softAdd ${REPMASK_DIR}/${*F}/seq.repmask.fa $< $@.${tmpExt}
+	mv $@.${tmpExt} $@
 
 # convert to .2bit to facilitate lastz/chain pipeline
 ${ASSEMBLIES_DIR}/%.trf.repmask.2bit: ${ASSEMBLIES_DIR}/%.trf.repmask.fa
-	faToTwoBit $< $@.${TMPEXT}
-	mv $@.${TMPEXT} $@
+	faToTwoBit $< $@.${tmpExt}
+	mv $@.${tmpExt} $@
 
-repeatMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a}, .trf.repmask.2bit ))
+# create chainJobs script
+${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.csh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
+	mkdir -p $(dir $@)
+	cd $(dir $@) && ${BIN_DIR}/runLastzChain.sh $(dir $@) ${HAPS_DIR}/hap1.trf.repmask.2bit $<
+
+${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.csh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
+	mkdir -p $(dir $@)
+	cd $(dir $@) && ${BIN_DIR}/runLastzChain.sh $(dir $@) ${HAPS_DIR}/hap2.trf.repmask.2bit $<
+
+# create the parasol jobList
+${CHAINSCRIPTS_DIR}/hap1/%/jobList: ${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.csh
+	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
+	mv $@.${tmpExt} $@
+
+${CHAINSCRIPTS_DIR}/hap2/%/jobList: ${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.csh
+	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
+	mv $@.${tmpExt} $@
+
+# run parasol on swarm
+${CHAINSCRIPTS_DIR}/hap1/%/para-complete: ${CHAINSCRIPTS_DIR}/hap1/%/jobList
+	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	touch $@
+
+${CHAINSCRIPTS_DIR}/hap2/%/para-complete: ${CHAINSCRIPTS_DIR}/hap2/%/jobList
+	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	touch $@
+
+${CHAINS_DIR}/hap1.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap1/%/para-complete
+	mkdir -p $(dir $@)
+	cd $(dir $<) && ./chainJobs.csh
+	cp $(dir $<)hap1.${*F}.all.chain.gz $@
+
+${CHAINS_DIR}/hap2.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap2/%/para-complete
+	mkdir -p $(dir $@)
+	cd $(dir $<) && ./chainJobs.csh
+	cp $(dir $<)hap2.${*F}.all.chain.gz $@
+
+chains: $(foreach a, ${ASSEMBLIES}, $(foreach b, ${HAPLOTYPES}, $(join ${CHAINS_DIR}/${b}.${a},.all.chain.gz)))
 	@echo $^
 
 clean:
-	rm -rf ${ASSEMBLIES_DIR} ${REPMASK_DIR} ${TRF_DIR} $(wildcard ${RAW_DIR}/*.fa-verified)
+	rm -rf ${ASSEMBLIES_DIR} ${REPMASK_DIR} ${TRF_DIR} $(wildcard ${RAW_DIR}/*.fa-verified) ${CHAINS_DIR} ${CHAINSCRIPTS_DIR}
