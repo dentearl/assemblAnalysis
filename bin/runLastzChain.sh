@@ -1,6 +1,25 @@
 #!/bin/bash -e
-# shell script to prepare a script to run lastz/chain pipeline
+# runLastzChain.sh
+# dent earl dearl (a) soe ucsc edu
+# 9 Feb 2011
+# adapted from a shell script of the same name by Hiram Clawson hiram (a) soe
 #
+# shell script to prepare scripts to run lastz/chain pipeline
+# this script produces, among others, the following files in the
+# supplied workDir:
+#  * runLastz       wrapper script to be run on the cluster
+#  * template       used by gensub2 to create jobList
+#  * jobList        jobList used by parasol
+#  * chainJobs.csh  script to be run following the cluster job
+#
+# usage: runLastzChain.sh workDir targetFile.2bit queryFile.2bit [near|medium|far]
+#
+# select one of three different parameter sets
+# near == genomes close to each other
+# medium == genomes at middle distance from each other
+# far == genomes distant from each other
+##############################
+
 usage()
 {
     echo -e "$0\nusage: runLastzChain.sh workDir targetFile.2bit queryFile.2bit [near|medium|far]"
@@ -16,10 +35,6 @@ export lastzNear="B=0 C=0 E=150 H=0 K=4500 L=3000 M=254 O=600 Q=/scratch/data/bl
 export lastzMedium="B=0 C=0 E=30 H=0 K=3000 L=3000 M=50 O=400 T=1 Y=9400"
 export lastzFar="B=0 C=0 E=30 H=2000 K=2200 L=6000 M=50 O=400 Q=/scratch/data/blastz/HoxD55.q T=2 Y=3400"
 
-# select one of three different parameter sets
-# near == genomes close to each other
-# medium == genomes at middle distance from each other
-# far == genomes distant from each other
 if [[ $# -eq 4 ]]; then
     dist=$(echo $4 | tr '[:upper:]' '[:lower:]')
     if [[ $dist != 'near' && $dist != 'medium' && $dist != 'far' ]]; then
@@ -47,9 +62,10 @@ if [ ! -e $2 ] || [ ! -e $3 ]; then
 else
     export TNAME=$( basename $2 .trf.repmask.2bit )
     export TARGET=$2
-    export TARGET_DIR=$( dirname $2 )
+    export TARGET_DIR=$( dirname $TARGET )
     export QNAME=$( basename $3 .trf.repmask.2bit )
     export QUERY=$3
+    export QUERY_DIR=$( dirname $QUERY )
 fi
 
 ls -ld $TARGET $QUERY
@@ -87,6 +103,8 @@ fi
 
 ####
 # we may potentially do away with this section
+# the following conditional is to prevent the script from exiting if the
+# grep comes back with no matches.
 if grep --invert-match PartList ${QNAME}.part.list > query.list ; then
     echo 'matches found' >> /dev/null
     else 
@@ -95,34 +113,33 @@ fi
 if [ $(ls -1A ${QNAME}PartList/ | wc -l) -gt 0 ]; then
     for F in ${QNAME}PartList/*.lst
       do
-      cat ${F}
+      # cat ${F}
+      echo ${F}
     done >> query.list
 fi
 # 
 ####
+echo "constructLiftFile.pl ${TNAME}.chrom.sizes target.list > target.lift"
 constructLiftFile.pl ${TNAME}.chrom.sizes target.list > target.lift
+echo "constructLiftFile.pl ${QNAME}.chrom.sizes query.list > query.lift"
 constructLiftFile.pl ${QNAME}.chrom.sizes query.list > query.lift
 
 echo "#LOOP" > template
-echo './runLastz $(path1) $(path2) $(file1) $(file2) { check out exists+ psl/$(file1).$(file2).psl.gz }' >> template
+echo './runLastz $(file1) $(file2) { check out exists+ psl/$(file1).$(file2).psl.gz }' >> template
 echo "#ENDLOOP" >> template
 
 # This script will be run on the cluster.
 cat <<_EOF_ > runLastz
 #!/bin/csh -fe
-set H = $WRKDIR
-set T = \$1
-set Q = \$2
-set FT = \$3
-set FQ = \$4
+set WDIR = $WRKDIR
+set TDIR = $TARGET_DIR
+set QDIR = $QUERY_DIR
+set FT = \$1
+set FQ = \$2
 set tmpDir = /scratch/tmp/\${FT}
 mkdir -p raw psl \${tmpDir}
-######
-# fix this
-twoBitToFa \${T} \${tmpDir}/\${FT}.fa
-twoBitToFa \${Q} \${tmpDir}/\${FQ}.fa
-# 
-######
+twoBitToFa \${TDIR}/\${T} \${tmpDir}/\${FT}.fa
+twoBitToFa \${QDIR}/\${Q} \${tmpDir}/\${FQ}.fa
 /cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz \${tmpDir}/\${FT}.fa \
     \${tmpDir}/\${FQ}.fa \
     ${lastzParams} \
@@ -136,11 +153,6 @@ rmdir --ignore-fail-on-non-empty \${tmpDir}
 _EOF_
 
 chmod 755 $WRKDIR/runLastz
-
-# echo "read to run lastz kluster job:"
-# echo "gensub2 target.list query.list template jobList"
-# echo "para make jobList"
-# echo "when finished, run the commands in chainJobs.csh to perform the chaining"
 
 mkdir -p chain
 echo "#!/bin/csh -fe" > chainJobs.csh

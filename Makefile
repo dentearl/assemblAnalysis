@@ -51,8 +51,12 @@ TRFTMP_DIR:=${TMPDIR}/dearlTRF${tmpExt}
 all: chains
 	@echo "Work complete"
 
+updateSubmissions:
+	mkdir -p submissions
+	${BIN_DIR}/grabAssemblies.sh ${PROJECT_DIR}/submissions
+
 ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
-	@if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/>(\S+).*/$$1/;' | head | sort -n | uniq -d ) ]]; then \
+	if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/>(\S+).*/$$1/;' | head | sort -n | uniq -d ) ]]; then \
 		echo "File $< contains duplicate ids, exiting" >&2 ; \
 		exit 1; \
 	fi
