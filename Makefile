@@ -61,7 +61,8 @@ ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
 # extract files, remove everything in the header line after the unique int id
 ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.fa-verified
 	mkdir -p $(dir $@)
-	zcat $< | perl -ple 's/>(\S+).*/>$$1/g;' > $@.${tmpExt}
+	zcat $< | perl -ple 's/>(\S+).*/>$$1/g;' > $@.${tmpExt}1
+	faFilter -minSize=100 $@.${tmpExt}1 $@.${tmpExt}
 	mv $@.${tmpExt} $@
 
 # # run trf on fasta, get the .bed
@@ -110,11 +111,11 @@ ${CHAINSCRIPTS_DIR}/hap2/%/jobList: ${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.csh
 
 # run parasol on swarm
 ${CHAINSCRIPTS_DIR}/hap1/%/para-complete: ${CHAINSCRIPTS_DIR}/hap1/%/jobList
-	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	aoeu ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 
 ${CHAINSCRIPTS_DIR}/hap2/%/para-complete: ${CHAINSCRIPTS_DIR}/hap2/%/jobList
-	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	aoeu ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 
 ${CHAINS_DIR}/hap1.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap1/%/para-complete
@@ -130,5 +131,19 @@ ${CHAINS_DIR}/hap2.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap2/%/para-complete
 chains: $(foreach a, ${ASSEMBLIES}, $(foreach b, ${HAPLOTYPES}, $(join ${CHAINS_DIR}/${b}.${a},.all.chain.gz)))
 	@echo $^
 
-clean:
-	rm -rf ${ASSEMBLIES_DIR} ${REPMASK_DIR} ${TRF_DIR} $(wildcard ${RAW_DIR}/*.fa-verified) ${CHAINS_DIR} ${CHAINSCRIPTS_DIR}
+chainClean:
+	mkdir -p trash
+	mv ${CHAINS_DIR} trash/${CHAINS_DIR}
+	mv ${CHAINSCRIPTS_DIR} trash/${CHAINSCRIPTS_DIR}
+	rm -rf trash/${CHAINS_DIR} trash/${CHAINSCRIPTS_DIR}
+	rm -rf trash/
+
+fullClean:
+	mkdir -p trash
+	mv ${ASSEMBLIES_DIR} trash/${ASSEMBLIES_DIR}
+	mv ${REPMASK_DIR} trash/${REPMASK_DIR}
+	mv ${TRF_DIR} trash/${TRF_DIR}
+	mv ${CHAINS_DIR} trash/${CHAINS_DIR}
+	mv ${CHAINSCRIPTS_DIR} trash/${CHAINSCRIPTS_DIR}
+	rm -rf trash/${ASSEMBLIES_DIR} trash/${REPMASK_DIR} trash/${TRF_DIR} $(wildcard ${RAW_DIR}/*.fa-verified) trash/${CHAINS_DIR} trash/${CHAINSCRIPTS_DIR}
+	rm -rf trash/

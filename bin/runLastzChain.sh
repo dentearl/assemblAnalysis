@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -e
 # shell script to prepare a script to run lastz/chain pipeline
 #
 usage()
@@ -41,44 +41,39 @@ if [ ! -e $1 ] || [ ! -d $1 ]; then
 else
     export WRKDIR=$1
     export WRKDIR=${WRKDIR%/} # remove trailing slash
-    #export WRKDIR="/hive/data/genomes/ce9/bed/testLastz"
 fi
 if [ ! -e $2 ] || [ ! -e $3 ]; then
     usage
 else
     export TNAME=$( basename $2 .trf.repmask.2bit )
-    #export TNAME=ce9
     export TARGET=$2
     export TARGET_DIR=$( dirname $2 )
-    #export TARGET=${WRKDIR}/${TNAME}.2bit
     export QNAME=$( basename $3 .trf.repmask.2bit )
-    #export QNAME=cb3
     export QUERY=$3
-    #export QUERY=${WRKDIR}/${QNAME}.2bit
 fi
 
 ls -ld $TARGET $QUERY
 
 if [ ! -s ${TNAME}.chrom.sizes ]; then
-twoBitInfo ${TARGET} stdout | sort -k2nr > ${TNAME}.chrom.sizes
-rm -fr ${TNAME}PartList ${TNAME}.part.list
-mkdir ${TNAME}PartList
+    twoBitInfo ${TARGET} stdout | sort -k2nr > ${TNAME}.chrom.sizes
+    rm -rf ${TNAME}PartList ${TNAME}.part.list
+    mkdir ${TNAME}PartList
 fi
 if [ ! -s ${QNAME}.chrom.sizes ]; then
-twoBitInfo ${QUERY} stdout | sort -k2nr > ${QNAME}.chrom.sizes
-rm -fr ${QNAME}PartList ${QNAME}.part.list
-mkdir ${QNAME}PartList
+    twoBitInfo ${QUERY} stdout | sort -k2nr > ${QNAME}.chrom.sizes
+    rm -rf ${QNAME}PartList ${QNAME}.part.list
+    mkdir ${QNAME}PartList
 fi
 
 if [ ! -s ${TNAME}.part.list ]; then
-#partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
-# 5,000 chunks with 1,000 bp overlap
-partitionSequence.pl 5000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
+    #partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
+    # Hiram's call: 10 Mb chunks with 10,000 bp overlap with 1 contig per partition
+    partitionSequence.pl 1000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
 	-lstDir ${TNAME}PartList > ${TNAME}.part.list
 fi
 if [ ! -s ${QNAME}.part.list ]; then
-#partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
-partitionSequence.pl 10000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
+    #partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
+    partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1000 \
 	-lstDir ${QNAME}PartList > ${QNAME}.part.list
 fi
 
@@ -90,31 +85,44 @@ if [ $(ls -1A ${TNAME}PartList/ | wc -l) -gt 0 ]; then
     done >> target.list
 fi
 
-grep --invert-match PartList ${QNAME}.part.list > query.list
+####
+# we may potentially do away with this section
+if grep --invert-match PartList ${QNAME}.part.list > query.list ; then
+    echo 'matches found' >> /dev/null
+    else 
+    echo 'no matches found' >> /dev/null
+fi
 if [ $(ls -1A ${QNAME}PartList/ | wc -l) -gt 0 ]; then
     for F in ${QNAME}PartList/*.lst
       do
       cat ${F}
     done >> query.list
 fi
-
+# 
+####
 constructLiftFile.pl ${TNAME}.chrom.sizes target.list > target.lift
 constructLiftFile.pl ${QNAME}.chrom.sizes query.list > query.lift
 
 echo "#LOOP" > template
-echo 'runLastz $(path1) $(path2) $(file1) $(file2) {check out exists+ psl/$(file1).$(file2).psl.gz}' >> template
+echo './runLastz $(path1) $(path2) $(file1) $(file2) { check out exists+ psl/$(file1).$(file2).psl.gz }' >> template
 echo "#ENDLOOP" >> template
 
+# This script will be run on the cluster.
 cat <<_EOF_ > runLastz
 #!/bin/csh -fe
+set H = $WRKDIR
 set T = \$1
 set Q = \$2
 set FT = \$3
 set FQ = \$4
 set tmpDir = /scratch/tmp/\${FT}
 mkdir -p raw psl \${tmpDir}
+######
+# fix this
 twoBitToFa \${T} \${tmpDir}/\${FT}.fa
 twoBitToFa \${Q} \${tmpDir}/\${FQ}.fa
+# 
+######
 /cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz \${tmpDir}/\${FT}.fa \
     \${tmpDir}/\${FQ}.fa \
     ${lastzParams} \

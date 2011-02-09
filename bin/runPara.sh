@@ -18,5 +18,5 @@ fi
 workDir=$1
 cd $workDir
 para create jobList
-para shove jobList -retries=5
+para shove jobList -retries=10
 exit 0
