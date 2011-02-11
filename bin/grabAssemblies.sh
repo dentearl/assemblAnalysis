@@ -1,4 +1,6 @@
 #!/bin/bash -e
+set -beEu -o pipefail
+
 DEST_DIR=${1%/}
 if [ ! -e $DEST_DIR ]; then
     echo "Local Destination directory $DEST_DIR does not exist!"

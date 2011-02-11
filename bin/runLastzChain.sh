@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -beEu -o pipefail
 # runLastzChain.sh
 # dent earl dearl (a) soe ucsc edu
 # 9 Feb 2011
@@ -84,13 +85,13 @@ fi
 if [ ! -s ${TNAME}.part.list ]; then
     #partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
     # Hiram's call: 10 Mb chunks with 10,000 bp overlap with 1 contig per partition
-    partitionSequence.pl 1000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
-	-lstDir ${TNAME}PartList > ${TNAME}.part.list
+    partitionSequence.pl 10000000 10000 ${TARGET} ${TNAME}.chrom.sizes 1 \
+    -lstDir ${TNAME}PartList > ${TNAME}.part.list
 fi
 if [ ! -s ${QNAME}.part.list ]; then
     #partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1 \
-    partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 1000 \
-	-lstDir ${QNAME}PartList > ${QNAME}.part.list
+    partitionSequence.pl 20000000 0 ${QUERY} ${QNAME}.chrom.sizes 2000 \
+    -lstDir ${QNAME}PartList > ${QNAME}.part.list
 fi
 
 grep --invert-match PartList ${TNAME}.part.list > target.list
@@ -130,24 +131,34 @@ echo "#ENDLOOP" >> template
 
 # This script will be run on the cluster.
 cat <<_EOF_ > runLastz
-#!/bin/csh -fe
-set WDIR = $WRKDIR
-set TDIR = $TARGET_DIR
-set QDIR = $QUERY_DIR
-set FT = \$1
-set FQ = \$2
-set tmpDir = /scratch/tmp/\${FT}
+#!/bin/bash -e
+set -beEu -o pipefail
+
+export WDIR=$WRKDIR
+export TDIR=$TARGET_DIR
+export QDIR=$QUERY_DIR
+export FT=\$1
+export FQ=\$2
+export tmpDir=/scratch/tmp/\${FT}
 mkdir -p raw psl \${tmpDir}
-twoBitToFa \${TDIR}/\${T} \${tmpDir}/\${FT}.fa
-twoBitToFa \${QDIR}/\${Q} \${tmpDir}/\${FQ}.fa
+twoBitToFa \${TDIR}/\${FT} \${tmpDir}/\${FT}.fa
+if [ \$(echo \$FQ | perl -ple 's/.*(\..*?)\$/\$1/;') == '.lst' ]; then
+   cat \${WDIR}/*PartList/\${FQ} \
+       | while read filename; do 
+           twoBitToFa \$filename \${tmpDir}/\${FQ}.fa.tmp
+           cat \${tmpDir}/\${FQ}.fa.tmp >> \${tmpDir}/\${FQ}.fa
+        done
+else
+   twoBitToFa \${QDIR}/\${FQ} \${tmpDir}/\${FQ}.fa
+fi
 /cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz \${tmpDir}/\${FT}.fa \
     \${tmpDir}/\${FQ}.fa \
     ${lastzParams} \
     > raw/\${FT}.\${FQ}.lav
 lavToPsl raw/\${FT}.\${FQ}.lav stdout \
     | liftUp -type=.psl stdout target.lift error stdin \
-    | liftUp -nohead -pslQ -type=.psl stdout query.lift error stdin \
-	| gzip -c > psl/\${FT}.\${FQ}.psl.gz
+    | liftUp -nohead -pslQ -type=.psl stdout query.lift carry stdin \
+    | gzip -c > psl/\${FT}.\${FQ}.psl.gz
 rm -f \${tmpDir}/\${FT}.fa \${tmpDir}/\${FQ}.fa
 rmdir --ignore-fail-on-non-empty \${tmpDir}
 _EOF_
@@ -156,12 +167,11 @@ chmod 755 $WRKDIR/runLastz
 
 mkdir -p chain
 echo "#!/bin/csh -fe" > chainJobs.csh
-for T in `cat target.list | sed -e "s#${TARGET_DIR}/##"`
-do
-echo "zcat psl/${T}.*.psl.gz \\"
-echo "    | axtChain -psl -verbose=0 ${chainParams} \\"
-echo -e "\tstdin ${TARGET} ${QUERY} stdout \\"
-echo "   | chainAntiRepeat ${TARGET} ${QUERY} stdin chain/${T}.chain"
+for T in `cat target.list | sed -e "s#${TARGET_DIR}/##"` ; do
+  echo    "zcat psl/${T}.*.psl.gz \\"
+  echo    "    | axtChain -psl -verbose=0 ${chainParams} \\"
+  echo    "      stdin ${TARGET} ${QUERY} stdout \\"
+  echo    "    | chainAntiRepeat ${TARGET} ${QUERY} stdin chain/${T}.chain"
 done >> chainJobs.csh
 
 chmod 755 $WRKDIR/chainJobs.csh
