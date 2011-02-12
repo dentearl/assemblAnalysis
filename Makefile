@@ -64,7 +64,7 @@ updateSubmissions: downloadSubmissions
 
 # verify the fasta has unique ids
 ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
-	if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/>(\S+)/$$1/;' | sort -n | uniq -d ) ]]; then \
+	if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/^>.*?\s*?(\S+)$$/$$1/' | sort -n | uniq -d ) ]]; then \
 		echo "File $< contains duplicate ids, exiting" >&2 ; \
 		exit 1; \
 	fi
@@ -73,7 +73,7 @@ ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
 # extract files, remove everything in the header line after the unique int id
 ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.fa-verified
 	mkdir -p $(dir $@)
-	zcat $< | perl -ple 's/>(\S+)/>$$1/g;' > $@.${tmpExt}2 # cut headers to contain only unique IDs
+	zcat $< | perl -ple 's/^>.*?\s*?(\S+)$$/>$$1/' > $@.${tmpExt}2 # cut headers to contain only unique IDs
 	faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
 	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}1 > $@.${tmpExt} # mask weird IUPACs
 	rm $@.${tmpExt}1 $@.${tmpExt}2
@@ -159,14 +159,13 @@ chainClean:
 	if [ -e ${CHAINS_DIR} ]; then mv ${CHAINS_DIR} trash/chains; fi
 	if [ -e ${CHAINSCRIPTS_DIR} ]; then mv ${CHAINSCRIPTS_DIR} trash/chainScripts; fi
 	rm -rf trash/chains trash/chainsScripts
-	rm -rf trash/
+
 
 trfRepClean:
 	mkdir -p trash
 	if [ -e ${REPMASK_DIR} ]; then mv ${REPMASK_DIR} trash/repmask; fi
 	if [ -e ${TRF_DIR} ]; then mv ${TRF_DIR} trash/trf; fi
 	rm -rf trash/repmask trash/trf
-	rm -rf trash/
 
 fullClean: chainClean trfRepClean
 	mkdir -p trash

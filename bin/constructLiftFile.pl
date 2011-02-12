@@ -1,5 +1,14 @@
 #!/bin/env perl
-
+# A hack created by Hiram and 
+# clumsily adapted by Dent.
+# 11 Feb 2011
+#
+# For use with assemblathon analysis pipeline,
+# this script takes a chrom.sizes (which is really contig
+# sizes) and a .list file containing either lines of .2bit specs 
+# or lines of .lst files and produces a .lift file.
+#
+##############################
 use warnings;
 use strict;
 use File::Basename;
@@ -23,9 +32,11 @@ close (FH);
 
 $file = shift;
 open (FH, "<$file") or die "can not read $file";
+# print a bogus line to prevent empty lift file freak-out by liftOver in the query stage.
+print "-28659142	HSCHR6_MHC_SSTO	171115067	chr6_ssto_hap7	4928567\n";
 while (my $line = <FH>) {
     chomp $line;
-    next if($line =~ m/\.lst/);
+    next if($line =~ m/.lst/);
     my $twoBitSpec = basename($line);
     my ($twoBitFile, $chrom, $startEnd) = split(':', $twoBitSpec);
     my ($start, $end) = split('-', $startEnd);

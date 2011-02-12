@@ -143,7 +143,7 @@ export tmpDir=/scratch/tmp/\${FT}
 mkdir -p raw psl \${tmpDir}
 twoBitToFa \${TDIR}/\${FT} \${tmpDir}/\${FT}.fa
 if [ \$(echo \$FQ | perl -ple 's/.*(\..*?)\$/\$1/;') == '.lst' ]; then
-   cat \${WDIR}/*PartList/\${FQ} \
+   cat \${WDIR}/*PartList/\${FQ} \\
        | while read filename; do 
            twoBitToFa \$filename \${tmpDir}/\${FQ}.fa.tmp
            cat \${tmpDir}/\${FQ}.fa.tmp >> \${tmpDir}/\${FQ}.fa
@@ -151,13 +151,13 @@ if [ \$(echo \$FQ | perl -ple 's/.*(\..*?)\$/\$1/;') == '.lst' ]; then
 else
    twoBitToFa \${QDIR}/\${FQ} \${tmpDir}/\${FQ}.fa
 fi
-/cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz \${tmpDir}/\${FT}.fa \
-    \${tmpDir}/\${FQ}.fa \
-    ${lastzParams} \
+/cluster/bin/penn/lastz-distrib-1.02.00/bin/lastz \${tmpDir}/\${FT}.fa \\
+    \${tmpDir}/\${FQ}.fa \\
+    ${lastzParams} \\
     > raw/\${FT}.\${FQ}.lav
-lavToPsl raw/\${FT}.\${FQ}.lav stdout \
-    | liftUp -type=.psl stdout target.lift error stdin \
-    | liftUp -nohead -pslQ -type=.psl stdout query.lift carry stdin \
+lavToPsl raw/\${FT}.\${FQ}.lav stdout \\
+    | liftUp -type=.psl stdout target.lift carry stdin \\
+    | liftUp -nohead -pslQ -type=.psl stdout query.lift carry stdin \\
     | gzip -c > psl/\${FT}.\${FQ}.psl.gz
 rm -f \${tmpDir}/\${FT}.fa \${tmpDir}/\${FQ}.fa
 rmdir --ignore-fail-on-non-empty \${tmpDir}
