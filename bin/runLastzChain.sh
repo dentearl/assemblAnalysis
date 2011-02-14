@@ -174,6 +174,6 @@ for T in `cat target.list | sed -e "s#${TARGET_DIR}/##"` ; do
   echo    "    | chainAntiRepeat ${TARGET} ${QUERY} stdin chain/${T}.chain"
 done >> chainJobs.csh
 
-chmod 755 $WRKDIR/chainJobs.csh
-
 echo "find ./chain -name \"*.chain\" | chainMergeSort -inputList=stdin | gzip -c > ${TNAME}.${QNAME}.all.chain.gz" >> chainJobs.csh
+
+chmod 755 $WRKDIR/chainJobs.csh
