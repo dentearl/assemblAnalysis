@@ -64,8 +64,11 @@ updateSubmissions: downloadSubmissions
 	rsync -av ${SUBMISSION_DIR}/*contigs.fa.gz ${RAW_DIR}
 
 # verify the fasta has unique ids
+# use only the first 40 characters on the header line as
+# RepeatMasker freaks out if you have 50 characters or more.
+# We reserve 9 characters for future use.
 ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
-	if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/^>.*?\s*?(\S+)$$/$$1/' | sort -n | uniq -d ) ]]; then \
+	if [[ ! -z $$(zcat $< | grep '>' - | perl -ple 's/.*(.{40})$$/>$$1/;' | perl -ple 's/^>.*?\s*?(\S+)$$/$$1/;' | sort -n | uniq -d ) ]]; then \
 		echo "File $< contains duplicate ids, exiting" >&2 ; \
 		exit 1; \
 	fi
@@ -74,7 +77,7 @@ ${RAW_DIR}/%.fa-verified: ${RAW_DIR}/%.fa.gz
 # extract files, remove everything in the header line after the unique int id
 ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.fa-verified
 	mkdir -p $(dir $@)
-	zcat $< | perl -ple 's/^>.*?\s*?(\S+)$$/>$$1/' > $@.${tmpExt}3 # cut headers to contain only unique IDs
+	zcat $< | perl -ple 's/>.*(.{40})$$/>$$1/;' | perl -ple 's/^>.*?\s*?(\S+)$$/>$$1/;' > $@.${tmpExt}3 # cut headers to contain only unique IDs
 	${BIN_DIR}/removeEmptyContigs.py < $@.${tmpExt}3 > $@.${tmpExt}2  # remove the empty contigs from the sequence file
 	faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
 	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}1 > $@.${tmpExt} # mask weird IUPACs
