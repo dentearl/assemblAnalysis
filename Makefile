@@ -33,7 +33,7 @@ BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 .SECONDARY: # leave this blank to force make to keep intermediate files
-.PHONY: mafs chains
+.PHONY: mafs chains test
 HAPS_DIR:=${PROJECT_DIR}/haplotypes
 SUBMISSION_DIR:=${PROJECT_DIR}/submissions
 RAW_DIR:=${PROJECT_DIR}/archives
@@ -140,15 +140,15 @@ ${CHAINSCRIPTS_DIR}/bac/%/jobList: ${CHAINSCRIPTS_DIR}/bac/%/chainJobs.sh
 	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
 	mv $@.${tmpExt} $@
 
-# run parasol on swarm
+# run parasol on swarm, stagger ssh attempts to prevent server from locking us out.
 ${CHAINSCRIPTS_DIR}/hap1/%/para-complete: ${CHAINSCRIPTS_DIR}/hap1/%/jobList
-	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 ${CHAINSCRIPTS_DIR}/hap2/%/para-complete: ${CHAINSCRIPTS_DIR}/hap2/%/jobList
-	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 ${CHAINSCRIPTS_DIR}/bac/%/para-complete: ${CHAINSCRIPTS_DIR}/bac/%/jobList
-	ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 
 # create chains
@@ -208,6 +208,11 @@ mafs: $(foreach a, ${ASSEMBLIES}, $(foreach b, ${HAPLOTYPES}, $(join ${MAFS_DIR}
 	@echo "MAF generation complete."
 
 ##############################
+
+# at the moment the only test is for fastaContigHeaderMapper.py
+test:
+	python ${BIN_DIR}/fastaContigHeaderMapperTest.py -v
+	@echo "Tests complete."
 
 chainClean:
 	mkdir -p trash${tmpExt}
