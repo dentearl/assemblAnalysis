@@ -94,7 +94,12 @@ if [ ! -s ${QNAME}.part.list ]; then
     -lstDir ${QNAME}PartList > ${QNAME}.part.list
 fi
 
-grep --invert-match PartList ${TNAME}.part.list > target.list
+# the bac sequence is so short it doesn't create a part list
+if grep --invert-match PartList ${TNAME}.part.list > target.list ; then
+    echo 'matches found' >> /dev/null
+else
+    echo 'no matches found' >> /dev/null
+fi
 if [ $(ls -1A ${TNAME}PartList/ | wc -l) -gt 0 ]; then
     for F in ${TNAME}PartList/*.lst
       do
@@ -108,7 +113,7 @@ fi
 # grep comes back with no matches.
 if grep --invert-match PartList ${QNAME}.part.list > query.list ; then
     echo 'matches found' >> /dev/null
-    else 
+else 
     echo 'no matches found' >> /dev/null
 fi
 if [ $(ls -1A ${QNAME}PartList/ | wc -l) -gt 0 ]; then
@@ -140,10 +145,11 @@ export QDIR=$QUERY_DIR
 export FT=\$1
 export FQ=\$2
 export tmpDir=/scratch/tmp/\${FT}
+export QNAME=$QNAME
 mkdir -p raw psl \${tmpDir}
 twoBitToFa \${TDIR}/\${FT} \${tmpDir}/\${FT}.fa
 if [ \$(echo \$FQ | perl -ple 's/.*(\..*?)\$/\$1/;') == '.lst' ]; then
-   cat \${WDIR}/*PartList/\${FQ} \\
+   cat \${WDIR}/\${QNAME}PartList/\${FQ} \\
        | while read filename; do 
            twoBitToFa \$filename \${tmpDir}/\${FQ}.fa.tmp
            cat \${tmpDir}/\${FQ}.fa.tmp >> \${tmpDir}/\${FQ}.fa
@@ -166,14 +172,15 @@ _EOF_
 chmod 755 $WRKDIR/runLastz
 
 mkdir -p chain
-echo "#!/bin/csh -fe" > chainJobs.csh
+echo "#!/bin/bash" > chainJobs.sh
+echo "set -beEu -o pipefail"
 for T in `cat target.list | sed -e "s#${TARGET_DIR}/##"` ; do
   echo    "zcat psl/${T}.*.psl.gz \\"
   echo    "    | axtChain -psl -verbose=0 ${chainParams} \\"
   echo    "      stdin ${TARGET} ${QUERY} stdout \\"
   echo    "    | chainAntiRepeat ${TARGET} ${QUERY} stdin chain/${T}.chain"
-done >> chainJobs.csh
+done >> chainJobs.sh
 
-echo "find ./chain -name \"*.chain\" | chainMergeSort -inputList=stdin | gzip -c > ${TNAME}.${QNAME}.all.chain.gz" >> chainJobs.csh
+echo "find ./chain -name \"*.chain\" | chainMergeSort -inputList=stdin | gzip -c > ${TNAME}.${QNAME}.all.chain.gz" >> chainJobs.sh
 
-chmod 755 $WRKDIR/chainJobs.csh
+chmod 755 $WRKDIR/chainJobs.sh

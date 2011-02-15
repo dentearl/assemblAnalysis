@@ -33,6 +33,7 @@ BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 .SECONDARY: # leave this blank to force make to keep intermediate files
+.PHONY: mafs chains
 HAPS_DIR:=${PROJECT_DIR}/haplotypes
 SUBMISSION_DIR:=${PROJECT_DIR}/submissions
 RAW_DIR:=${PROJECT_DIR}/archives
@@ -77,8 +78,8 @@ ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.map
 	mkdir -p $(dir $@)
 	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --map ${RAW_DIR}/${*F}.map --goForward > $@.${tmpExt}3 # change headers to contain only unique IDs
 	${BIN_DIR}/removeEmptyContigs.py < $@.${tmpExt}3 > $@.${tmpExt}2  # remove the empty contigs from the sequence file
-	faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
-	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}1 > $@.${tmpExt} # mask weird IUPACs
+#faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
+	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}2 > $@.${tmpExt} # mask weird IUPACs
 	rm $@.${tmpExt}1 $@.${tmpExt}2 $@.${tmpExt}3
 	mv $@.${tmpExt} $@
 
@@ -118,24 +119,24 @@ repMask: $(foreach a, ${ASSEMBLIES}, $(join ${ASSEMBLIES_DIR}/${a},.trf.repmask.
 	@echo "RepeatMasking complete."
 
 # create chainJobs script
-${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.csh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
+${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.sh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
 	mkdir -p $(dir $@)
 	cd $(dir $@) && ${BIN_DIR}/runLastzChain.sh $(dir $@) ${HAPS_DIR}/hap1.trf.repmask.2bit $<
-${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.csh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
+${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.sh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
 	mkdir -p $(dir $@)
 	cd $(dir $@) && ${BIN_DIR}/runLastzChain.sh $(dir $@) ${HAPS_DIR}/hap2.trf.repmask.2bit $<
-${CHAINSCRIPTS_DIR}/bac/%/chainJobs.csh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
+${CHAINSCRIPTS_DIR}/bac/%/chainJobs.sh: ${ASSEMBLIES_DIR}/%.trf.repmask.2bit
 	mkdir -p $(dir $@)
 	cd $(dir $@) && ${BIN_DIR}/runLastzChain.sh $(dir $@) ${HAPS_DIR}/bac.trf.repmask.2bit $<
 
 # create the parasol jobList
-${CHAINSCRIPTS_DIR}/hap1/%/jobList: ${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.csh
+${CHAINSCRIPTS_DIR}/hap1/%/jobList: ${CHAINSCRIPTS_DIR}/hap1/%/chainJobs.sh
 	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
 	mv $@.${tmpExt} $@
-${CHAINSCRIPTS_DIR}/hap2/%/jobList: ${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.csh
+${CHAINSCRIPTS_DIR}/hap2/%/jobList: ${CHAINSCRIPTS_DIR}/hap2/%/chainJobs.sh
 	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
 	mv $@.${tmpExt} $@
-${CHAINSCRIPTS_DIR}/bac/%/jobList: ${CHAINSCRIPTS_DIR}/bac/%/chainJobs.csh
+${CHAINSCRIPTS_DIR}/bac/%/jobList: ${CHAINSCRIPTS_DIR}/bac/%/chainJobs.sh
 	gensub2 $(dir $@)target.list $(dir $@)query.list $(dir $@)template $@.${tmpExt}
 	mv $@.${tmpExt} $@
 
@@ -153,15 +154,15 @@ ${CHAINSCRIPTS_DIR}/bac/%/para-complete: ${CHAINSCRIPTS_DIR}/bac/%/jobList
 # create chains
 ${CHAINS_DIR}/hap1.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap1/%/para-complete
 	mkdir -p $(dir $@)
-	cd $(dir $<) && ./chainJobs.csh
+	cd $(dir $<) && ./chainJobs.sh
 	cp $(dir $<)hap1.${*F}.all.chain.gz $@
 ${CHAINS_DIR}/hap2.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/hap2/%/para-complete
 	mkdir -p $(dir $@)
-	cd $(dir $<) && ./chainJobs.csh
+	cd $(dir $<) && ./chainJobs.sh
 	cp $(dir $<)hap2.${*F}.all.chain.gz $@
 ${CHAINS_DIR}/bac.%.all.chain.gz: ${CHAINSCRIPTS_DIR}/bac/%/para-complete
 	mkdir -p $(dir $@)
-	cd $(dir $<) && ./chainJobs.csh
+	cd $(dir $<) && ./chainJobs.sh
 	cp $(dir $<)bac.${*F}.all.chain.gz $@
 
 chains: $(foreach a, ${ASSEMBLIES}, $(foreach b, ${HAPLOTYPES}, $(join ${CHAINS_DIR}/${b}.${a},.all.chain.gz)))
