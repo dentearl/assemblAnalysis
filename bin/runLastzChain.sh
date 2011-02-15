@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 set -beEu -o pipefail
 # runLastzChain.sh
 # dent earl dearl (a) soe ucsc edu
@@ -136,21 +136,24 @@ echo "#ENDLOOP" >> template
 
 # This script will be run on the cluster.
 cat <<_EOF_ > runLastz
-#!/bin/bash -e
+#!/bin/bash
 set -beEu -o pipefail
+# FT will likely be a 2bit spec
+# FQ will likely be a partXXX.lst.fa file
 
 export WDIR=$WRKDIR
 export TDIR=$TARGET_DIR
 export QDIR=$QUERY_DIR
 export FT=\$1
 export FQ=\$2
-export tmpDir=/scratch/tmp/\${FT}
 export QNAME=$QNAME
+export tmpDir=/scratch/tmp/\${FT}\${QNAME}
+
 mkdir -p raw psl \${tmpDir}
 twoBitToFa \${TDIR}/\${FT} \${tmpDir}/\${FT}.fa
 if [ \$(echo \$FQ | perl -ple 's/.*(\..*?)\$/\$1/;') == '.lst' ]; then
    cat \${WDIR}/\${QNAME}PartList/\${FQ} \\
-       | while read filename; do 
+      | while read filename; do 
            twoBitToFa \$filename \${tmpDir}/\${FQ}.fa.tmp
            cat \${tmpDir}/\${FQ}.fa.tmp >> \${tmpDir}/\${FQ}.fa
         done
@@ -166,7 +169,7 @@ lavToPsl raw/\${FT}.\${FQ}.lav stdout \\
     | liftUp -nohead -pslQ -type=.psl stdout query.lift carry stdin \\
     | gzip -c > psl/\${FT}.\${FQ}.psl.gz
 rm -f \${tmpDir}/\${FT}.fa \${tmpDir}/\${FQ}.fa
-rmdir --ignore-fail-on-non-empty \${tmpDir}
+rm -rf \${tmpDir}
 _EOF_
 
 chmod 755 $WRKDIR/runLastz
