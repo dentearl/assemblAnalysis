@@ -30,6 +30,10 @@ def initOptions( parser ):
     parser.add_option( '--createMap', dest='createMap',
                        type='string',
                        help='Create the map file that contains the mapping between IDs.')
+    parser.add_option( '--prefix', dest='prefix',
+                       type='string',
+                       help='When using --createMap one can specify a header prefix that will '
+                       'result in headers like: >prefix.contig000001')
     parser.add_option( '--map', dest='map',
                        type='string',
                        help='Specify the map file that contains the mapping between IDs.')
@@ -43,8 +47,10 @@ def initOptions( parser ):
 def checkOptions( parser, options ):
     if options.createMap != None:
         return
+    if options.prefix != None:
+        parser.error('--prefix may only be used in conjunction with --createMap.')
     if options.map == None:
-        parser.error('You must specify the map you wish to use with --map')
+        parser.error('You must specify the map you wish to use with --map.')
     if not os.path.exists( options.map ):
             parser.error('%s Does not exist.' % options.map )
     if ( not options.goForward ) and ( not options.goBackward ):
@@ -53,6 +59,10 @@ def checkOptions( parser, options ):
 def createMap( options ):
     faMap = {}
     num = 1
+    if options.prefix != None:
+        prefix = '%s.' % options.prefix
+    else:
+        prefix = ''
     for line in sys.stdin:
         line=line.strip()
         if line == '':
@@ -61,7 +71,7 @@ def createMap( options ):
             if line in faMap:
                 sys.stderr.write( 'Error, duplicate contig header found: %s.\n' % line )
                 sys.exit( 1 )
-            faMap[ line ] = '>contig%06d' % num
+            faMap[ line ] = '>%scontig%06d' % ( prefix, num )
             num += 1
             
     FILE = open( options.createMap, 'w' )

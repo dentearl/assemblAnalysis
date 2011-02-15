@@ -70,7 +70,7 @@ updateSubmissions: downloadSubmissions
 # RepeatMasker freaks out if you have 50 characters or more.
 # We reserve 9 characters for future use.
 ${RAW_DIR}/%.map: ${RAW_DIR}/%.fa.gz
-	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --createMap $@.tmp
+	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --prefix $(patsub %_contigs,%,${*F}) --createMap $@.tmp
 	mv $@.tmp $@
 
 # extract files, remove everything in the header line after the unique int id
