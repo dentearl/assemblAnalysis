@@ -142,13 +142,13 @@ ${CHAINSCRIPTS_DIR}/bac/%/jobList: ${CHAINSCRIPTS_DIR}/bac/%/chainJobs.sh
 
 # run parasol on swarm, stagger ssh attempts to prevent server from locking us out.
 ${CHAINSCRIPTS_DIR}/hap1/%/para-complete: ${CHAINSCRIPTS_DIR}/hap1/%/jobList
-	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$( perl -e 'printf "%d\n", int(rand(5))' ) && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 ${CHAINSCRIPTS_DIR}/hap2/%/para-complete: ${CHAINSCRIPTS_DIR}/hap2/%/jobList
-	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$( perl -e 'printf "%d\n", int(rand(5))' ) && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 ${CHAINSCRIPTS_DIR}/bac/%/para-complete: ${CHAINSCRIPTS_DIR}/bac/%/jobList
-	sleep $$(echo $$RANDOM | perl -ple 's/.*?(\d{1})$$/$$1+1/;' | perl -wlne 'print eval') && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
+	sleep $$( perl -e 'printf "%d\n", int(rand(5))' ) && ssh swarm ${BIN_DIR}/runPara.sh $(dir $<)
 	touch $@
 
 # create chains
