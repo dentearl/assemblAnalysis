@@ -2,10 +2,9 @@
 import unittest
 import os
 import sys
-myBinDir = os.path.normpath(os.path.dirname(sys.argv[0]))
+myBinDir = os.path.normpath( os.path.dirname(sys.argv[0]) )
 sys.path.append(myBinDir + "/../../..")
 os.environ["PATH"] = myBinDir + "/../../../../bin:" + os.environ["PATH"]
-from sonLib.bioio import logger
 
 class RoundTripCheck( unittest.TestCase ):
    import os
@@ -53,13 +52,13 @@ TGCATGCAacgt bad characters
       import subprocess
       for pre, post in self.knownValues:
          # generate map
-         cmd = ['fastaContigHeaderMapper.py', '--createMap=%s' %
+         cmd = [os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--createMap=%s' %
                 os.path.join('tempTestFiles','testMap.map')]
          p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                                stderr=subprocess.STDOUT )
          ( sout ) = p.communicate( pre )[0]
          # go forward
-         cmd = ['fastaContigHeaderMapper.py', '--map=%s' %
+         cmd = [os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--map=%s' %
                 os.path.join('tempTestFiles','testMap.map'),
                 '--goForward']
          p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
@@ -72,13 +71,13 @@ TGCATGCAacgt bad characters
       import subprocess
       for pre, post in self.knownValues:
          # generate map
-         cmd = ['fastaContigHeaderMapper.py', '--createMap=%s' %
+         cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--createMap=%s' %
                 os.path.join('tempTestFiles','testMap.map')]
          p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                                stderr=subprocess.STDOUT )
          ( sout ) = p.communicate( pre )[0]
          # go forward
-         cmd = ['fastaContigHeaderMapper.py', '--map=%s' %
+         cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--map=%s' %
                 os.path.join('tempTestFiles','testMap.map'),
                 '--goForward']
          p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
@@ -86,7 +85,7 @@ TGCATGCAacgt bad characters
          ( outFor ) = p.communicate( pre )[0]
          self.assertEqual( post, outFor )
          # go backward
-         cmd = ['fastaContigHeaderMapper.py', '--map=%s' %
+         cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--map=%s' %
                 os.path.join('tempTestFiles','testMap.map'),
                 '--goBackward']
          p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
@@ -100,8 +99,9 @@ TGCATGCAacgt bad characters
       import string
       import subprocess
       print ' '
+      chars = string.letters + string.digits + ' ' + '\t' + string.punctuation
       for i in range(50):
-         prefix = ''.join( random.choice(string.letters + string.digits + ' ' + '\t' + string.punctuation) for x in range(30))
+         prefix = ''.join( random.choice( chars ) for x in range(30))
          for pre, post in self.knownValues:
             #add prefix to post
             post2 = ''
@@ -119,14 +119,14 @@ TGCATGCAacgt bad characters
                   post2+= '%s\n' % p
             post = post2
             # generate map
-            cmd = ['fastaContigHeaderMapper.py', '--createMap=%s' %
+            cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--createMap=%s' %
                    os.path.join('tempTestFiles','testMap.map'),
                    '--prefix=%s' % prefix]
             p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
                                   stderr=subprocess.STDOUT )
             ( sout ) = p.communicate( pre )[0]
             # go forward
-            cmd = ['fastaContigHeaderMapper.py', '--map=%s' %
+            cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--map=%s' %
                    os.path.join('tempTestFiles','testMap.map'),
                    '--goForward']
             p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
@@ -134,7 +134,7 @@ TGCATGCAacgt bad characters
             ( outFor ) = p.communicate( pre )[0]
             self.assertEqual( post, outFor )
             # go backward
-            cmd = ['fastaContigHeaderMapper.py', '--map=%s' %
+            cmd = [ os.path.join( myBinDir, 'fastaContigHeaderMapper.py'), '--map=%s' %
                    os.path.join('tempTestFiles','testMap.map'),
                    '--goBackward']
             p = subprocess.Popen( cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, 

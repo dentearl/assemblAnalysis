@@ -33,7 +33,7 @@ BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 .SECONDARY: # leave this blank to force make to keep intermediate files
-.PHONY: mafs chains test
+.PHONY: mafs chains test repMask chainClean trfRepClean fullClean
 HAPS_DIR:=${PROJECT_DIR}/haplotypes
 SUBMISSION_DIR:=${PROJECT_DIR}/submissions
 RAW_DIR:=${PROJECT_DIR}/archives
