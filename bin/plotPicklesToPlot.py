@@ -150,9 +150,6 @@ def loadMafs( options, data ):
       for n in data.mafNamesDict:
          data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
    data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True)
-   for n in data.orderedMafs:
-      print '%s %d / %d = %.3f' % ( n, data.mafNamesDict[n], data.genomeLength, 
-                                    float(data.mafNamesDict[n])/data.genomeLength )
 
 def initImage( options ):
    pdf = None
@@ -214,7 +211,6 @@ def labelAxes( fig, axDict, options, data ):
               axDict[ c ].get_position().get_points()[0][0])
       fig.text( x=xPos, y=0.96, s= data.chrLabelsByChrom[ c ], horizontalalignment='center',
                   verticalalignment='bottom', fontsize=fs )
-   print options.axHeight
    increment = options.axHeight / 40.0
    j = 0.0
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat']:
@@ -267,7 +263,6 @@ def drawMafs( axDict, options, data ):
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
             data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = j + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / 40.0
          j -=  1.0 / 40.0
-         print 'draw %s %s' % ( n, c )
          axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                              ydata = data.mafWigDict[ c ][ n ]['maf'], 
                                              c = colors[ col ], linewidth = 0.5 ))
