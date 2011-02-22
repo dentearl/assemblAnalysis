@@ -78,36 +78,26 @@ def objListToBinnedWiggle( objList, featLen, numBins ):
     vec = numpy.zeros( shape = ( numBins ))
     if objList == None or len( objList ) < 1:
         return vec
-    maxCount = 0
+    
     if isinstance( objList[0], GffRecord ):
+        maxCount = 0
         for a in objList:
             # index position in a 'numBins' length array.
-            start = int(( float( a.start ) / featLen ) * ( numBins - 1 ) )
-            # index position in a 'numBins' length array.
-            stop  = int(( float( a.end ) / featLen ) * ( numBins - 1 ) )
-            # perform the binning of annotation presence (as binary)
-            for i in range( start, stop + 1 ):
-                vec[ i ] += 1
-                if vec[ i ] > maxCount:
-                    maxCount = vec[ i ]
-        if maxCount > 0:
-            for i in range( 0, numBins):
-                vec[ i ] /= float( maxCount )
+            for i in range( a.start, a.end + 1 ):
+                vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] += 1
+                if vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] > maxCount:
+                    maxCount = vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ]
+        for i in range( 0, numBins):
+            vec[ i ] /= float( maxCount )
         return vec
     elif isinstance( objList[0], MafBlock ):
+        maxCount = float( featLen ) / numBins
         for m in objList:
             # index position in a 'numBins' length array.
-            start = int(( float( m.refStart ) / featLen ) * ( numBins - 1 ) )
-            # index position in a 'numBins' length array.
-            stop  = int(( float( m.refEnd) / featLen ) * ( numBins - 1 ) )
-            # perform the binning of annotation presence (as binary)
-            for i in range( start, stop + 1 ):
-                vec[ i ] += 1
-                if vec[ i ] > maxCount:
-                    maxCount = vec[ i ]
-        if maxCount > 0:
-            for i in range( 0, numBins):
-                vec[ i ] /= float( maxCount )
+            for i in range( m.refStart, m.refEnd + 1 ):
+                vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] += 1
+        for i in range( 0, numBins):
+            vec[ i ] /= float( maxCount )
         return vec
     else:
         return None

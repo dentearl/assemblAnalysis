@@ -231,7 +231,8 @@ def readMaf( options, data ):
          if m == 'notOurGenome':
             continue
          if m.length > len( m.sequence ):
-            sys.stderr.write('Error, printed sequence length not equal to actual sequence length: \'%s\'\n' % ( line ) )
+            sys.stderr.write('Error, printed sequence length greater than actual sequence'
+                             'length ref:%s other:%s line:\'%s\'\n' % ( options.ref, options.other, line ) )
             sys.exit( 1 )
          blockList.append( m )
       else:
@@ -283,6 +284,9 @@ def trimDups( options, data ):
    for c in data.chrNames:
       prevBlock = MafBlock()
       replacement = []
+      if c not in data.mafBlocksByChrom:
+         data.mafBlocksByChrom[ c ] = replacement
+         continue
       for m in data.mafBlocksByChrom[ c ]:
          if m.refStart < prevBlock.refEnd:
             if m.refEnd > prevBlock.refEnd:
@@ -318,10 +322,10 @@ def main():
    convertDataToWiggle( options, data )
    recordCoverage( options, data )
    packData( options, data )
-   for c in data.chrNames:
-      print '%s: %d / %d = %.4f' % ( c, data.mafWigDict[c]['columnsInBlocks'], 
-                                     data.chrLengthsByChrom[c], 
-                                     float(data.mafWigDict[c]['columnsInBlocks']) / data.chrLengthsByChrom[c])
+   # for c in data.chrNames:
+   #    print '%s: %d / %d = %.4f' % ( c, data.mafWigDict[c]['columnsInBlocks'], 
+   #                                   data.chrLengthsByChrom[c], 
+   #                                   float(data.mafWigDict[c]['columnsInBlocks']) / data.chrLengthsByChrom[c])
 
 if __name__ == '__main__':
    main()

@@ -31,6 +31,9 @@ def initOptions( parser ):
    parser.add_option( '--mafDir', dest='mafDir',
                       type='string',
                       help='Directory where maf pickles will be read from.' )
+   parser.add_option( '-a', '--referenceGenome', dest='ref',
+                      type='string',
+                      help='Establishes the genome in the maf that will be used as the reference.' )
    parser.add_option( '--out', dest='out', default='myPlot',
                        type='string',
                        help='output pdf where figure will be created. No extension.' )
@@ -59,6 +62,8 @@ def initOptions( parser ):
                       help='Turns on verbose output.' )
 
 def checkOptions( options, parser, data ):
+   if options.ref == None:
+      parser.error( 'Error, specify --referenceGenome.\n' )
    dirs = { 'annotDir' : options.annotDir,
             'mafDir'   : options.mafDir }
    for d in dirs:
@@ -99,8 +104,8 @@ def checkOptions( options, parser, data ):
       data.genomeLength += c
    options.annotColors = { 'CDS':'#1f77b4', 'UTR':'#aec7e8',
                            'NXE':'#ff600e', 'NGE':'#ffbb78',
-                           'island':'#00662c', 'tandem':'#00e32c',
-                           'repeat':'#662D91' }
+                           'island':'#00662c', 'repeat':'#00e32c',
+                           'tandem':'#662D91' }
    
 def unpackData( filename, options, data ):
    t0 = time.time()
@@ -116,7 +121,7 @@ def unpackData( filename, options, data ):
 def loadAnnots( options, data ):
    data.annotWigDict = {}
    for c in data.chrNames:
-      f = glob.glob( os.path.join( options.annotDir, '*annots.%s.pickle' % c ))
+      f = glob.glob( os.path.join( options.annotDir, '%s.annots.%s.pickle' % ( options.ref, c )))
       if len( f ) == 1:
          f = f[0]
       else:
@@ -155,7 +160,7 @@ def initImage( options ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'both':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 10), dpi=options.dpi, facecolor='w' )
+   fig = plt.figure( figsize=(8, 11), dpi=options.dpi, facecolor='w' )
    return ( fig, pdf )
 
 def establishAxes( fig, options, data ):
@@ -163,12 +168,14 @@ def establishAxes( fig, options, data ):
    """
    axDict = {}
    options.axLeft = 0.1
-   options.axWidth = 0.85
-   options.axTop = 0.95
-   options.axBottom = 0.05
+   options.axWidth = 0.88
+   options.axTop = 0.98
+   options.axBottom = 0.01
    options.axHeight = options.axTop - options.axBottom
    options.chrMargin = 0.02
    curXPos = options.axLeft
+   data.labelAx = fig.add_axes( [ 0.01, options.axBottom, 0.07, options.axHeight] )
+   plt.box( on=False )
    for c in data.chrNames:
       w = (( data.chrLengthsByChrom[ c ] / float( data.genomeLength ) ) * 
             ( options.axWidth - ( options.chrMargin * float( len( data.chrNames ) - 1) )))
@@ -180,9 +187,13 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def setAxisLimits( axDict, options, data ):
+   data.labelAx.set_ylim( 0.0, 1.01 )
+   data.labelAx.set_xlim( 0.0, 1.0 )
+   data.labelAx.xaxis.set_major_locator( pylab.NullLocator() )
+   data.labelAx.yaxis.set_major_locator( pylab.NullLocator() )
    for c in axDict:
-      axDict[ c ].set_ylim( 0, 1.01 )
-      axDict[ c ].set_xlim( 0, data.chrLengthsByChrom[ c ] )
+      axDict[ c ].set_ylim( 0.0, 1.01 )
+      axDict[ c ].set_xlim( 0.0, data.chrLengthsByChrom[ c ] )
       axDict[ c ].xaxis.set_major_locator( pylab.NullLocator() )
       axDict[ c ].yaxis.set_major_locator( pylab.NullLocator() )
 
@@ -203,26 +214,30 @@ def drawChrLines( ax, options, data):
          ax.add_line( lines.Line2D( xdata=[ data.chrOffsets[ c ], data.chrOffsets[ c ] ], ydata=[ 0,1 ], c='#87B6F9'))
 
 def labelAxes( fig, axDict, options, data ):
+   data.annotYPos = []
+   data.mafYPos = []
    for c in data.chrNames:
       # chromosome names
       fs = scaleFont(c, data.chrLengthsByChrom[ c ], data.genomeLength, options.axWidth, options, data )
       xPos = ((( axDict[ c ].get_position().get_points()[1][0] - 
                  axDict[ c ].get_position().get_points()[0][0] ) / 2.0 ) + 
               axDict[ c ].get_position().get_points()[0][0])
-      fig.text( x=xPos, y=0.96, s= data.chrLabelsByChrom[ c ], horizontalalignment='center',
+      fig.text( x=xPos, y=options.axTop + 0.005, s= data.chrLabelsByChrom[ c ], horizontalalignment='center',
                   verticalalignment='bottom', fontsize=fs )
-   increment = options.axHeight / 40.0
-   j = 0.0
-   for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat']:
-      yPos = options.axTop - 0.018 - j
-      fig.text( x= options.axLeft - 0.02, y= yPos, s = a, 
-                horizontalalignment='right', verticalalignment='center', fontsize=8 )
-      j +=  increment
-   j += increment
+   increment = options.axHeight / 50.0
+   j = 0.02
+   for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
+      yPos =  1.0 - j
+      data.labelAx.text( x= 1.0, y= yPos, s = a, 
+                         horizontalalignment='right', verticalalignment='bottom', fontsize=8 )
+      data.annotYPos.append( yPos )
+      j += increment
+   j += increment / 2.0
    for n in data.orderedMafs:
-      yPos = options.axTop - 0.018 - j
-      fig.text( x= options.axLeft - 0.02, y= yPos, s = n, 
-                horizontalalignment='right', verticalalignment='center', fontsize=8 )
+      yPos =  1.0 - j
+      data.labelAx.text( x= 1.0, y= yPos + increment/ 2.0, s = '%s %.4f' % (n, float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+                         horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
+      data.mafYPos.append( yPos )
       j += increment
          
 
@@ -240,32 +255,52 @@ def scaleFont( c, chrLen, genLen, axLen, options, data):
    return fs
 
 def drawAnnotations( axDict, options, data ):
-   annotOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat']
-   annotOrder.reverse()
+   annotOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat'] # 'tandem'
    for c in data.chrNames:
+      if c not in data.annotWigDict:
+         sys.stderr.write('Error, unable to locate chromosome %s in annotWigDict!\n' % c )
+         sys.exit( 1 )
+      if 'xAxis' not in data.annotWigDict[ c ]:
+         sys.stderr.write('Error, unable to locate xAxis in annotWigDict[ %s ]!\n' % c )
+         sys.exit( 1 )
       for i in range( 0, len( data.annotWigDict[ c ]['xAxis']) ):
-         j = 33.0 / 40.0
+         j = 0
          for a in annotOrder:
-            data.annotWigDict[ c ][ a ][ i ] = j + float( data.annotWigDict[ c ][ a ][ i ] ) / 40.0
-            j +=  1.0 / 40.0
+            
+            data.annotWigDict[ c ][ a ][ i ] = data.annotYPos[ j ] + float( data.annotWigDict[ c ][ a ][ i ] ) / 50.0
+            j += 1
+      j = 0
       for a in annotOrder:
+         axDict[ c ].fill_between( x=data.annotWigDict[ c ]['xAxis'], 
+                                   y1=data.annotWigDict[ c ][ a ], 
+                                   y2=data.annotYPos[ j ],
+                                   edgecolor = options.annotColors[ a ],
+                                   facecolor = options.annotColors[ a ], 
+                                   linewidth = 0.2 )
+         j += 1
          axDict[ c ].add_line( lines.Line2D( xdata = data.annotWigDict[ c ]['xAxis'], 
                                              ydata = data.annotWigDict[ c ][ a ], 
                                              c = options.annotColors[ a ], linewidth = 0.5 ))
 
 def drawMafs( axDict, options, data ):
-   colors = { True: ( 0.1, 0.1, 0.1 ),
-              False: ( 0.4, 0.4, 0.4 ) }
+   colors = { True: ( 0.6, 0.6, 0.6 ),
+              False: ( 0.6, 0.6, 0.6 ) }
    for c in data.chrNames:
       col = True
-      j = 31.0 / 40.0
+      j = 0
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
-            data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = j + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / 40.0
-         j -=  1.0 / 40.0
+            data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / 50.0
+         
+         axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
+                                   y1=data.mafWigDict[ c ][ n ]['maf'],
+                                   y2=data.mafYPos[ j ],
+                                   edgecolor = colors[col],
+                                   facecolor = (0.8, 0.8, 0.8), linewidth = 0.2 )
          axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                              ydata = data.mafWigDict[ c ][ n ]['maf'], 
                                              c = colors[ col ], linewidth = 0.5 ))
+         j +=1
          col = not col
 
 def drawGridLines( mafAx, annotAx, options, data ):
