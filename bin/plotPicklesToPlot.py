@@ -24,6 +24,8 @@ import sys
 import re
 import time
 
+NUM_ROWS = 55.0
+
 def initOptions( parser ):
    parser.add_option( '--annotDir', dest='annotDir',
                       type='string',
@@ -35,14 +37,14 @@ def initOptions( parser ):
                       type='string',
                       help='Establishes the genome in the maf that will be used as the reference.' )
    parser.add_option( '--out', dest='out', default='myPlot',
-                       type='string',
-                       help='output pdf where figure will be created. No extension.' )
+                      type='string',
+                      help='output pdf where figure will be created. No extension.' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|both]' )
    parser.add_option( '--dpi', dest='dpi', default=300,
-                       type='int',
-                       help='Dots per inch of the output.')
+                      type='int',
+                      help='Dots per inch of the output.')
    parser.add_option( '--chrLengths', dest='chrLengths',
                       type='string',
                       help='comma separated list (no spaces) of chromosome lengths.' )
@@ -51,12 +53,14 @@ def initOptions( parser ):
                       help='comma separated list (no spaces) of chromosome names, as you want them '
                       'to appear in l-r order in the figure.' )
    parser.add_option( '--chrLabels', dest='chrLabels', default='',
-                       type='string',
-                       help='comma separated list (no spaces) of chromosome labels, as the will appear '
+                      type='string',
+                      help='comma separated list (no spaces) of chromosome labels, as the will appear '
                       'in the plot.')
    parser.add_option( '--gridLinesMajor', dest='gridLinesMajor', default=0,
-                       type='int',
-                       help='Place thick grid lines on the plot every X many bases.' )
+                      type='int',
+                      help='Place thick grid lines on the plot every X many bases.' )
+   parser.add_option( '--forceOrder', dest='forceOrder', 
+                      help='Specify either the complete ordering of the assemblies or a partial ordering. In the case of a partial ordering, the remaining assemblies will be listed in name sorted order.' )
    parser.add_option( '--verbose', dest='isVerbose', default=False,
                       action='store_true',
                       help='Turns on verbose output.' )
@@ -106,6 +110,8 @@ def checkOptions( options, parser, data ):
                            'NXE':'#ff600e', 'NGE':'#ffbb78',
                            'island':'#00662c', 'repeat':'#00e32c',
                            'tandem':'#662D91' }
+   if options.out[-4:] == '.png' or options.out[-4:] == '.pdf':
+      options.out = options.out[:-4]
    
 def unpackData( filename, options, data ):
    t0 = time.time()
@@ -140,7 +146,7 @@ def loadMafs( options, data ):
    patStr = '\S+\.(\S+)\.maf.*'
    pat = re.compile( patStr )
    for c in data.chrNames:
-      mafFiles = glob.glob( os.path.join( options.mafDir, '*maf.%s.pickle' % c ))
+      mafFiles = glob.glob( os.path.join( options.mafDir, '%s*maf.%s.pickle' % ( options.ref, c )))
       data.mafWigDict[ c ] = {}
       for f in mafFiles:
          m = re.search( pat, f )
@@ -154,7 +160,18 @@ def loadMafs( options, data ):
    for c in data.chrNames:
       for n in data.mafNamesDict:
          data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
-   data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True)
+   if not options.forceOrder:
+      data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True )
+   else:
+      spokenFor = {}
+      data.orderedMafs = options.forceOrder.split(',')
+      for n in data.orderedMafs:
+         spokenFor[ n ] = True
+      sortNames = sorted( data.mafNamesDict, key=lambda key: key )
+      for n in sortNames:
+         if n not in spokenFor:
+            data.orderedMafs.append( n )
+         
 
 def initImage( options ):
    pdf = None
@@ -219,12 +236,18 @@ def labelAxes( fig, axDict, options, data ):
    for c in data.chrNames:
       # chromosome names
       fs = scaleFont(c, data.chrLengthsByChrom[ c ], data.genomeLength, options.axWidth, options, data )
+      # get_position() returns a BBox object, and we can get out the bounding points with get_points()
       xPos = ((( axDict[ c ].get_position().get_points()[1][0] - 
                  axDict[ c ].get_position().get_points()[0][0] ) / 2.0 ) + 
               axDict[ c ].get_position().get_points()[0][0])
-      fig.text( x=xPos, y=options.axTop + 0.005, s= data.chrLabelsByChrom[ c ], horizontalalignment='center',
+      fig.text( x=xPos, y=options.axTop + 0.005, s = data.chrLabelsByChrom[ c ], horizontalalignment='center',
                   verticalalignment='bottom', fontsize=fs )
-   increment = options.axHeight / 50.0
+      fig.text( x=xPos + 0.025, y=options.axTop + 0.005, 
+                s = '(%s)' % prettyPrintLength( data.chrLengthsByChrom[ c ] ), 
+                horizontalalignment='left',
+                verticalalignment='bottom', 
+                color= (0.5, 0.5, 0.5,), fontsize=6 )
+   increment = options.axHeight / ( NUM_ROWS * 0.9 )
    j = 0.02
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
       yPos =  1.0 - j
@@ -235,8 +258,11 @@ def labelAxes( fig, axDict, options, data ):
    j += increment / 2.0
    for n in data.orderedMafs:
       yPos =  1.0 - j
-      data.labelAx.text( x= 1.0, y= yPos + increment/ 2.0, s = '%s %.4f' % (n, float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+      data.labelAx.text( x= 1.0, y= yPos + increment/3.0, s = '%s' % n, 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
+      data.labelAx.text( x= 0.6, y= yPos + increment/3.0, s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+                         horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
+                         color=(0.5, 0.5, 0.5) )
       data.mafYPos.append( yPos )
       j += increment
          
@@ -267,7 +293,7 @@ def drawAnnotations( axDict, options, data ):
          j = 0
          for a in annotOrder:
             
-            data.annotWigDict[ c ][ a ][ i ] = data.annotYPos[ j ] + float( data.annotWigDict[ c ][ a ][ i ] ) / 50.0
+            data.annotWigDict[ c ][ a ][ i ] = data.annotYPos[ j ] + float( data.annotWigDict[ c ][ a ][ i ] ) / NUM_ROWS
             j += 1
       j = 0
       for a in annotOrder:
@@ -290,7 +316,7 @@ def drawMafs( axDict, options, data ):
       j = 0
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
-            data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / 50.0
+            data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / NUM_ROWS
          
          axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
                                    y1=data.mafWigDict[ c ][ n ]['maf'],
@@ -312,6 +338,31 @@ def drawGridLines( mafAx, annotAx, options, data ):
          j += 1
          for i in range( data.chrOffsets[ c ], data.chrOffsets[ c ] + data.chrLengths[ j ], options.gridLinesMajor ):
             ax.add_line( lines.Line2D( xdata=[i, i], ydata=[0, 1], c='pink', linewidth=0.15 ))
+
+def prettyPrintLength( n ):
+    """ takes an integer with a number of bases,
+    returns a string with the number displayed nicely
+    with units.
+    """
+    if float( n ) / 1000000000.0 >= 1:
+        v = '%.2f' % ( float(n) / 1000000000.0 )
+        v = v.strip('0').strip('.')
+        units = 'Gb'
+    elif float( n ) / 1000000.0 >= 1:
+        v = '%.2f' % ( float(n) / 1000000.0 )
+        v = v.strip('0').strip('.')
+        units = 'Mb'
+    elif float( n ) / 1000.0 >= 1:
+        v = '%.2f' % ( float(n) / 1000.0 )
+        v = v.strip('0').strip('.')
+        units = 'Kb'
+    elif n == 1:
+        v = '%d' % n
+        units = 'base'
+    else:
+        v = '%d' % n
+        units = 'bases'
+    return '%s %s' % ( v, units )
 
 def main():
    data = Data()
