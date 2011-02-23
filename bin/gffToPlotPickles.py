@@ -168,7 +168,7 @@ def convertDataToWiggle( options, data ):
       annotWigDict[ c ]['xAxis'] = numpy.zeros( shape = thisChrNumBins )
       for a in annotOrder:
          d = annotDataOrNone( data.gffRecordsByChrom, c, a )
-         annotWigDict[ c ][ a ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins )
+         annotWigDict[ c ][ a ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins, options.gff )
       for j in range( 0, thisChrNumBins ):
          annotWigDict[ c ]['xAxis'][ j ] = ( float( j ) / ( thisChrNumBins - 1 )) * data.chrLengthsByChrom[ c ]
    data.annotWigDict = annotWigDict

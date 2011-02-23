@@ -130,6 +130,13 @@ def extractMafLine( line, pat, options, data ):
    ml.length = int( m.group( 4 ) )
    ml.strand = int( m.group( 5 ) + '1')
    ml.totalLength = int( m.group( 6 ) )
+   if ml.genome == options.ref:
+      if ml.totalLength != data.chrLengthsByChrom[ ml.chr ]:
+         sys.stderr.write( 'Error, file %s: maf block on chr %s has sequence length (%d) '
+                           'that does not equal the corresponding input from --chrLengths (%d). '
+                           'Line below:\n%s\n' % ( options.maf, ml.chr, ml.totalLength,
+                                                   data.chrLengthsByChrom[ ml.chr ], line ))
+         sys.exit( 1 )
    if ml.strand == -1:
       ml.start = ml.totalLength - ml.start + 1
    ml.sequence = m.group( 7 )
@@ -231,8 +238,10 @@ def readMaf( options, data ):
          if m == 'notOurGenome':
             continue
          if m.length > len( m.sequence ):
-            sys.stderr.write('Error, printed sequence length greater than actual sequence'
-                             'length ref:%s other:%s line:\'%s\'\n' % ( options.ref, options.other, line ) )
+            sys.stderr.write('Error while working on file %s :\n   '
+                             'printed sequence length (%d) greater than actual sequence '
+                             'length (%d) ref genome:%s other genome:%s line below:\n%s\n' % 
+                             ( options.maf, m.length, len( m.sequence ), options.ref, options.other, line ) )
             sys.exit( 1 )
          blockList.append( m )
       else:
@@ -264,7 +273,7 @@ def convertDataToWiggle( options, data ):
       mafWigDict[ c ] = {}
       mafWigDict[ c ]['xAxis'] = numpy.zeros( shape = thisChrNumBins )
       d = mafDataOrNone( data.mafBlocksByChrom, c )
-      mafWigDict[ c ][ 'maf' ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins )
+      mafWigDict[ c ][ 'maf' ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins, options.maf )
       for j in range( 0, thisChrNumBins ):
          mafWigDict[ c ]['xAxis'][ j ] = ( float( j ) / ( thisChrNumBins - 1 )) * data.chrLengthsByChrom[ c ]
    data.mafWigDict = mafWigDict
