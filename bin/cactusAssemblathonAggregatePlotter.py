@@ -41,6 +41,9 @@ def initOptions( parser ):
    parser.add_option( '--title', dest='title',
                       type='string',
                       help='Title placed at the top of the plot.' )
+   parser.add_option( '--xLabel', dest='xLabel',
+                      type='string', default='',
+                      help='The x axis label placed at the bottom of the plot.' )
    parser.add_option( '--out', dest='out', default='myAggPlot',
                       type='string',
                       help='output pdf where figure will be created. No extension.' )
@@ -213,9 +216,10 @@ def drawData( fig, options, data ):
                                           y2=[0]*8, 
                                           facecolor = data.colors[ i ], 
                                           linewidth = 0.0)
+   # add baseline for homespun bar plot:
    data.axDict['crazy'].add_line( lines.Line2D( xdata=[0.9, 8.6],
                                                 ydata=[0,0],
-                                                color=( 0.7, 0.7, 0.7 ),
+                                                color=( 0.6, 0.6, 0.6 ),
                                                 linewidth=0.5 ))
    for i in range(1, 9):
       data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
@@ -268,7 +272,7 @@ def drawAxisLabels( fig, options, data ):
       fig.text(x = 0.5, y = 0.96, s = options.title,
                fontsize = 18, horizontalalignment='center',
                verticalalignment='bottom')
-   fig.text(x = 0.5, y = 0.02, s = 'Contig length',
+   fig.text(x = 0.5, y = 0.02, s = options.xLabel,
             fontsize = 14, horizontalalignment='center',
             verticalalignment='bottom')
    fig.text(x = options.axLeft - 0.06, y = 0.28, s = 'Stacked Proportion',
