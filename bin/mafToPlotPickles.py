@@ -278,6 +278,20 @@ def convertDataToWiggle( options, data ):
          mafWigDict[ c ]['xAxis'][ j ] = ( float( j ) / ( thisChrNumBins - 1 )) * data.chrLengthsByChrom[ c ]
    data.mafWigDict = mafWigDict
 
+def switchToPositiveStrandCoordinates( options, data ): 
+   """ The refStart and refEnd in the maf are not necessarily
+   in a set order. If the strand is negative then the refEnd may be
+   a smaller number than the refStart. 
+   This is only confusing for our purposes, so we explicity move to
+   a positive strand only coordinate system.
+   """
+   for c in data.mafBlocksByChrom:
+      for m in data.mafBlocksByChrom[ c ]:
+         if m.refStart > m.refEnd:
+            m.refStart, m.refEnd = m.refEnd, m.refStart
+            m.refStrand *= -1
+      
+
 def trimDups( options, data ):
    """ Walk the data.mafBlockByChrom structure and 
    look for any mafBlocks that overlap on the reference.
@@ -316,7 +330,10 @@ def recordCoverage( options, data ):
    for c in data.chrNames:
       data.mafWigDict[ c ]['columnsInBlocks'] = 0
       for m in data.mafBlocksByChrom[ c ]:
-         data.mafWigDict[ c ]['columnsInBlocks'] += ( m.refEnd + 1 ) - m.refStart
+         if m.refEnd > m.refStart:
+            data.mafWigDict[ c ]['columnsInBlocks'] += ( m.refEnd + 1 ) - m.refStart
+         else:
+            data.mafWigDict[ c ]['columnsInBlocks'] += ( m.refStart + 1 ) - m.refEnd
 
 def main():
    data = Data()
@@ -325,6 +342,7 @@ def main():
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
    readMaf( options, data )
+   switchToPositiveStrandCoordinates( options, data )
    for c in data.chroms:
       data.mafBlocksByChrom[ c ].sort( key = lambda x: x.refStart, reverse=False )
    trimDups( options, data )

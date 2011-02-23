@@ -63,9 +63,10 @@ def initOptions( parser ):
                       help='Specify either the complete ordering of the assemblies or '
                       'a partial ordering. In the case of a partial ordering, the remaining '
                       'assemblies will be listed in name sorted order.' )
-   parser.add_option( '--fillOff', dest='fillOff', default=False,
+   parser.add_option( '--fill', dest='fill', default=False,
                       action='store_true',
-                      help='Turns off the fill color for the coverage wiggles.' )
+                      help='Turns on the fill color for the coverage wiggles. Useful for viewing '
+                      'highly variable coverage alignments.')
    parser.add_option( '--verbose', dest='isVerbose', default=False,
                       action='store_true',
                       help='Turns on verbose output.' )
@@ -156,14 +157,18 @@ def loadMafs( options, data ):
       for f in mafFiles:
          m = re.search( pat, f )
          if m == None:
-            sys.stderr.write('Error, unable to find genome name in %s using regex %s\n' % f, patStr )
+            sys.stderr.write('Error, unable to find genome name in filename %s using regex %s\n' % f, patStr )
             sys.exit( 1 )
          name = m.group(1)
          if name not in data.mafNamesDict:
-            data.mafNamesDict[ name ] = 0
+            data.mafNamesDict[ name ] = 0 # this serves the duel purpose of storing 
+                                          # all seen names and the count of bases aligned
          data.mafWigDict[ c ][ name ] = unpackData( f, options, data )
    for c in data.chrNames:
       for n in data.mafNamesDict:
+         # print '%s %s %d + %d = %d' % ( n, c, data.mafNamesDict[ n ],
+         #                                data.mafWigDict[ c ][ n ]['columnsInBlocks'],
+         #                                data.mafNamesDict[ n ] + data.mafWigDict[ c ][ n ]['columnsInBlocks'])
          data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
    if not options.forceOrder:
       data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True )
@@ -196,7 +201,7 @@ def establishAxes( fig, options, data ):
    options.axHeight = options.axTop - options.axBottom
    options.chrMargin = 0.02
    curXPos = options.axLeft
-   data.labelAx = fig.add_axes( [ 0.01, options.axBottom, 0.07, options.axHeight] )
+   data.labelAx = fig.add_axes( [ 0.01, options.axBottom, 0.09, options.axHeight] )
    plt.box( on=False )
    for c in data.chrNames:
       w = (( data.chrLengthsByChrom[ c ] / float( data.genomeLength ) ) * 
@@ -252,24 +257,30 @@ def labelAxes( fig, axDict, options, data ):
                 horizontalalignment='left',
                 verticalalignment='bottom', 
                 color= (0.5, 0.5, 0.5,), fontsize=6 )
-   increment = options.axHeight / ( NUM_ROWS * 0.9 )
+   data.increment = options.axHeight / ( NUM_ROWS * 0.9 )
    j = 0.02
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
       yPos =  1.0 - j
-      data.labelAx.text( x= 1.0, y= yPos, s = a, 
+      data.labelAx.text( x= 0.8, y= yPos, s = a, 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=8 )
       data.annotYPos.append( yPos )
-      j += increment
-   j += increment / 2.0
+      j += data.increment
+   j += data.increment / 2.0
    for n in data.orderedMafs:
       yPos =  1.0 - j
-      data.labelAx.text( x= 1.0, y= yPos + increment/3.0, s = '%s' % n, 
+      data.labelAx.text( x= 0.8, y= yPos + data.increment/3.0, s = '%s' % n, 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
-      data.labelAx.text( x= 0.6, y= yPos + increment/3.0, s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+      data.labelAx.text( x= 0.45, y= yPos + data.increment/3.0, s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
                          color=(0.5, 0.5, 0.5) )
+      # draw vectical lines for each maf row
+      # data.labelAx.add_line( lines.Line2D( xdata=[0.95, 0.95],
+      #                                      ydata=[yPos + data.increment / 2.0 - data.increment / 2.2, 
+      #                                             yPos + data.increment / 2.0 + data.increment / 2.2 ],
+      #                                      color= (0.8, 0.8, 0.8),
+      #                                      linewidth=0.3))
       data.mafYPos.append( yPos )
-      j += increment
+      j += data.increment
          
 
 def scaleFont( c, chrLen, genLen, axLen, options, data):
@@ -302,35 +313,48 @@ def drawAnnotations( axDict, options, data ):
             j += 1
       j = 0
       for a in annotOrder:
+         axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
+                                                ydata=[data.annotYPos[ j ], data.annotYPos[ j ]],
+                                                color= options.annotColors[ a ],
+                                                linewidth=0.3))
          axDict[ c ].fill_between( x=data.annotWigDict[ c ]['xAxis'], 
                                    y1=data.annotWigDict[ c ][ a ], 
                                    y2=data.annotYPos[ j ],
-                                   edgecolor = options.annotColors[ a ],
                                    facecolor = options.annotColors[ a ], 
-                                   linewidth = 0.2 )
+                                   linewidth = 0.0 )
          j += 1
-         axDict[ c ].add_line( lines.Line2D( xdata = data.annotWigDict[ c ]['xAxis'], 
-                                             ydata = data.annotWigDict[ c ][ a ], 
-                                             c = options.annotColors[ a ], linewidth = 0.5 ))
+         # axDict[ c ].add_line( lines.Line2D( xdata = data.annotWigDict[ c ]['xAxis'], 
+         #                                     ydata = data.annotWigDict[ c ][ a ], 
+         #                                     c = options.annotColors[ a ], linewidth = 0.5 ))
 
 def drawMafs( axDict, options, data ):
-   colors = { True: ( 0.6, 0.6, 0.6 ),
-              False: ( 0.6, 0.6, 0.6 ) }
+   colors = { True: ( 0.2, 0.2, 0.2 ),
+              False: ( 0.2, 0.2, 0.2 ) }
+   myGray = ( 0.8, 0.8, 0.8 )
    for c in data.chrNames:
       col = True
       j = 0
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
             data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / NUM_ROWS
-         if not options.fillOff:
+         axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
+                                             ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
+                                             color= myGray,
+                                             linewidth=0.3))
+         if options.fill:
+            axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
+                                                ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
+                                                color= myGray,
+                                                linewidth=0.3))
             axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
                                       y1=data.mafWigDict[ c ][ n ]['maf'],
                                       y2=data.mafYPos[ j ],
-                                      edgecolor = colors[ col ],
-                                      facecolor = (0.8, 0.8, 0.8), linewidth = 0.3 )
-         axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
-                                             ydata = data.mafWigDict[ c ][ n ]['maf'], 
-                                             c = colors[ col ], linewidth = 0.3 ))
+                                      facecolor = myGray,
+                                      linewidth = 0.0 )
+         else:
+            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+                                                ydata = data.mafWigDict[ c ][ n ]['maf'], 
+                                                c = colors[ col ], linewidth = 0.3 ))
          j +=1
          col = not col
 

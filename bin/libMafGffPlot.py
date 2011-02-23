@@ -79,19 +79,20 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     vec = numpy.zeros( shape = ( numBins ))
     if objList == None or len( objList ) < 1:
         return vec
-    
     if isinstance( objList[0], GffRecord ):
         maxCount = 0
         for a in objList:
             # index position in a 'numBins' length array.
             if a.start > featLen or a.end > featLen:
-                sys.stderr.write( 'Error, file %s has annotation on chr %s with bounds [%d - %d] which are beyond featLen (%d)\n' %
+                sys.stderr.write( 'Error, file %s has annotation on chr %s '
+                                  'with bounds [%d - %d] which are beyond featLen (%d)\n' %
                                   ( filename, a.chr, a.start, a.end, featLen ))
                 sys.exit( 1 )
             for i in range( a.start, a.end + 1 ):
-                vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] += 1
-                if vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] > maxCount:
-                    maxCount = vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ]
+                pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) )))
+                vec[ pos ] += 1
+                if vec[ pos ] > maxCount:
+                    maxCount = vec[ pos ]
         for i in range( 0, numBins):
             vec[ i ] /= float( maxCount )
         return vec
@@ -99,12 +100,14 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         maxCount = float( featLen ) / numBins
         for m in objList:
             if m.refStart > featLen or m.refEnd > featLen:
-                sys.stderr.write( 'Error, file %s has maf block on chr %s with bounds [%d - %d] which are beyond featLen (%d)\n' %
+                sys.stderr.write( 'Error, file %s has maf block on chr %s with '
+                                  'bounds [%d - %d] which are beyond featLen (%d)\n' %
                                   ( filename, m.refChr, m.refStart, m.refEnd, featLen ))
                 sys.exit( 1 )
             # index position in a 'numBins' length array.
             for i in range( m.refStart, m.refEnd + 1 ):
-                vec[ int(( float( i ) / featLen ) * ( numBins - 1 ) ) ] += 1
+                pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+                vec[ pos ] += 1
         for i in range( 0, numBins):
             vec[ i ] /= float( maxCount )
         return vec
