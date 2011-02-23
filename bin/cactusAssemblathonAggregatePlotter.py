@@ -4,6 +4,18 @@ cactusAssemblathonAggregatePlotter.py
 22 February 2011
 dent earl, dearl@soe.ucsc.edu
 
+This script takes an aggregate text file and produces
+a pretty picture. Files look like:
+
+[dearl@hgwdev demo]$ cat agg.A1.txt 
+columnLength	0	100	1000	10000	100000	1000000	10000000	100000000
+hapA1/hapA2/assembly	101277168	101277168	101180952	91579210	1828234	0	0	0
+hapA1/hapA2/!assembly	9440056	9440056	9536272	19138014	108888990	110717224	110717224	110717224
+hapA1/!hapA2/assembly	670370	670370	669794	594560	15208	0	0	0
+hapA1/!hapA2/!assembly	805664	805664	806240	881474	1460826	1476034	1476034	1476034
+!hapA1/hapA2/assembly	733168	733168	732480	664854	9869	0	0	0
+!hapA1/hapA2/!assembly	799267	799267	799955	867581	1522566	1532435	1532435	1532435
+!hapA1/!hapA2/assembly	195281	195281	192837	151029	694	0	0	0
 
 """
 from libMafGffPlot import Data
@@ -51,7 +63,6 @@ def checkOptions( options, parser ):
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.' % options.dpi )
    options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                            'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
-   
 
 def readFile( filename ):
    f = open( filename, 'r' )
@@ -79,7 +90,7 @@ def setAxisLimits( axDict, options, data ):
    #axDict[ 'main' ].xaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
    axDict[ 'crazy' ].set_xlim( 0.9, 8.6 )
-   axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
+   #axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'crazy' ].xaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'blowUp' ].set_ylim( 0.9, 1.01 )
    axDict[ 'blowUp' ].set_xlim( 0.9, 8.1 )
@@ -95,8 +106,8 @@ def establishAxes( fig, options, data ):
    axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
                                       options.axWidth , 0.58 ] )
    plt.box( on=False )
-   axDict[ 'crazy' ] = fig.add_axes( [ options.axLeft, 0.655,
-                                       options.axWidth , 0.085 ] )
+   axDict[ 'crazy' ] = fig.add_axes( [ options.axLeft, 0.68, # 0.655
+                                       options.axWidth , 0.04 ] ) # 0.085
    plt.box( on=False )
    axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.75,
                                        options.axWidth , 0.22 ] )
@@ -104,6 +115,13 @@ def establishAxes( fig, options, data ):
    setAxisLimits( axDict, options, data )
    data.axDict = axDict
    return ( axDict )
+
+def establishTicks( options, data ):
+   data.xData = range(1, 9)
+   data.axDict['main'].set_xticks( data.xData )
+   data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
+   data.axDict['crazy'].set_yticks( [0, 1 ] )
+   data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
@@ -130,7 +148,7 @@ def prettyList( uglyList ):
 
 def vectorAddition( v1, v2 ):
    if len( v1 ) != len( v2 ):
-      sys.stderr.write( 'Error, lists are not the same length, cannot add %s to %s\n' % (v1, v2))
+      sys.stderr.write( 'Error, lists are not the same length, cannot add %s to %s\n' % ( str(v1), str(v2) ))
       sys.exit(1)
    r = []
    for i in range( 0, len(v1)):
@@ -149,13 +167,13 @@ def normalizeData( options, data ):
    for i in range( 0, len( data.valuesDict[ '!hapA1/!hapA2/assembly' ])):
       data.valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
       
-   # verify the remaining columns all have the same sum
+   # collect column sums, they should all be the same
    colSum = [ 0 ] * 8
    for i in range( 0, 8 ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
                 'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly']:
          colSum[ i ] += data.valuesDict[ j ][ i ]
-   # check column sums
+   # verify the columns all have the same sum
    for i in range(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
          sys.stderr.write('Error, column sums do not equal one another, col 0 != col %d\n' % i)
@@ -195,6 +213,10 @@ def drawData( fig, options, data ):
                                           y2=[0]*8, 
                                           facecolor = data.colors[ i ], 
                                           linewidth = 0.0)
+   data.axDict['crazy'].add_line( lines.Line2D( xdata=[0.9, 8.6],
+                                                ydata=[0,0],
+                                                color=( 0.7, 0.7, 0.7 ),
+                                                linewidth=0.5 ))
    for i in range(1, 9):
       data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
                                                          height = data.valuesDict['!hapA1/!hapA2/assembly'][i-1],
@@ -264,18 +286,15 @@ def main():
    axDict = establishAxes( fig, options, data )
    
    data.valuesDict = readFile( options.file )
-   data.xData = range(1, 9)
-   axDict['main'].set_xticks( data.xData )
-   axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
-
    normalizeData( options, data )
+   
+   establishTicks( options, data )
    drawData( fig, options, data )
    drawLegend( options, data )
    drawAxisLabels( fig, options, data )
    
    setAxisLimits( axDict, options, data )
    writeImage( fig, pdf, options, data )
-   
 
 if __name__ == '__main__':
    main()
