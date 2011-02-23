@@ -226,7 +226,7 @@ def readMaf( options, data ):
          line = line.strip()
          m = extractMafLine( line, pat, options, data )
          if m == None:
-            sys.stderr.write('Error, regexp fail on file %s line : \'%s\'\nRegex : \'%s\'\n' % ( maf, line, regex ) )
+            sys.stderr.write('Error, regexp fail on file %s line : \'%s\'\nRegex : \'%s\'\n' % ( options.maf, line, regex ) )
             sys.exit( 1 )
          if m == 'notOurGenome':
             continue
