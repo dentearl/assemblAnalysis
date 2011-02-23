@@ -60,7 +60,12 @@ def initOptions( parser ):
                       type='int',
                       help='Place thick grid lines on the plot every X many bases.' )
    parser.add_option( '--forceOrder', dest='forceOrder', 
-                      help='Specify either the complete ordering of the assemblies or a partial ordering. In the case of a partial ordering, the remaining assemblies will be listed in name sorted order.' )
+                      help='Specify either the complete ordering of the assemblies or '
+                      'a partial ordering. In the case of a partial ordering, the remaining '
+                      'assemblies will be listed in name sorted order.' )
+   parser.add_option( '--fillOff', dest='fillOff', default=False,
+                      action='store_true',
+                      help='Turns off the fill color for the coverage wiggles.' )
    parser.add_option( '--verbose', dest='isVerbose', default=False,
                       action='store_true',
                       help='Turns on verbose output.' )
@@ -317,15 +322,15 @@ def drawMafs( axDict, options, data ):
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
             data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / NUM_ROWS
-         
-         axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
-                                   y1=data.mafWigDict[ c ][ n ]['maf'],
-                                   y2=data.mafYPos[ j ],
-                                   edgecolor = colors[col],
-                                   facecolor = (0.8, 0.8, 0.8), linewidth = 0.2 )
+         if not options.fillOff:
+            axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
+                                      y1=data.mafWigDict[ c ][ n ]['maf'],
+                                      y2=data.mafYPos[ j ],
+                                      edgecolor = colors[ col ],
+                                      facecolor = (0.8, 0.8, 0.8), linewidth = 0.3 )
          axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                              ydata = data.mafWigDict[ c ][ n ]['maf'], 
-                                             c = colors[ col ], linewidth = 0.5 ))
+                                             c = colors[ col ], linewidth = 0.3 ))
          j +=1
          col = not col
 
