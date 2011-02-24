@@ -73,9 +73,11 @@ def readFile( filename ):
    for line in f:
       line = line.strip()
       d = line.split('\t')
-      data[ d[0] ] = d[ 1: ]
+      data[ d[0] ] = d[ 1:-1 ]
+      # we only go up to length - 1 because we don't need to go to 100,000,000
+      # which is the last column presently
    for d in data:
-      for i in range(0, len( data[d] )):
+      for i in range(0, len( data[d])):
          data[d][i] = int( data[d][i] )
    f.close()
    return data
@@ -89,14 +91,14 @@ def initImage( options ):
 
 def setAxisLimits( axDict, options, data ):
    axDict[ 'main' ].set_ylim( 0.0, 1.01 )
-   axDict[ 'main' ].set_xlim( 0.9, 8.1 )
+   axDict[ 'main' ].set_xlim( 0.9, 7.1 )
    #axDict[ 'main' ].xaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
-   axDict[ 'crazy' ].set_xlim( 0.9, 8.6 )
+   axDict[ 'crazy' ].set_xlim( 0.9, 7.6 )
    #axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'crazy' ].xaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'blowUp' ].set_ylim( 0.9, 1.01 )
-   axDict[ 'blowUp' ].set_xlim( 0.9, 8.1 )
+   axDict[ 'blowUp' ].set_xlim( 0.9, 7.1 )
    axDict[ 'blowUp' ].xaxis.set_major_locator( pylab.NullLocator() )
    #axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
 
@@ -120,7 +122,7 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def establishTicks( options, data ):
-   data.xData = range(1, 9)
+   data.xData = range(1, 8)
    data.axDict['main'].set_xticks( data.xData )
    data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    data.axDict['crazy'].set_yticks( [0, 1 ] )
@@ -171,8 +173,8 @@ def normalizeData( options, data ):
       data.valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
       
    # collect column sums, they should all be the same
-   colSum = [ 0 ] * 8
-   for i in range( 0, 8 ):
+   colSum = [ 0 ] * 7
+   for i in range( 0, 7 ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
                 'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly']:
          colSum[ i ] += data.valuesDict[ j ][ i ]
@@ -187,13 +189,13 @@ def normalizeData( options, data ):
    data.valuesDict[ 'hapA1ORhapA2/!assembly' ] = vectorAddition( data.valuesDict['!hapA1/hapA2/!assembly'], 
                                                                  data.valuesDict['hapA1/!hapA2/!assembly'] )
    # normalize the data
-   for i in range( 0, 8 ):
+   for i in range( 0, 7 ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1ORhapA2/assembly',
                 'hapA1ORhapA2/!assembly' ]:
          data.valuesDict[ j ][ i ] /= float( colSum[ 0 ] )
    # stack the data
    options.topBotOrder.reverse()
-   for i in range( 0, 8 ):
+   for i in range( 0, 7 ):
       cumSum = 0.0
       for j in options.topBotOrder:
          data.valuesDict[ j ][ i ] += cumSum
@@ -208,12 +210,12 @@ def drawData( fig, options, data ):
       i += 1
       data.axDict['main'].fill_between( x=data.xData,
                                         y1=data.valuesDict[ n ],
-                                        y2=[0]*8, 
+                                        y2=[0]*7, 
                                         facecolor = data.colors[ i ],
                                         linewidth = 0.0)
       data.axDict['blowUp'].fill_between( x=data.xData,
                                           y1=data.valuesDict[ n ],
-                                          y2=[0]*8, 
+                                          y2=[0]*7, 
                                           facecolor = data.colors[ i ], 
                                           linewidth = 0.0)
    # add baseline for homespun bar plot:
@@ -221,13 +223,13 @@ def drawData( fig, options, data ):
                                                 ydata=[0,0],
                                                 color=( 0.6, 0.6, 0.6 ),
                                                 linewidth=0.5 ))
-   for i in range(1, 9):
+   for i in range(1, 8):
       data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
                                                          height = data.valuesDict['!hapA1/!hapA2/assembly'][i-1],
                                                          width=0.5,
                                                          color='r',
                                                          edgecolor=None) )
-   #data.axDict['crazy'].bar( range(1, 9), data.valuesDict['!hapA1/!hapA2/assembly'],
+   #data.axDict['crazy'].bar( range(1, 8), data.valuesDict['!hapA1/!hapA2/assembly'],
    #                          width=0.5, color='r', linewidth = 0.0 )
    #fig.text( x = options.axLeft, y = 0.8, s=data.crazyMax )
 
@@ -291,7 +293,7 @@ def main():
    
    data.valuesDict = readFile( options.file )
    normalizeData( options, data )
-   
+
    establishTicks( options, data )
    drawData( fig, options, data )
    drawLegend( options, data )
