@@ -87,7 +87,8 @@ def checkOptions( options, parser, data ):
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    if len( data.chrLengths ) != len( data.chrNames ):
-      parser.error('Error, number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
+      parser.error('Error, number of elemnts in --chrLengths not equal to '
+                   'number of elements in --chrNames.\n')
    for i in range( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
@@ -95,7 +96,8 @@ def checkOptions( options, parser, data ):
    for c in data.chrLengths:
       data.genomeLength += c
    if options.numBins > data.genomeLength:
-      parser.error('Error, number of bins (%d) must be < length of genome (%d).' % ( options.numBins, data.genomeLength ))
+      parser.error('Error, number of bins (%d) must be '
+                   '< length of genome (%d).' % ( options.numBins, data.genomeLength ))
 
 def packData( options, data, prot='py23Bin' ):
    """ prot refers to the protocol to use.
@@ -221,6 +223,10 @@ def extractBlockPairs( blockList, options, data ):
          extendPairSet( blockList[ i ], blockList[ j ], options, data )
 
 def readMaf( options, data ):
+   """ read the maf, populate the blockList, then
+   eventually things get stuffed in data.mafBlocksByChrom
+   by way of extractBlockPairs() -> extendPairSet()
+   """
    regex = 's\s+([\w\d\-]+?)\.([\w\d\.\+\-]+?)\s+(\d+)\s+(\d+)\s+([-+])\s+(\d+)\s+([\-actgurykmswbdhvnACTGURYKMSWBDHVN]+)'
    pat = re.compile( regex )
    mf = open( options.maf )
@@ -233,7 +239,8 @@ def readMaf( options, data ):
          line = line.strip()
          m = extractMafLine( line, pat, options, data )
          if m == None:
-            sys.stderr.write('Error, regexp fail on file %s line : \'%s\'\nRegex : \'%s\'\n' % ( options.maf, line, regex ) )
+            sys.stderr.write('Error, regexp fail on file %s line: \'%s\'\n'
+                             'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
             sys.exit( 1 )
          if m == 'notOurGenome':
             continue
@@ -256,7 +263,7 @@ def mafDataOrNone( mafBlocksByChrom, c ):
    for a given chromosome, c, and a given annotation type,
    a, or return None.
    """
-   if c not in mafBlocksByChrom:
+   if len( mafBlocksByChrom[c ] ) < 1:
       return None
    else:
       return mafBlocksByChrom[ c ]
@@ -271,11 +278,23 @@ def convertDataToWiggle( options, data ):
    for c in data.chrNames:
       thisChrNumBins = int( ( float( data.chrLengthsByChrom[ c ] ) / data.genomeLength ) * options.numBins )
       mafWigDict[ c ] = {}
-      mafWigDict[ c ]['xAxis'] = numpy.zeros( shape = thisChrNumBins )
       d = mafDataOrNone( data.mafBlocksByChrom, c )
-      mafWigDict[ c ][ 'maf' ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins, options.maf )
-      for j in range( 0, thisChrNumBins ):
-         mafWigDict[ c ]['xAxis'][ j ] = ( float( j ) / ( thisChrNumBins - 1 )) * data.chrLengthsByChrom[ c ]
+      if d == None:
+         mafWigDict[ c ] = { 'maf'   : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e2': numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e3': numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e4': numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e5': numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e6': numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e7': numpy.zeros( shape = ( thisChrNumBins )),
+                             'xAxis' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'blockEdgeDensity': numpy.zeros( shape = ( thisChrNumBins )) }
+         for i in range( 0, thisChrNumBins ):
+            mafWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
+                                           float( data.chrLengthsByChrom[ c ] ) )
+      else:
+         mafWigDict[ c ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], 
+                                                  thisChrNumBins, options.maf )
    data.mafWigDict = mafWigDict
 
 def switchToPositiveStrandCoordinates( options, data ): 
@@ -290,8 +309,13 @@ def switchToPositiveStrandCoordinates( options, data ):
          if m.refStart > m.refEnd:
             m.refStart, m.refEnd = m.refEnd, m.refStart
             m.refStrand *= -1
+         # sanity check
+         if m.refStart > data.chrLengthsByChrom[ c ] or m.refEnd > data.chrLengthsByChrom[ c ]:
+            sys.stderr.write( 'Error, file %s has maf block on chr %s with '
+                              'bounds [%d - %d] which are beyond featLen (%d)\n' %
+                              ( options.maf, m.refChr, m.refStart, m.refEnd, data.chrLengthsByChrom[ c ] ))
+            sys.exit( 1 )
       
-
 def trimDups( options, data ):
    """ Walk the data.mafBlockByChrom structure and 
    look for any mafBlocks that overlap on the reference.
@@ -326,7 +350,6 @@ def recordCoverage( options, data ):
    by alignments. Stores this under the key 'coverage' as
    a float.
    """
-   columnsInBlocks = 0
    for c in data.chrNames:
       data.mafWigDict[ c ]['columnsInBlocks'] = 0
       for m in data.mafBlocksByChrom[ c ]:

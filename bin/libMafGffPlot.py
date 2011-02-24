@@ -76,10 +76,14 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     from libMafGffPlot import MafBlock
     import numpy
     import sys
-    vec = numpy.zeros( shape = ( numBins ))
     if objList == None or len( objList ) < 1:
-        return vec
+            return None
     if isinstance( objList[0], GffRecord ):
+        """ the Gff return is a single numpy vector of numBins length
+        """
+        vec = numpy.zeros( shape = ( numBins ))
+        if objList == None or len( objList ) < 1:
+            return vec
         maxCount = 0
         for a in objList:
             # index position in a 'numBins' length array.
@@ -97,19 +101,55 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
             vec[ i ] /= float( maxCount )
         return vec
     elif isinstance( objList[0], MafBlock ):
-        maxCount = float( featLen ) / numBins
+        """ the Maf return is a dictionary with the following keys
+        maf               all maf block bases
+        maf1e2            maf blocks 100 or greater
+        maf1e3            maf blocks 1,000 or greater
+        maf1e4            maf blocks 10,000 or greater
+        maf1e5            maf blocks 100,000 or greater
+        maf1e6            maf blocks 1,000,000 or greater
+        maf1e7            maf blocks 10,000,000 or greater
+        xAxis             x Values
+        blockEdgeDensity  each block has two edges, a left and a right
+        """
+        data = { 'maf'   : numpy.zeros( shape = ( numBins )),
+                 'maf1e2': numpy.zeros( shape = ( numBins )),
+                 'maf1e3': numpy.zeros( shape = ( numBins )),
+                 'maf1e4': numpy.zeros( shape = ( numBins )),
+                 'maf1e5': numpy.zeros( shape = ( numBins )),
+                 'maf1e6': numpy.zeros( shape = ( numBins )),
+                 'maf1e7': numpy.zeros( shape = ( numBins )),
+                 'xAxis' : numpy.zeros( shape = ( numBins )),
+                 'blockEdgeDensity': numpy.zeros( shape = ( numBins )) }
+        maxPossibleCount = float( featLen ) / float( numBins )
+        # populate xAxis
+        for i in range( 0, numBins ):
+            data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
         for m in objList:
-            if m.refStart > featLen or m.refEnd > featLen:
-                sys.stderr.write( 'Error, file %s has maf block on chr %s with '
-                                  'bounds [%d - %d] which are beyond featLen (%d)\n' %
-                                  ( filename, m.refChr, m.refStart, m.refEnd, featLen ))
-                sys.exit( 1 )
-            # index position in a 'numBins' length array.
+            # do block edges
+            for r in [ m.refStart, m.refEnd ]:
+                pos = int(( float( m.refStart ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+                data['blockEdgeDensity'][ pos ] += 1
+            # do all of the different maf block flavors
             for i in range( m.refStart, m.refEnd + 1 ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
-                vec[ pos ] += 1
-        for i in range( 0, numBins):
-            vec[ i ] /= float( maxCount )
-        return vec
+                data['maf'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 100:
+                    data['maf1e2'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 1000:
+                    data['maf1e3'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 10000:
+                    data['maf1e4'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 100000:
+                    data['maf1e5'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 1000000:
+                    data['maf1e6'][ pos ] += 1
+                if ( m.refEnd - m.refStart ) >= 10000000:
+                    data['maf1e7'][ pos ] += 1
+        for r in ['maf', 'maf1e2', 'maf1e3', 'maf1e4', 'maf1e5',
+                  'maf1e6', 'maf1e7', 'blockEdgeDensity' ]:
+            for i in range( 0, numBins):
+                data[ r ][ i ] /= float( maxPossibleCount )
+        return data
     else:
         return None
