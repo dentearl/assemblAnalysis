@@ -25,6 +25,7 @@ import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter # minor tick marks
 import numpy
 from optparse import OptionParser
 import os
@@ -127,6 +128,10 @@ def establishTicks( options, data ):
    data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    data.axDict['crazy'].set_yticks( [0, 1 ] )
    data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
+   minorLocator = MultipleLocator( 5 )
+   data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
+   data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
+                                       0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
