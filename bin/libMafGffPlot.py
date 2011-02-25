@@ -122,6 +122,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                  'xAxis' : numpy.zeros( shape = ( numBins )),
                  'blockEdgeDensity': numpy.zeros( shape = ( numBins )) }
         maxPossibleCount = float( featLen ) / float( numBins )
+        maxBEDCount = 0
         # populate xAxis
         for i in range( 0, numBins ):
             data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
@@ -130,6 +131,8 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
             for r in [ m.refStart, m.refEnd ]:
                 pos = int(( float( m.refStart ) / (( featLen + 1.0 ) / float( numBins ) ) ))
                 data['blockEdgeDensity'][ pos ] += 1
+                if data['blockEdgeDensity'][ pos ] > maxBEDCount:
+                    maxBEDCount = data['blockEdgeDensity'][ pos ]
             # do all of the different maf block flavors
             for i in range( m.refStart, m.refEnd + 1 ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
@@ -146,10 +149,12 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                     data['maf1e6'][ pos ] += 1
                 if ( m.refEnd - m.refStart ) >= 10000000:
                     data['maf1e7'][ pos ] += 1
-        for r in ['maf', 'maf1e2', 'maf1e3', 'maf1e4', 'maf1e5',
-                  'maf1e6', 'maf1e7', 'blockEdgeDensity' ]:
-            for i in range( 0, numBins):
+        for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
+                   'maf1e5', 'maf1e6', 'maf1e7' ]:
+            for i in range( 0, numBins ):
                 data[ r ][ i ] /= float( maxPossibleCount )
+        for i in range( 0, numBins ):
+            data[ 'blockEdgeDensity' ][ i ] /= float( maxBEDCount )
         return data
     else:
         return None
