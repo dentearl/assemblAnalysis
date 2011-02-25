@@ -4,7 +4,7 @@ export SHELLOPTS=pipefail
 # 26 Jan 2011
 ##############################
 # EDIT THESE:
-PROJECT_DIR:=/hive/users/dearl/assemblathon/prod
+PROJECT_DIR:=/hive/users/dearl/assemblathon/prodTest
 BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # It is assumed that all assemblies will be in fasta format, gzipped
@@ -70,7 +70,7 @@ updateSubmissions: downloadSubmissions
 # RepeatMasker freaks out if you have 50 characters or more.
 # We reserve 9 characters for future use.
 ${RAW_DIR}/%.map: ${RAW_DIR}/%.fa.gz
-	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --prefix $(patsub %_contigs,%,${*F}) --createMap $@.tmp
+	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --prefix $(patsubst %_contigs,%,${*F}) --createMap $@.tmp
 	mv $@.tmp $@
 
 # extract files, remove everything in the header line after the unique int id
@@ -78,10 +78,10 @@ ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.map
 	mkdir -p $(dir $@)
 	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --map ${RAW_DIR}/${*F}.map --goForward > $@.${tmpExt}3 # change headers to contain only unique IDs
 	${BIN_DIR}/removeEmptyContigs.py < $@.${tmpExt}3 > $@.${tmpExt}2  # remove the empty contigs from the sequence file
-#faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
-	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}2 > $@.${tmpExt} # mask weird IUPACs
-	rm $@.${tmpExt}1 $@.${tmpExt}2 $@.${tmpExt}3
-	mv $@.${tmpExt} $@
+#	faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
+#	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}2 > $@.${tmpExt} # mask out IUPACs
+	rm -rf $@.${tmpExt}1 $@.${tmpExt}3
+	mv $@.${tmpExt}2 $@
 
 # # run trf on fasta, get the .bed
 ${TRF_DIR}/%.trf.bed: ${ASSEMBLIES_DIR}/%.fa
