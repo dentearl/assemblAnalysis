@@ -24,7 +24,7 @@ import sys
 import re
 import time
 
-NUM_ROWS = 55.0
+#NUM_ROWS = 55.0
 
 def initOptions( parser ):
    parser.add_option( '--annotDir', dest='annotDir',
@@ -67,6 +67,13 @@ def initOptions( parser ):
                       action='store_true',
                       help='Turns on the fill color for the coverage wiggles. Useful for viewing '
                       'highly variable coverage alignments.')
+   parser.add_option( '--stackFill', dest='stackFill', default=False,
+                      action='store_true',
+                      help='Turns on the fill color for the coverage wiggles. Shows different coverage '
+                      'thresholds in different colors. Thresholds: 0, 1e2, 1e3,...,1e7.')
+   parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
+                      action='store_true',
+                      help='Turns on the wiggle track that shows relative density of block edges. ' )
    parser.add_option( '--verbose', dest='isVerbose', default=False,
                       action='store_true',
                       help='Turns on verbose output.' )
@@ -88,7 +95,8 @@ def checkOptions( options, parser, data ):
    for a in opts:
       if opts[ a ] == None:
          parser.error('Error, specify --%s.\n' % a )
-
+   if options.stackFill and options.fill:
+      parser.error('Error, specify either --stackFill or --fill, not both.\n')
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    data.chrLabelsByChrom  = {}
@@ -181,9 +189,11 @@ def loadMafs( options, data ):
       for n in sortNames:
          if n not in spokenFor:
             data.orderedMafs.append( n )
+   data.numberOfMafs = len( data.mafNamesDict )
+   data.numRows = data.numberOfMafs + 10 # number of total rows in the figure
          
 
-def initImage( options ):
+def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'both':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
@@ -257,7 +267,7 @@ def labelAxes( fig, axDict, options, data ):
                 horizontalalignment='left',
                 verticalalignment='bottom', 
                 color= (0.5, 0.5, 0.5,), fontsize=6 )
-   data.increment = options.axHeight / ( NUM_ROWS * 0.9 )
+   data.increment = options.axHeight / ( ( data.numRows ) * 0.9 )
    j = 0.02
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
       yPos =  1.0 - j
@@ -309,7 +319,9 @@ def drawAnnotations( axDict, options, data ):
          j = 0
          for a in annotOrder:
             
-            data.annotWigDict[ c ][ a ][ i ] = data.annotYPos[ j ] + float( data.annotWigDict[ c ][ a ][ i ] ) / NUM_ROWS
+            data.annotWigDict[ c ][ a ][ i ] =  ( data.annotYPos[ j ] + 
+                                                  float( data.annotWigDict[ c ][ a ][ i ] ) / 
+                                                  data.numRows )
             j += 1
       j = 0
       for a in annotOrder:
@@ -328,45 +340,69 @@ def drawAnnotations( axDict, options, data ):
          #                                     c = options.annotColors[ a ], linewidth = 0.5 ))
 
 def drawMafs( axDict, options, data ):
-   colors = { True: ( 0.2, 0.2, 0.2 ),
-              False: ( 0.2, 0.2, 0.2 ) }
+   alternatingColors = { True: ( 0.2, 0.2, 0.2 ),
+                         False: ( 0.2, 0.2, 0.2 ) }
    myGray = ( 0.8, 0.8, 0.8 )
+   stackFillColors = [ ( '#17becf' ), # dark blue
+                       ( '#9edae5' ), # light blue
+                       ( '#9467bd' ), # dark purple
+                       ( '#c5b0d5' ), # light purple
+                       ( '#7f7f7f' ), # dark gray
+                       ( '#c7c7c7' ), # light gray
+                       ( '#ff7f0e' ), # bright orange
+                       ( '#ffbb78' )  # light orange
+                       ]
    for c in data.chrNames:
       col = True
       j = 0
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
-            data.mafWigDict[ c ][ n ][ 'maf' ][ i ] = data.mafYPos[j] + float( data.mafWigDict[ c ][ n ][ 'maf' ][ i ] ) / NUM_ROWS
+            for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
+                       'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeDensity' ]:
+               # adjust the height and the position of the track to fit in the plot
+               data.mafWigDict[ c ][ n ][ r ][ i ] = ( data.mafYPos[j] + 
+                                                       float( data.mafWigDict[ c ][ n ][ r ][ i ] ) / 
+                                                       data.numRows )
+         # draw the baseline
          axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
                                              ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
                                              color= myGray,
                                              linewidth=0.3))
+         # Basic fills
          if options.fill:
             axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
                                                 ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
                                                 color= myGray,
                                                 linewidth=0.3))
+            
             axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
                                       y1=data.mafWigDict[ c ][ n ]['maf'],
                                       y2=data.mafYPos[ j ],
                                       facecolor = myGray,
                                       linewidth = 0.0 )
+            # Stack Fills
+         elif options.stackFill:
+            k = -1
+            for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
+                       'maf1e5', 'maf1e6', 'maf1e7' ]:
+               k += 1
+               axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
+                                         y1=data.mafWigDict[ c ][ n ][ r ],
+                                         y2=data.mafYPos[ j ],
+                                         facecolor = stackFillColors[ k ],
+                                         linewidth = 0.0 )
+            # No Fills, basic wiggle
          else:
             axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                 ydata = data.mafWigDict[ c ][ n ]['maf'], 
-                                                c = colors[ col ], linewidth = 0.3 ))
+                                                c = alternatingColors[ col ], linewidth = 0.3 ))
+         # --blockEdgeDensity track
+         if options.blockEdgeDensity == True:
+            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+                                                ydata = data.mafWigDict[ c ][ n ]['blockEdgeDensity'], 
+                                                c = '#FA698D', linewidth = 0.3 ))
          j +=1
          col = not col
-
-def drawGridLines( mafAx, annotAx, options, data ):
-   if options.gridLinesMajor < 1:
-      return
-   for ax in [ mafAx, annotAx ]:
-      j = -1
-      for c in data.chrNames:
-         j += 1
-         for i in range( data.chrOffsets[ c ], data.chrOffsets[ c ] + data.chrLengths[ j ], options.gridLinesMajor ):
-            ax.add_line( lines.Line2D( xdata=[i, i], ydata=[0, 1], c='pink', linewidth=0.15 ))
 
 def prettyPrintLength( n ):
     """ takes an integer with a number of bases,
@@ -401,10 +437,10 @@ def main():
    checkOptions( options, parser, data )
    loadAnnots( options, data )
    loadMafs( options, data )
-   ( fig, pdf ) = initImage( options )
+
+   ( fig, pdf ) = initImage( options, data )
    axDict = establishAxes( fig, options, data )
    labelAxes( fig, axDict, options, data )
-   #drawGridLines( mafAx, annotAx, options, data )
    drawAnnotations( axDict, options, data )
    drawMafs( axDict, options, data )
 
