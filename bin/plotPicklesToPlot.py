@@ -190,7 +190,7 @@ def loadMafs( options, data ):
          if n not in spokenFor:
             data.orderedMafs.append( n )
    data.numberOfMafs = len( data.mafNamesDict )
-   data.numRows = data.numberOfMafs + 10 # number of total rows in the figure
+   data.numRows = 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
          
 
 def initImage( options, data ):
@@ -335,22 +335,29 @@ def drawAnnotations( axDict, options, data ):
                                    facecolor = options.annotColors[ a ], 
                                    linewidth = 0.0 )
          j += 1
-         # axDict[ c ].add_line( lines.Line2D( xdata = data.annotWigDict[ c ]['xAxis'], 
-         #                                     ydata = data.annotWigDict[ c ][ a ], 
-         #                                     c = options.annotColors[ a ], linewidth = 0.5 ))
 
 def drawMafs( axDict, options, data ):
    alternatingColors = { True: ( 0.2, 0.2, 0.2 ),
                          False: ( 0.2, 0.2, 0.2 ) }
    myGray = ( 0.8, 0.8, 0.8 )
-   stackFillColors = [ ( '#17becf' ), # dark blue
-                       ( '#9edae5' ), # light blue
-                       ( '#9467bd' ), # dark purple
-                       ( '#c5b0d5' ), # light purple
-                       ( '#7f7f7f' ), # dark gray
-                       ( '#c7c7c7' ), # light gray
-                       ( '#ff7f0e' ), # bright orange
-                       ( '#ffbb78' )  # light orange
+   # stackFillColors = [ ( '#17becf' ), # dark blue
+   #                     ( '#9edae5' ), # light blue
+   #                     ( '#9467bd' ), # dark purple
+   #                     ( '#c5b0d5' ), # light purple
+   #                     ( '#7f7f7f' ), # dark gray
+   #                     ( '#c7c7c7' ), # light gray
+   #                     ( '#ff7f0e' ), # bright orange
+   #                     ( '#ffbb78' )  # light orange
+   #                     ]
+   stackFillColors = [ ( '#4B4C5E' ),
+                       ( '#9edae5' ), #( '#9899CF' ), # light blue # ( '#9091C3' ),
+                       ( '#7F80AB' ),
+                       ( '#4B4C5E' ),
+                       ( '#9edae5' ),
+                       ( '#7F80AB' ),
+                       ( 'r' ),
+                       ( 'b' ),
+                       ( 'm' )
                        ]
    for c in data.chrNames:
       col = True
