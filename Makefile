@@ -4,7 +4,7 @@ export SHELLOPTS=pipefail
 # 26 Jan 2011
 ##############################
 # EDIT THESE:
-PROJECT_DIR:=/hive/users/dearl/assemblathon/prodTest
+PROJECT_DIR:=/hive/users/dearl/assemblathon/prod
 BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # It is assumed that all assemblies will be in fasta format, gzipped
