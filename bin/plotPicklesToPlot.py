@@ -126,6 +126,24 @@ def checkOptions( options, parser, data ):
                            'tandem':'#662D91' }
    if options.out[-4:] == '.png' or options.out[-4:] == '.pdf':
       options.out = options.out[:-4]
+   data.stackFillColors = [ ( '#17becf' ), # dark blue
+                            ( '#9edae5' ), # light blue
+                            ( '#9467bd' ), # dark purple
+                            ( '#c5b0d5' ), # light purple
+                            ( '#7f7f7f' ), # dark gray
+                            ( '#c7c7c7' ), # light gray
+                            ( '#ff7f0e' ), # bright orange
+                            ( '#ffbb78' )  # light orange
+                            ]
+   data.stackFillColors = [ ( '#4B4C5E' ), # dark slate gray
+                            ( '#9edae5' ), # light blue 
+                            ( '#7F80AB' ), # purple-ish slate blue
+                            ( '#c7c7c7' ), # light gray
+                            ( '#ff7f0e' ), # bright orange
+                            ( '#ffbb78' ), # light orange
+                            ( '#9467bd' ), # dark purple
+                            ( '#c5b0d5' )  # light purple
+                            ]
    
 def unpackData( filename, options, data ):
    t0 = time.time()
@@ -190,14 +208,14 @@ def loadMafs( options, data ):
          if n not in spokenFor:
             data.orderedMafs.append( n )
    data.numberOfMafs = len( data.mafNamesDict )
-   data.numRows = 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
-         
+   data.numRows = data.numberOfMafs + 12.0 # + 10.0 # 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
 
 def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'both':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 11), dpi=options.dpi, facecolor='w' )
+   figHeight = ( data.numberOfMafs + 6.0 ) / 4.0 
+   fig = plt.figure( figsize=( 8, figHeight ), dpi=options.dpi, facecolor='w' )
    return ( fig, pdf )
 
 def establishAxes( fig, options, data ):
@@ -207,11 +225,13 @@ def establishAxes( fig, options, data ):
    options.axLeft = 0.1
    options.axWidth = 0.88
    options.axTop = 0.98
-   options.axBottom = 0.01
+   options.axBottom = 0.08
    options.axHeight = options.axTop - options.axBottom
    options.chrMargin = 0.02
+   data.footerAx = fig.add_axes( [ 0.02, 0.01, 0.96, options.axBottom - 0.02] )
+   plt.box( on=False )
    curXPos = options.axLeft
-   data.labelAx = fig.add_axes( [ 0.01, options.axBottom, 0.09, options.axHeight] )
+   data.labelAx = fig.add_axes( [ 0.02, options.axBottom, 0.08, options.axHeight] )
    plt.box( on=False )
    for c in data.chrNames:
       w = (( data.chrLengthsByChrom[ c ] / float( data.genomeLength ) ) * 
@@ -224,10 +244,11 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def setAxisLimits( axDict, options, data ):
-   data.labelAx.set_ylim( 0.0, 1.01 )
-   data.labelAx.set_xlim( 0.0, 1.0 )
-   data.labelAx.xaxis.set_major_locator( pylab.NullLocator() )
-   data.labelAx.yaxis.set_major_locator( pylab.NullLocator() )
+   for ax in [ data.labelAx, data.footerAx ]:
+      ax.set_ylim( 0.0, 1.01 )
+      ax.set_xlim( 0.0, 1.0 )
+      ax.xaxis.set_major_locator( pylab.NullLocator() )
+      ax.yaxis.set_major_locator( pylab.NullLocator() )
    for c in axDict:
       axDict[ c ].set_ylim( 0.0, 1.01 )
       axDict[ c ].set_xlim( 0.0, data.chrLengthsByChrom[ c ] )
@@ -267,7 +288,7 @@ def labelAxes( fig, axDict, options, data ):
                 horizontalalignment='left',
                 verticalalignment='bottom', 
                 color= (0.5, 0.5, 0.5,), fontsize=6 )
-   data.increment = options.axHeight / ( ( data.numRows ) * 0.9 )
+   data.increment = 1.0 / ( data.numRows * 0.9 )
    j = 0.02
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
       yPos =  1.0 - j
@@ -283,14 +304,52 @@ def labelAxes( fig, axDict, options, data ):
       data.labelAx.text( x= 0.45, y= yPos + data.increment/3.0, s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
                          color=(0.5, 0.5, 0.5) )
-      # draw vectical lines for each maf row
-      # data.labelAx.add_line( lines.Line2D( xdata=[0.95, 0.95],
-      #                                      ydata=[yPos + data.increment / 2.0 - data.increment / 2.2, 
-      #                                             yPos + data.increment / 2.0 + data.increment / 2.2 ],
-      #                                      color= (0.8, 0.8, 0.8),
-      #                                      linewidth=0.3))
       data.mafYPos.append( yPos )
       j += data.increment
+
+def drawLegend( options, data ):
+   # LEGEND
+   if options.stackFill:
+      data.footerAx.text( x=0.22, y = 0.75, horizontalalignment='right',
+                          verticalalignment = 'center',
+                          s = 'Fill Color Key', fontsize = 8)
+      data.footerAx.text( x=0.22, y = 0.56, horizontalalignment='right',
+                          verticalalignment = 'top',
+                          s = 'Maf block >=', fontsize = 7)
+      xPos = 0.2
+      xunit = 0.05
+      labs = [ '0', '1e2', '1e3', '1e4',
+               '1e5', '1e6', '1e7', '1e8' ]
+      i = -1
+      for col in data.stackFillColors:
+         xPos += xunit
+         i += 1
+         data.footerAx.add_patch( patches.Rectangle( xy = ( xPos, 0.6 ), width = 0.05, height = 0.3,
+                                                     color= col, edgecolor=None, linewidth=0.0 ))
+         data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
+                             verticalalignment='top', fontsize = 7 )
+   if not options.stackFill and not options.fill:
+      data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
+                          verticalalignment = 'center',
+                          s = 'Coverage', fontsize = 8 )
+      # baseline
+      data.footerAx.add_line( lines.Line2D( xdata=[0.91, 0.97],
+                                            ydata=[ 0.45, 0.45],
+                                            color= ( 0.8, 0.8, 0.8),
+                                            linewidth=0.3) )
+      # maf demo line
+      data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959,.96, 0.97 ],
+                                            ydata = [ 0.55, 0.55, 0.55, 0.55, 0.52,  0.505, 0.45, 0.45, 0.54, 0.55 ],
+                                            c = (0.2, 0.2, 0.2), linewidth = 0.3 ))
+      
+   if options.blockEdgeDensity:
+      data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
+                          verticalalignment = 'center',
+                          s = 'Maf block edge density', fontsize = 8 )
+      # block edge denisty demo line
+      data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959, 0.96, 0.961, 0.97 ],
+                                            ydata = [ 0.25, 0.24, 0.25, 0.24, 0.24,  0.35, 0.23,  0.23, 0.36, 0.25, 0.245 ],
+                                            c = '#FA698D', linewidth = 0.3 ))
          
 
 def scaleFont( c, chrLen, genLen, axLen, options, data):
@@ -340,25 +399,7 @@ def drawMafs( axDict, options, data ):
    alternatingColors = { True: ( 0.2, 0.2, 0.2 ),
                          False: ( 0.2, 0.2, 0.2 ) }
    myGray = ( 0.8, 0.8, 0.8 )
-   # stackFillColors = [ ( '#17becf' ), # dark blue
-   #                     ( '#9edae5' ), # light blue
-   #                     ( '#9467bd' ), # dark purple
-   #                     ( '#c5b0d5' ), # light purple
-   #                     ( '#7f7f7f' ), # dark gray
-   #                     ( '#c7c7c7' ), # light gray
-   #                     ( '#ff7f0e' ), # bright orange
-   #                     ( '#ffbb78' )  # light orange
-   #                     ]
-   stackFillColors = [ ( '#4B4C5E' ),
-                       ( '#9edae5' ), #( '#9899CF' ), # light blue # ( '#9091C3' ),
-                       ( '#7F80AB' ),
-                       ( '#4B4C5E' ),
-                       ( '#9edae5' ),
-                       ( '#7F80AB' ),
-                       ( 'r' ),
-                       ( 'b' ),
-                       ( 'm' )
-                       ]
+
    for c in data.chrNames:
       col = True
       j = 0
@@ -396,7 +437,7 @@ def drawMafs( axDict, options, data ):
                axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
                                          y1=data.mafWigDict[ c ][ n ][ r ],
                                          y2=data.mafYPos[ j ],
-                                         facecolor = stackFillColors[ k ],
+                                         facecolor = data.stackFillColors[ k ],
                                          linewidth = 0.0 )
             # No Fills, basic wiggle
          else:
@@ -450,6 +491,7 @@ def main():
    labelAxes( fig, axDict, options, data )
    drawAnnotations( axDict, options, data )
    drawMafs( axDict, options, data )
+   drawLegend( options, data )
 
    setAxisLimits( axDict, options, data )
    writeImage( fig, pdf, options, data )
