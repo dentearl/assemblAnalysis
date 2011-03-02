@@ -166,9 +166,15 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
    mb.pairStart  = jLine.start
    mb.pairEnd    = jLine.start + jLine.strand * jLine.length
    mb.pairStrand = jLine.strand
-   mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
-   mb.five       = hplList[ jLine.order ][ 'five' ]
-   mb.three      = hplList[ jLine.order ][ 'three' ]
+   if len( hplList ) > 0:
+      if jLine.order < len( hplList ):
+         mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
+         mb.five       = hplList[ jLine.order ][ 'five' ]
+         mb.three      = hplList[ jLine.order ][ 'three' ]
+      else:
+         sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
+                           'greating than the length of the hpl list (%d))\n' % ( jLine.order, 
+                                                                                  len( hplList ) ))
 
    data.mafBlocksByChrom[ mb.refChr ].append( mb )
 
