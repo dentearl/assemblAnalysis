@@ -18,6 +18,10 @@ class MafBlock:
    pairStart and then walk through the sequences and 
    use the increment method whenever there is not a gap
    '-' character in the sequence.
+   Hap path edge (five, three) codes:
+    * 0 = contig ends.
+    * 1 = correct adjacency.
+    * 2 = error adjacency.
    """
    def __init__( self ):
       self.refGenome  = ''
@@ -32,6 +36,9 @@ class MafBlock:
       self.pairEnd    = -1
       self.pairStrand = 0
       self.pairSeq    = '' # future use
+      self.hpl        = -1
+      self.five       = -1
+      self.three      = -1
    def increment( self ):
       self.refEnd  += self.refStrand
       self.pairEnd += self.pairStrand
@@ -49,6 +56,11 @@ class MafLine:
       self.strand = ''
       self.totalLength = -1
       self.sequence = ''
+      # order > -1 implies this sequence is the comparativeGenome
+      # and this is the order the sequence appears in the block from
+      # (0..n-1) for a block with n sequences.
+      self.order = -1 
+
 
 class GffRecord:
    """ a GffRecord object contains the relevant information needed
@@ -110,6 +122,14 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         maf1e6            maf blocks 1,000,000 or greater
         maf1e7            maf blocks 10,000,000 or greater
         xAxis             x Values
+        mafHpl1e2         maf haplotype paths of 100 or greater
+        mafHpl1e3         maf haplotype paths of 1,000 or greater
+        mafHpl1e4         maf haplotype paths of 10,000 or greater
+        mafHpl1e5         maf haplotype paths of 100,000 or greater
+        mafHpl1e6         maf haplotype paths of 1,000,000 or greater
+        mafHpl1e7         maf haplotype paths of 10,000,000 or greater
+        mafHpEdgeDensity  each haplotype path has two edges, a left and a right
+        mafHpErrorDensity haplotype paths are made up of segments, segments may have errors at junctions.
         blockEdgeDensity  each block has two edges, a left and a right
         """
         data = { 'maf'   : numpy.zeros( shape = ( numBins )),
@@ -120,41 +140,79 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                  'maf1e6': numpy.zeros( shape = ( numBins )),
                  'maf1e7': numpy.zeros( shape = ( numBins )),
                  'xAxis' : numpy.zeros( shape = ( numBins )),
-                 'blockEdgeDensity': numpy.zeros( shape = ( numBins )) }
+                 'mafHpl1e2': numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e3': numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e4': numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e5': numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e6': numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e7': numpy.zeros( shape = ( numBins )),
+                 'mafHpEdgeDensity' : numpy.zeros( shape = ( numBins )),
+                 'mafHpErrorDensity': numpy.zeros( shape = ( numBins )),
+                 'blockEdgeDensity' : numpy.zeros( shape = ( numBins )) }
         maxPossibleCount = float( featLen ) / float( numBins )
-        maxBEDCount = 0
+        maxBEDCount  = 0
+        maxHEdDCount = 0
+        maxHErDCount = 0
         # populate xAxis
         for i in range( 0, numBins ):
             data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
-        for m in objList:
+        for mb in objList:
             # do block edges
-            for r in [ m.refStart, m.refEnd ]:
-                pos = int(( float( m.refStart ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+            for r in [ mb.refStart, mb.refEnd ]:
+                pos = int(( float( r ) / (( featLen + 1.0 ) / float( numBins ) ) ))
                 data['blockEdgeDensity'][ pos ] += 1
                 if data['blockEdgeDensity'][ pos ] > maxBEDCount:
                     maxBEDCount = data['blockEdgeDensity'][ pos ]
+            # do haplotype path edges
+            for r in [ mb.five, mb.three ]:
+                if r == 0:
+                    data['mafHpEdgeDensity'][ pos ] += 1
+                    if data['mafHpEdgeDensity'][ pos ] > maxHEdDCount:
+                        maxHEdDcount = data['mafHpEdgeDensity'][ pos ]
+                elif r == 2:
+                    data['mafHpErrorDensity'][ pos ] += 1
+                    if data['mafHpErrorDensity'][ pos ] > maxHErDCount:
+                        maxHErDcount = data['mafHpErrorDensity'][ pos ]
+                    
             # do all of the different maf block flavors
-            for i in range( m.refStart, m.refEnd + 1 ):
+            for i in range( mb.refStart, mb.refEnd + 1 ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
                 data['maf'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 100:
+                length = mb.refEnd - mb.refStart
+                if ( length ) >= 100:
                     data['maf1e2'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 1000:
+                if ( length ) >= 1000:
                     data['maf1e3'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 10000:
+                if ( length ) >= 10000:
                     data['maf1e4'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 100000:
+                if ( length ) >= 100000:
                     data['maf1e5'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 1000000:
+                if ( length ) >= 1000000:
                     data['maf1e6'][ pos ] += 1
-                if ( m.refEnd - m.refStart ) >= 10000000:
+                if ( length ) >= 10000000:
                     data['maf1e7'][ pos ] += 1
+                if ( mb.hpl ) >= 100:
+                    data['mafHpl1e2'][ pos ] += 1
+                if ( mb.hpl ) >= 1000:
+                    data['mafHpl1e3'][ pos ] += 1
+                if ( mb.hpl ) >= 10000:
+                    data['mafHpl1e4'][ pos ] += 1
+                if ( mb.hpl ) >= 100000:
+                    data['mafHpl1e5'][ pos ] += 1
+                if ( mb.hpl ) >= 1000000:
+                    data['mafHpl1e6'][ pos ] += 1
+                if ( mb.hpl ) >= 10000000:
+                    data['mafHpl1e7'][ pos ] += 1
         for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
-                   'maf1e5', 'maf1e6', 'maf1e7' ]:
+                   'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2',
+                   'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
+                   'mafHpl1e6', 'mafHpl1e7' ]:
             for i in range( 0, numBins ):
                 data[ r ][ i ] /= float( maxPossibleCount )
         for i in range( 0, numBins ):
-            data[ 'blockEdgeDensity' ][ i ] /= float( maxBEDCount )
+            data[ 'blockEdgeDensity' ][ i ]  /= float( maxBEDCount )
+            data[ 'mafHpEdgeDensity' ][ i ]  /= float( maxHEdDCount )
+            data[ 'mafHpErrorDensity' ][ i ] /= float( maxHErDCount )
         return data
     else:
         return None

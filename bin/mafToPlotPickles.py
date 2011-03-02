@@ -55,9 +55,6 @@ def initOptions( parser ):
    parser.add_option( '--chrLengths', dest='chrLengths',
                       type='string',
                       help='comma separated list (no spaces) of chromosome lengths.' )
-   parser.add_option( '--verbose', dest='isVerbose', default=False,
-                      action='store_true',
-                      help='Turns on verbose output.' )
 
 def checkOptions( options, parser, data ):
    if options.maf == None:
@@ -111,17 +108,20 @@ def packData( options, data, prot='py23Bin' ):
       cPickle.dump( data.mafWigDict[ c ], f, protocol=protocols[ prot ] )
       f.close()
 
-def extractMafLine( line, pat, options, data ):
+def extractMafLine( line, order, pat, options, data ):
    """ parse a given line from a maf file into a 
    MafLine object.
    """
    m = re.match( pat, line )
    if m == None:
-      return None
+      return ( None, order )
    ml = MafLine()
    ml.genome = m.group( 1 )
    if ml.genome not in data.genomesDict:
-      return 'notOurGenome'
+      return ( 'notOurGenome', order )
+   if ml.genome == options.other:
+      order += 1
+      ml.order = order
    ml.chr = m.group( 2 )
    if ml.genome == options.ref:
       if ml.chr not in data.chroms:
@@ -134,7 +134,7 @@ def extractMafLine( line, pat, options, data ):
    ml.totalLength = int( m.group( 6 ) )
    if ml.genome == options.ref:
       if ml.totalLength != data.chrLengthsByChrom[ ml.chr ]:
-         sys.stderr.write( 'Error, file %s: maf block on chr %s has sequence length (%d) '
+         sys.stderr.write( 'Error, file %s: maf block on chromosome "%s" has sequence length (%d) '
                            'that does not equal the corresponding input from --chrLengths (%d). '
                            'Line below:\n%s\n' % ( options.maf, ml.chr, ml.totalLength,
                                                    data.chrLengthsByChrom[ ml.chr ], line ))
@@ -142,121 +142,105 @@ def extractMafLine( line, pat, options, data ):
    if ml.strand == -1:
       ml.start = ml.totalLength - ml.start + 1
    ml.sequence = m.group( 7 )
-   return ml
+   for b in ml.sequence:
+      if b == '-':
+         sys.stderr.write( 'Error, file %s: maf line contains \'-\' character. Mafs are assumed '
+                           'to be gapless. Bad line:\n%s\n' % ( options.maf, line ) )
+         sys.exit( 1 )
+   return ( ml, order )
 
-def extendPairSet( iLine, jLine, options, data ):
-   """for a pair of maf line objects, walk their sequences simultaneously and if we find
-   any gaps, '-', then we need to seal off the maf alignment pair, and then
-   create a new one as soon as we're out of the gapped region.
+def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
+   """for a pair of maf line objects, create a mafBlock and store all relevant
+   information.
    """
-   iPos = 0
-   jPos = 0
-   p = None
-   for k in range( 0, len( iLine.sequence ) ):
-      if iLine.sequence[ k ] != '-' and jLine.sequence[ k ] != '-':
-         if p == None:
-            p = buildMafBlock( iLine.genome, iLine.chr, iLine.start + iPos * iLine.strand, iLine.strand,
-                               jLine.genome, jLine.chr, jLine.start + jPos * jLine.strand, jLine.strand,
-                               options, data )
-         else:
-            p.increment()
-         iPos += 1
-         jPos += 1
-      elif iLine.sequence[ k ] == '-' and jLine.sequence[ k ] != '-':
-         if p != None:
-            data.mafBlocksByChrom[ p.refChr ].append( p )
-            p = None
-         jPos += 1
-      elif iLine.sequence[ k ] != '-' and jLine.sequence[ k ] == '-':
-         if p != None:
-            data.mafBlocksByChrom[ p.refChr ].append( p )
-            p = None
-         iPos += 1
-   # post loop cleanup
-   if p != None:
-      data.mafBlocksByChrom[ p.refChr ].append( p )
-      p = None
+   mb = MafBlock()
+   if iLine.genome != options.ref:
+      iLine, jLine = jLine, iLine
+   mb.refGenome  = iLine.genome
+   mb.refChr     = iLine.chr
+   mb.refStart   = iLine.start
+   mb.refEnd     = iLine.start + iLine.strand * iLine.length
+   mb.refStrand  = iLine.strand
+   mb.pairGenome = jLine.genome
+   mb.pairChr    = jLine.chr
+   mb.pairStart  = jLine.start
+   mb.pairEnd    = jLine.start + jLine.strand * jLine.length
+   mb.pairStrand = jLine.strand
+   mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
+   mb.five       = hplList[ jLine.order ][ 'five' ]
+   mb.three      = hplList[ jLine.order ][ 'three' ]
 
-def buildMafBlock( iGenome, iChr, iPos, iStrand, jGenome, jChr, jPos, jStrand, options, data ):
-   """
-   """
-   m = MafBlock()
-   if iGenome == options.ref:
-      m.refGenome  = iGenome
-      m.refChr     = iChr
-      m.refStart   = iPos
-      m.refEnd     = iPos
-      m.refStrand  = iStrand
-      m.pairGenome = jGenome
-      m.pairChr    = jChr
-      m.pairStart  = jPos
-      m.pairEnd    = jPos
-      m.pairStrand = jStrand
-   else:
-      m.refGenome  = jGenome
-      m.refChr     = jChr
-      m.refStart   = jPos
-      m.refEnd     = jPos
-      m.refStrand  = jStrand
-      m.pairGenome = iGenome
-      m.pairChr    = iChr
-      m.pairStart  = iPos
-      m.pairEnd    = iPos
-      m.pairStrand = iStrand
-   return m
+   data.mafBlocksByChrom[ mb.refChr ].append( mb )
 
-def extractBlockPairs( blockList, options, data ):
+def extractBlockPairs( mafLineList, hplList, options, data ):
    """ loop through all pairs in the block list, store
    the discovered blocks.
    Elements of blockList are MafLine() objects.
    """
-   k = 0
-   for i in range( 0, len( blockList )):
-      if blockList[ i ].genome not in data.genomesDict:
+   for i in range( 0, len( mafLineList )):
+      if mafLineList[ i ].genome not in data.genomesDict:
          continue
-      for j in range( i + 1, len( blockList )):
-         if blockList[ j ].genome not in data.genomesDict:
+      for j in range( i + 1, len( mafLineList )):
+         if mafLineList[ j ].genome not in data.genomesDict:
             continue
-         if blockList[ i ].genome == blockList[ j ].genome:
+         if mafLineList[ i ].genome == mafLineList[ j ].genome:
             continue
-         k += 1
-         extendPairSet( blockList[ i ], blockList[ j ], options, data )
+         createMafBlockFromPair( mafLineList[ i ], mafLineList[ j ], hplList, options, data )
 
 def readMaf( options, data ):
-   """ read the maf, populate the blockList, then
+   """ read the maf, populate the mafLineList, then
    eventually things get stuffed in data.mafBlocksByChrom
-   by way of extractBlockPairs() -> extendPairSet()
+   by way of extractBlockPairs() -> createMafBlockFromPair()
    """
    regex = 's\s+([\w\d\-]+?)\.([\w\d\.\+\-]+?)\s+(\d+)\s+(\d+)\s+([-+])\s+(\d+)\s+([\-actgurykmswbdhvnACTGURYKMSWBDHVN]+)'
    pat = re.compile( regex )
    mf = open( options.maf )
-   blockList = []
+   mafLineList = []
+   order = -1
+   hplList = []
+   hpl   = ''
+   five  = ''
+   three = ''
    for line in mf:
-      if line[0] == '#':
-         # comments
+      if line[ 0 ] == '#':
+         if line[ :4 ] == '#HPL':
+            d = line.split(' ')
+            # example line: "#HPL=12049 5=1 3=1"
+            # there will be one hpl line per options.other line
+            # in blocks that contain the options.ref
+            hpl   = int( d[0][5:] )
+            five  = int( d[1][2] )
+            three = int( d[2][2] )
+            hplList.append( { 'hpl': hpl, 'five': five, 'three': three } )
          continue
-      if line[0] == 's':
+      if line[ 0 ] == 's':
          line = line.strip()
-         m = extractMafLine( line, pat, options, data )
-         if m == None:
-            sys.stderr.write('Error, regexp fail on file %s line: \'%s\'\n'
-                             'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
+         ( ml, order ) = extractMafLine( line, order, pat, options, data )
+         if ml == None:
+            sys.stderr.write( 'Error, regexp fail on file %s line: \'%s\'\n'
+                              'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
             sys.exit( 1 )
-         if m == 'notOurGenome':
+         if ml == 'notOurGenome':
             continue
-         if m.length > len( m.sequence ):
-            sys.stderr.write('Error while working on file %s :\n   '
-                             'printed sequence length (%d) greater than actual sequence '
-                             'length (%d) ref genome:%s other genome:%s line below:\n%s\n' % 
-                             ( options.maf, m.length, len( m.sequence ), options.ref, options.other, line ) )
+         if ml.length != len( ml.sequence ):
+            sys.stderr.write( 'Error while working on file %s :\n   '
+                              'printed sequence length (%d) not equal to actual sequence '
+                              'length (%d) ref genome:%s other genome:%s line below:\n%s\n' % 
+                              ( options.maf, ml.length, len( ml.sequence ), options.ref, options.other, line ) )
             sys.exit( 1 )
-         blockList.append( m )
+         mafLineList.append( ml )
       else:
-         if len( blockList ) > 0:
-            extractBlockPairs( blockList, options, data )
-            blockList = []
-   if len( blockList ) > 0:
-      extractBlockPairs( blockList, options, data )
+         # end of the block
+         if len( mafLineList ) > 0:
+            extractBlockPairs( mafLineList, hplList, options, data )
+            mafLineList = []
+            order = -1
+            hplList = []
+            hpl   = ''
+            five  = ''
+            three = ''
+   if len( mafLineList ) > 0:
+      extractBlockPairs( mafLineList, hplList, options, data )
 
 def mafDataOrNone( mafBlocksByChrom, c ):
    """ return d which is either the list of MafBlocks
@@ -299,7 +283,7 @@ def convertDataToWiggle( options, data ):
 
 def switchToPositiveStrandCoordinates( options, data ): 
    """ The refStart and refEnd in the maf are not necessarily
-   in a set order. If the strand is negative then the refEnd may be
+   in a set order. If the strand is negative then the refEnd will be
    a smaller number than the refStart. 
    This is only confusing for our purposes, so we explicity move to
    a positive strand only coordinate system.
@@ -364,6 +348,7 @@ def main():
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
+
    readMaf( options, data )
    switchToPositiveStrandCoordinates( options, data )
    for c in data.chroms:
@@ -372,10 +357,11 @@ def main():
    convertDataToWiggle( options, data )
    recordCoverage( options, data )
    packData( options, data )
-   # for c in data.chrNames:
-   #    print '%s: %d / %d = %.4f' % ( c, data.mafWigDict[c]['columnsInBlocks'], 
-   #                                   data.chrLengthsByChrom[c], 
-   #                                   float(data.mafWigDict[c]['columnsInBlocks']) / data.chrLengthsByChrom[c])
+   # for c in data.mafBlocksByChrom:
+   #    for mb in data.mafBlocksByChrom[ c ]:
+   #       print 'genome:%s chr:%s start:%d end:%d hpl:%d five:%d three:%d' % ( mb.refGenome, mb.refChr,
+   #                                                                            mb.refStart, mb.refEnd,
+   #                                                                            mb.hpl, mb.five, mb.three )
 
 if __name__ == '__main__':
    main()
