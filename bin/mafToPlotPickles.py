@@ -128,7 +128,7 @@ def extractMafLine( line, order, pat, options, data ):
          data.chroms[ ml.chr ] = True
          data.mafBlocksByChrom[ ml.chr ] = []
 
-   ml.start  = int( m.group( 3 ) ) + 1
+   ml.start  = int( m.group( 3 ) )
    ml.length = int( m.group( 4 ) )
    ml.strand = int( m.group( 5 ) + '1')
    ml.totalLength = int( m.group( 6 ) )
@@ -158,19 +158,19 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
       iLine, jLine = jLine, iLine
    mb.refGenome  = iLine.genome
    mb.refChr     = iLine.chr
-   mb.refStart   = iLine.start
+   mb.refStart   = iLine.start + 1
    mb.refEnd     = iLine.start + iLine.strand * iLine.length
    mb.refStrand  = iLine.strand
    mb.pairGenome = jLine.genome
    mb.pairChr    = jLine.chr
-   mb.pairStart  = jLine.start
-   mb.pairEnd    = jLine.start + jLine.strand * jLine.length
+   mb.pairStart  = jLine.start + 1
+   mb.pairEnd    = jLine.start - 1 + jLine.strand * jLine.length
    mb.pairStrand = jLine.strand
    if len( hplList ) > 0:
       if jLine.order < len( hplList ):
          mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
-         mb.five       = hplList[ jLine.order ][ 'five' ]
-         mb.three      = hplList[ jLine.order ][ 'three' ]
+         mb.hplStart   = hplList[ jLine.order ][ 'five' ]
+         mb.hplEnd     = hplList[ jLine.order ][ 'three' ]
       else:
          sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
                            'greating than the length of the hpl list (%d))\n' % ( jLine.order, 
@@ -257,7 +257,6 @@ def mafDataOrNone( mafBlocksByChrom, c ):
       return None
    else:
       return mafBlocksByChrom[ c ]
-   
 
 def convertDataToWiggle( options, data ):
    """ the mafWigDict is keyed on chromosome and then
@@ -270,15 +269,26 @@ def convertDataToWiggle( options, data ):
       mafWigDict[ c ] = {}
       d = mafDataOrNone( data.mafBlocksByChrom, c )
       if d == None:
-         mafWigDict[ c ] = { 'maf'   : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e2': numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e3': numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e4': numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e5': numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e6': numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e7': numpy.zeros( shape = ( thisChrNumBins )),
-                             'xAxis' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'blockEdgeDensity': numpy.zeros( shape = ( thisChrNumBins )) }
+         mafWigDict[ c ] = { 'maf'    : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e2' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e3' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e4' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e5' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e6' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'maf1e7' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'xAxis'  : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e2' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e3' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e4' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpEdgeMax'     : 0,
+                             'mafHpErrorCounts' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpErrorMax'    : 0,
+                             'blockEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
+                             'blockEdgeMax'     : 0 }
          for i in range( 0, thisChrNumBins ):
             mafWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
                                            float( data.chrLengthsByChrom[ c ] ) )
@@ -299,6 +309,7 @@ def switchToPositiveStrandCoordinates( options, data ):
          if m.refStart > m.refEnd:
             m.refStart, m.refEnd = m.refEnd, m.refStart
             m.refStrand *= -1
+            m.hplStart, m.hplEnd = m.hplStart, m.hplEnd # this is now left-right draw order
          # sanity check
          if m.refStart > data.chrLengthsByChrom[ c ] or m.refEnd > data.chrLengthsByChrom[ c ]:
             sys.stderr.write( 'Error, file %s has maf block on chr %s with '
@@ -348,6 +359,31 @@ def recordCoverage( options, data ):
          else:
             data.mafWigDict[ c ]['columnsInBlocks'] += ( m.refStart + 1 ) - m.refEnd
 
+def verifyStacks( options, data ):
+   """ For both blocks and paths, the stacked data structure must be a proper stack.
+   That is, there must be a monotonically decreasing count in the categories.
+   Logically this should be impossible, but I want to be able to point to this test 
+   whenever we see a weird spike on the plot and say 'this is due to a visual artifact
+   of the plotting library we're using.'
+   """
+   tests = { 'blocks': [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
+                         'maf1e5', 'maf1e6', 'maf1e7' ],
+             'paths' : [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4',
+                         'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ] }
+   for c in data.chrNames:
+      for i in range( 0, len( data.mafWigDict[ c ][ 'xAxis' ] )):
+         for t in tests:
+            for j in range( 0, len( tests[ t ] ) - 1):
+               if ( data.mafWigDict[ c ][ tests[ t ][ j ] ][ i ] < 
+                    data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][ i ] ):
+                  sys.stderr.write('Error, validation failed on file:%s '
+                                   'chr:%s %s (%d) > %s (%d)!\n' % ( options.maf, c,
+                                                                     tests[ t ][ j + 1],
+                                                                     data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][i],
+                                                                     tests[ t ][ j ],
+                                                                     data.mafWigDict[ c ][ tests[ t ][ j ] ][i] ))
+                  sys.exit( 1 )
+
 def main():
    data = Data()
    parser = OptionParser()
@@ -362,12 +398,9 @@ def main():
    trimDups( options, data )
    convertDataToWiggle( options, data )
    recordCoverage( options, data )
+   
+   verifyStacks( options, data )
    packData( options, data )
-   # for c in data.mafBlocksByChrom:
-   #    for mb in data.mafBlocksByChrom[ c ]:
-   #       print 'genome:%s chr:%s start:%d end:%d hpl:%d five:%d three:%d' % ( mb.refGenome, mb.refChr,
-   #                                                                            mb.refStart, mb.refEnd,
-   #                                                                            mb.hpl, mb.five, mb.three )
 
 if __name__ == '__main__':
    main()

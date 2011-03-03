@@ -37,8 +37,8 @@ class MafBlock:
       self.pairStrand = 0
       self.pairSeq    = '' # future use
       self.hpl        = -1
-      self.five       = -1
-      self.three      = -1
+      self.hplStart    = -1
+      self.hplEnd   = -1
    def increment( self ):
       self.refEnd  += self.refStrand
       self.pairEnd += self.pairStrand
@@ -128,31 +128,35 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         mafHpl1e5         maf haplotype paths of 100,000 or greater
         mafHpl1e6         maf haplotype paths of 1,000,000 or greater
         mafHpl1e7         maf haplotype paths of 10,000,000 or greater
-        mafHpEdgeDensity  each haplotype path has two edges, a left and a right
-        mafHpErrorDensity haplotype paths are made up of segments, segments may have errors at junctions.
-        blockEdgeDensity  each block has two edges, a left and a right
+        mafHpEdgeCounts   each haplotype path has two edges, a left and a right
+        mafHpEdgeMax      max count
+        mafHpErrorCounts  haplotype paths are made up of segments, segments may have errors at junctions.
+        mafHpErrorMax     max count
+        blockEdgeCounts   each block has two edges, a left and a right
+        blockEdgeMax      max count
+        
         """
-        data = { 'maf'   : numpy.zeros( shape = ( numBins )),
-                 'maf1e2': numpy.zeros( shape = ( numBins )),
-                 'maf1e3': numpy.zeros( shape = ( numBins )),
-                 'maf1e4': numpy.zeros( shape = ( numBins )),
-                 'maf1e5': numpy.zeros( shape = ( numBins )),
-                 'maf1e6': numpy.zeros( shape = ( numBins )),
-                 'maf1e7': numpy.zeros( shape = ( numBins )),
-                 'xAxis' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e2': numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e3': numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e4': numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e5': numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e6': numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e7': numpy.zeros( shape = ( numBins )),
-                 'mafHpEdgeDensity' : numpy.zeros( shape = ( numBins )),
-                 'mafHpErrorDensity': numpy.zeros( shape = ( numBins )),
-                 'blockEdgeDensity' : numpy.zeros( shape = ( numBins )) }
+        data = { 'maf'    : numpy.zeros( shape = ( numBins )),
+                 'maf1e2' : numpy.zeros( shape = ( numBins )),
+                 'maf1e3' : numpy.zeros( shape = ( numBins )),
+                 'maf1e4' : numpy.zeros( shape = ( numBins )),
+                 'maf1e5' : numpy.zeros( shape = ( numBins )),
+                 'maf1e6' : numpy.zeros( shape = ( numBins )),
+                 'maf1e7' : numpy.zeros( shape = ( numBins )),
+                 'xAxis'  : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e2' : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e3' : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e4' : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
+                 'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
+                 'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
+                 'mafHpEdgeMax'    : 0,
+                 'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
+                 'mafHpErrorMax'   : 0,
+                 'blockEdgeCount'  : numpy.zeros( shape = ( numBins )),
+                 'blockEdgeMax'   : 0 }
         maxPossibleCount = float( featLen ) / float( numBins )
-        maxBEDCount  = 0
-        maxHEdDCount = 0
-        maxHErDCount = 0
         # populate xAxis
         for i in range( 0, numBins ):
             data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
@@ -160,19 +164,36 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
             # do block edges
             for r in [ mb.refStart, mb.refEnd ]:
                 pos = int(( float( r ) / (( featLen + 1.0 ) / float( numBins ) ) ))
-                data['blockEdgeDensity'][ pos ] += 1
-                if data['blockEdgeDensity'][ pos ] > maxBEDCount:
-                    maxBEDCount = data['blockEdgeDensity'][ pos ]
-            # do haplotype path edges
-            for r in [ mb.five, mb.three ]:
-                if r == 0:
-                    data['mafHpEdgeDensity'][ pos ] += 1
-                    if data['mafHpEdgeDensity'][ pos ] > maxHEdDCount:
-                        maxHEdDcount = data['mafHpEdgeDensity'][ pos ]
-                elif r == 2:
-                    data['mafHpErrorDensity'][ pos ] += 1
-                    if data['mafHpErrorDensity'][ pos ] > maxHErDCount:
-                        maxHErDcount = data['mafHpErrorDensity'][ pos ]
+                data['blockEdgeCount'][ pos ] += 1.0
+                if data['blockEdgeCount'][ pos ] > data[ 'blockEdgeMax' ]:
+                    data[ 'blockEdgeMax' ] = data['blockEdgeCount'][ pos ]
+            # do haplotype path edges and errors
+            posSt  = int(( float( mb.refStart  ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+            posEnd = int(( float( mb.refEnd    ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+            # five prime
+            if mb.hplStart == 0:
+                # edge
+                data['mafHpEdgeCount'][ posSt ] += 1.0
+                if data['mafHpEdgeCount'][ posSt ] > data[ 'mafHpEdgeMax' ]:
+                    data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posSt ]
+#                print 'added 0 to hplStart at [%d] = %d, max: %d' % ( posSt, data['mafHpEdgeCount'][ posSt ], data['mafHpEdgeMax'])
+            elif mb.hplStart == 2:
+                # error
+                data['mafHpErrorCount'][ posSt ] += 1.0
+                if data['mafHpErrorCount'][ posSt ] > data[ 'mafHpErrorMax' ]:
+                    data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posSt ]
+            # three prime
+            if mb.hplEnd == 0:
+                # edge
+                data['mafHpEdgeCount'][ posEnd ] += 1.0
+                if data['mafHpEdgeCount'][ posEnd ] > data[ 'mafHpEdgeMax' ]:
+                    data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posEnd ]
+#                print 'added 0 to hplSEnd at [%d] = %d, max: %d' % ( posEnd, data['mafHpEdgeCount'][ posEnd ], data[ 'mafHpEdgeMax' ] )
+            elif mb.hplEnd == 2:
+                # error
+                data['mafHpErrorCount'][ posEnd ] += 1.0
+                if data['mafHpErrorCount'][ posEnd ] > data[ 'mafHpErrorMax' ]:
+                    data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posEnd ]
                     
             # do all of the different maf block flavors
             for i in range( mb.refStart, mb.refEnd + 1 ):
@@ -209,10 +230,6 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                    'mafHpl1e6', 'mafHpl1e7' ]:
             for i in range( 0, numBins ):
                 data[ r ][ i ] /= float( maxPossibleCount )
-        for i in range( 0, numBins ):
-            data[ 'blockEdgeDensity' ][ i ]  /= float( maxBEDCount )
-            data[ 'mafHpEdgeDensity' ][ i ]  /= float( maxHEdDCount )
-            data[ 'mafHpErrorDensity' ][ i ] /= float( maxHErDCount )
         return data
     else:
         return None

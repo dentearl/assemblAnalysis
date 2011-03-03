@@ -4,7 +4,6 @@ plotPicklesToPlot.py
 18 February 2011
 dent earl, dearl@soe.ucsc.edu
 
-
 """
 import cPickle
 import glob
@@ -12,6 +11,7 @@ from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
 from libMafGffPlot import GffRecord
 
+import math
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
 import matplotlib.patches as patches
@@ -23,8 +23,6 @@ import os
 import sys
 import re
 import time
-
-#NUM_ROWS = 55.0
 
 def initOptions( parser ):
    parser.add_option( '--annotDir', dest='annotDir',
@@ -67,16 +65,33 @@ def initOptions( parser ):
                       action='store_true',
                       help='Turns on the fill color for the coverage wiggles. Useful for viewing '
                       'highly variable coverage alignments.')
-   parser.add_option( '--stackFill', dest='stackFill', default=False,
+   parser.add_option( '--stackFillBlocks', dest='stackFillBlocks', default=False,
                       action='store_true',
-                      help='Turns on the fill color for the coverage wiggles. Shows different coverage '
+                      help='Turns on the fill color for the block wiggles. Shows different coverage '
+                      'thresholds in different colors. Thresholds: 0, 1e2, 1e3,...,1e7.')
+   parser.add_option( '--stackFillHapPaths', dest='stackFillHapPaths', default=False,
+                      action='store_true',
+                      help='Turns on the fill color for the hap path wiggles. Shows different coverage '
                       'thresholds in different colors. Thresholds: 0, 1e2, 1e3,...,1e7.')
    parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
                       action='store_true',
                       help='Turns on the wiggle track that shows relative density of block edges. ' )
-   parser.add_option( '--verbose', dest='isVerbose', default=False,
+   parser.add_option( '--hapPathEdgeDensity', dest='hapPathEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on verbose output.' )
+                      help='Turns on the wiggle track that shows relative density of haplotype path edges. ' )
+   parser.add_option( '--hapPathErrorDensity', dest='hapPathErrorDensity', default=False,
+                      action='store_true',
+                      help=( 'Turns on the wiggle track that shows relative density of haplotype '
+                             'path segment adjacency errors. ' ))
+   parser.add_option( '--relative', dest='relative', default=False,
+                      action='store_true',
+                      help='Plots errors as relative to the genome max. Otherwise is to global genomes max.' )
+   parser.add_option( '--transform', dest='transform', default=False,
+                      action='store_true',
+                      help='Transform the block and haplotype errors by y^(1/4) to reduce spikes from extreme values.' )
+   parser.add_option( '--frames', dest='frames', default=False,
+                      action='store_true',
+                      help='Debug option, turns on the plotting of all axes frames. ' )
 
 def checkOptions( options, parser, data ):
    if options.ref == None:
@@ -95,8 +110,10 @@ def checkOptions( options, parser, data ):
    for a in opts:
       if opts[ a ] == None:
          parser.error('Error, specify --%s.\n' % a )
-   if options.stackFill and options.fill:
-      parser.error('Error, specify either --stackFill or --fill, not both.\n')
+   if ( options.stackFillBlocks or options.stackFillHapPaths ) and options.fill:
+      parser.error('Error, specify either --stackFillBlocks or --stackFillHapPaths or --fill, not more than one.\n')
+   if options.stackFillBlocks and options.stackFillHapPaths:
+      parser.error('Error, specify either --stackFillBlocks or --stackFillHapPaths not more than one.\n')
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    data.chrLabelsByChrom  = {}
@@ -192,9 +209,6 @@ def loadMafs( options, data ):
          data.mafWigDict[ c ][ name ] = unpackData( f, options, data )
    for c in data.chrNames:
       for n in data.mafNamesDict:
-         # print '%s %s %d + %d = %d' % ( n, c, data.mafNamesDict[ n ],
-         #                                data.mafWigDict[ c ][ n ]['columnsInBlocks'],
-         #                                data.mafNamesDict[ n ] + data.mafWigDict[ c ][ n ]['columnsInBlocks'])
          data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
    if not options.forceOrder:
       data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True )
@@ -209,6 +223,21 @@ def loadMafs( options, data ):
             data.orderedMafs.append( n )
    data.numberOfMafs = len( data.mafNamesDict )
    data.numRows = data.numberOfMafs + 12.0 # + 10.0 # 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
+   # discover which size categories are absent from all datasets... used in legend plotting
+   labs = [ '1e2', '1e3', '1e4',
+         '1e5', '1e6', '1e7' ]
+   data.lengthThresholdPresent = {}
+   for c in data.chrNames:
+      for n in data.mafWigDict[ c ]:
+         for l in labs:
+            if l in data.lengthThresholdPresent:
+               continue
+            key = 'mafHpl' + l
+            if key not in data.mafWigDict[ c ][ n ]:
+               print 'thats weird, this key: %s is not in file: %s chr: %s' % ( key, n, c )
+               continue
+            if sum( data.mafWigDict[ c ][ n ][ key ] ) > 0:
+               data.lengthThresholdPresent[ l ] = True
 
 def initImage( options, data ):
    pdf = None
@@ -229,17 +258,20 @@ def establishAxes( fig, options, data ):
    options.axHeight = options.axTop - options.axBottom
    options.chrMargin = 0.02
    data.footerAx = fig.add_axes( [ 0.02, 0.01, 0.96, options.axBottom - 0.02] )
-   plt.box( on=False )
+   if not options.frames:
+      plt.box( on=False )
    curXPos = options.axLeft
    data.labelAx = fig.add_axes( [ 0.02, options.axBottom, 0.08, options.axHeight] )
-   plt.box( on=False )
+   if not options.frames:
+      plt.box( on=False )
    for c in data.chrNames:
       w = (( data.chrLengthsByChrom[ c ] / float( data.genomeLength ) ) * 
             ( options.axWidth - ( options.chrMargin * float( len( data.chrNames ) - 1) )))
       axDict[ c ] = fig.add_axes( [ curXPos, options.axBottom,
                                     w , options.axHeight] )
       curXPos += w + options.chrMargin
-      plt.box( on=False )
+      if not options.frames:
+         plt.box( on=False )
    setAxisLimits( axDict, options, data )
    return ( axDict )
 
@@ -309,7 +341,7 @@ def labelAxes( fig, axDict, options, data ):
 
 def drawLegend( options, data ):
    # LEGEND
-   if options.stackFill:
+   if options.stackFillBlocks or options.stackFillHapPaths:
       data.footerAx.text( x=0.22, y = 0.75, horizontalalignment='right',
                           verticalalignment = 'center',
                           s = 'Fill Color Key', fontsize = 8)
@@ -324,11 +356,14 @@ def drawLegend( options, data ):
       for col in data.stackFillColors:
          xPos += xunit
          i += 1
+         if labs[ i ] not in data.lengthThresholdPresent and labs[ i ] != '0':
+            # only print colored boxes and names for data present in the figure.
+            continue
          data.footerAx.add_patch( patches.Rectangle( xy = ( xPos, 0.6 ), width = 0.05, height = 0.3,
                                                      color= col, edgecolor=None, linewidth=0.0 ))
          data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
                              verticalalignment='top', fontsize = 7 )
-   if not options.stackFill and not options.fill:
+   if not options.stackFillBlocks and not options.fill and not options.stackFillHapPaths:
       data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
                           verticalalignment = 'center',
                           s = 'Coverage', fontsize = 8 )
@@ -406,7 +441,10 @@ def drawMafs( axDict, options, data ):
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
             for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
-                       'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeDensity' ]:
+                       'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeCount',
+                       'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
+                       'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7', 'mafHpEdgeCount',
+                       'mafHpErrorCount' ]:
                # adjust the height and the position of the track to fit in the plot
                data.mafWigDict[ c ][ n ][ r ][ i ] = ( data.mafYPos[j] + 
                                                        float( data.mafWigDict[ c ][ n ][ r ][ i ] ) / 
@@ -429,7 +467,7 @@ def drawMafs( axDict, options, data ):
                                       facecolor = myGray,
                                       linewidth = 0.0 )
             # Stack Fills
-         elif options.stackFill:
+         elif options.stackFillBlocks:
             k = -1
             for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
                        'maf1e5', 'maf1e6', 'maf1e7' ]:
@@ -439,16 +477,47 @@ def drawMafs( axDict, options, data ):
                                          y2=data.mafYPos[ j ],
                                          facecolor = data.stackFillColors[ k ],
                                          linewidth = 0.0 )
+         elif options.stackFillHapPaths:
+            k = -1
+            for r in [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
+                       'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ]:
+               k += 1
+               axDict[ c ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
+                                         y1=data.mafWigDict[ c ][ n ][ r ],
+                                         y2=data.mafYPos[ j ],
+                                         facecolor = data.stackFillColors[ k ],
+                                         linewidth = 0.0 )
+            
+         # old red = "#FA698D"
+         # new red = "#FA9AAB"
+         myRed = '#FA9AAB'
+         # --blockEdgeDensity track
+         if options.blockEdgeDensity:
+            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+                                                ydata = data.mafWigDict[ c ][ n ]['blockEdgeCount'], 
+                                                c = myRed, linewidth=0.0, linestyle='None',
+                                                marker='o', markerfacecolor=myRed, mec='None',
+                                                markersize=0.3) )
+         # --hapPathEdgeDensity track
+         # if options.hapPathEdgeDensity:
+         #    axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+         #                                        ydata = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'], 
+         #                                        c = 'b', linewidth=0.3))#linestyle='None', linewidth=0.0, 
+         #                                        #marker='.', markerfacecolor='b', markersize=1.0) )
+         # --hapPathErrorDensity track
+         if options.hapPathErrorDensity:
+            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+                                                ydata = data.mafWigDict[ c ][ n ]['mafHpErrorCount'], 
+                                                c = myRed, linewidth=0.3))# ,linestyle='None',
+                                                #marker='o', markerfacecolor=myRed, mec='None', 
+                                                #markersize=0.3) )
+
+         if (not options.stackFillBlocks) and (not options.stackFillHapPaths) and (not options.fill):
             # No Fills, basic wiggle
-         else:
             axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                 ydata = data.mafWigDict[ c ][ n ]['maf'], 
                                                 c = alternatingColors[ col ], linewidth = 0.3 ))
-         # --blockEdgeDensity track
-         if options.blockEdgeDensity == True:
-            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
-                                                ydata = data.mafWigDict[ c ][ n ]['blockEdgeDensity'], 
-                                                c = '#FA698D', linewidth = 0.3 ))
+
          j +=1
          col = not col
 
@@ -477,6 +546,47 @@ def prettyPrintLength( n ):
         units = 'bases'
     return '%s %s' % ( v, units )
 
+def transformErrorDensities( options, data ):
+   if not options.relative:
+      ultimateMax = 0
+      for c in data.chrNames:
+         for n in data.orderedMafs:
+            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > ultimateMax:
+               ultimateMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+   for c in data.chrNames:
+      for n in data.orderedMafs:
+         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
+            if data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] == 0:
+               pass
+               #data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
+            if not options.relative:
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( ultimateMax  ))
+            else:
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( data.mafWigDict[ c ][ n ]['mafHpErrorMax']  )) 
+            if options.transform:
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] ** 0.25
+
+def transformBlockEdgeDensities( options, data ):
+   if not options.relative:
+      ultimateMax = 0
+      for c in data.chrNames:
+         for n in data.orderedMafs:
+            if data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]> ultimateMax:
+               ultimateMax = data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]
+   for c in data.chrNames:
+      for n in data.orderedMafs:
+         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
+            if not options.relative:
+               data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( ultimateMax )
+            else:
+               data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
+            if options.transform:
+               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
+               
+def transformData( options, data ):
+   transformBlockEdgeDensities( options, data )
+   transformErrorDensities( options, data )
+
 def main():
    data = Data()
    parser = OptionParser()
@@ -485,6 +595,8 @@ def main():
    checkOptions( options, parser, data )
    loadAnnots( options, data )
    loadMafs( options, data )
+
+   transformData( options, data )
 
    ( fig, pdf ) = initImage( options, data )
    axDict = establishAxes( fig, options, data )
