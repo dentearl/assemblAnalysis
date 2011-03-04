@@ -57,6 +57,10 @@ def initOptions( parser ):
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
+   parser.add_option( '--smallMultipleMode', dest='SMM',
+                      action='store_true', default=False,
+                      help=('Turns off the printing of the legend and other '
+                            'details, turns on the printing of the --title as the ID.' ))
 
 def checkOptions( options, parser ):
    if options.file == None:
@@ -87,14 +91,11 @@ def readFile( filename, options ):
    
    data[ 'columnLength' ] = data[ 'block/contig_lengths/haplotype_path_lengths' ]
    del data[ 'block/contig_lengths/haplotype_path_lengths' ]
-   pats = { 'contigs':'(\S+)_0_0', 'blocks':'0_(\S+)_0', 'hapPaths':'0_0_(\S+)' }
-   regexs = {}
-   for p in pats:
-      regexs[ p ] = re.compile( pats[ p ] )
+   position = { 'contigs':0, 'blocks':1, 'hapPaths':2 }
    for i in range(0, len( data[ 'columnLength' ])):
       # this will break first time we do contamination mode
       #print regexs[ options.mode ], data[ 'columnLength'][ i ]
-      data[ 'columnLength' ][ i ] = int( re.search( regexs[ options.mode ], data[ 'columnLength'][ i ] ).group( 1 ) )
+      data[ 'columnLength' ][ i ] = int( data[ 'columnLength'][ i ].split('_')[ position[ options.mode ]] )
 
    for d in data:
       for i in range(0, len( data[d])):
@@ -120,16 +121,19 @@ def setAxisLimits( axDict, options, data ):
       upperlimit = 6
    axDict[ 'main' ].set_ylim( 0.0, 1.01 )
    axDict[ 'main' ].set_xlim( 0.9, upperlimit + 0.1 )
-   #axDict[ 'main' ].xaxis.set_major_locator( pylab.NullLocator() )
+   if options.SMM:
+      axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
       axDict[ 'crazy' ].set_xlim( 0.9, upperlimit + 0.6 )
-      #axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
+      if options.SMM:
+         axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
       axDict[ 'crazy' ].xaxis.set_major_locator( pylab.NullLocator() )
    axDict[ 'blowUp' ].set_ylim( 0.9, 1.01 )
    axDict[ 'blowUp' ].set_xlim( 0.9, upperlimit + 0.1 )
    axDict[ 'blowUp' ].xaxis.set_major_locator( pylab.NullLocator() )
-   #axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
+   if options.SMM:
+      axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
@@ -169,11 +173,13 @@ def establishTicks( options, data ):
    data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       data.axDict['crazy'].set_yticks( [0, 1 ] )
-      data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
+      if not options.SMM:
+         data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
-   data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
-   data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
-                                       0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
+   if not options.SMM:
+      data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
+      data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
+                                          0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
@@ -311,18 +317,25 @@ def drawData( fig, options, data ):
                                              y1=data.valuesDict[ n ],
                                              y2=y2, 
                                              facecolor = data.colors[ i ], 
-                                             linewidth = 0.0)
-   # add baseline for homespun bar plot:
+                                             linewidth = 0.0 )
+      # add baseline for homespun bar plot:
       data.axDict['crazy'].add_line( lines.Line2D( xdata=[0.9, 8.6],
                                                    ydata=[0,0],
                                                    color=( 0.6, 0.6, 0.6 ),
                                                    linewidth=0.5 ))
-      for i in range(1, upperlimit):
-         data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
-                                                            height = data.valuesDict['!hapA1/!hapA2/assembly'][i-1],
-                                                            width=0.5,
-                                                            color='r',
-                                                            edgecolor=None) )
+      # for i in range(1, upperlimit ):
+      #    data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
+      #                                                       height = data.valuesDict['!hapA1/!hapA2/assembly'][i-1],
+      #                                                       width=0.5,
+      #                                                       color='r',
+      #                                                       edgecolor=None ))
+      
+      # Error fills
+      data.axDict['crazy'].fill_between( x=data.xData, 
+                                         y1=data.valuesDict[ '!hapA1/!hapA2/assembly' ],
+                                         y2=y2, 
+                                         facecolor = 'r', 
+                                         linewidth = 0.0 )
    else:
       data.colors = [ "#8ca252", "#b5cf6b" ]
       for n in options.topBotOrder:
@@ -339,6 +352,8 @@ def drawData( fig, options, data ):
                                              linewidth = 0.0)
 
 def drawLegend( options, data ):
+   if options.SMM:
+      return
    if options.mode != 'contamination':
       height = 0.3
       left = 0.05
@@ -410,17 +425,25 @@ def drawLegend( options, data ):
       options.topBotOrder.reverse()
 
 def drawAxisLabels( fig, options, data ):
-   if options.title != None:
-      fig.text(x = 0.5, y = 0.96, s = options.title,
-               fontsize = 18, horizontalalignment='center',
+   if not options.SMM:
+      if options.title != None:
+         fig.text(x = 0.5, y = 0.96, s = options.title,
+                  fontsize = 18, horizontalalignment='center',
+                  verticalalignment='bottom')
+      fig.text(x = 0.5, y = 0.02, s = options.xLabel,
+               fontsize = 14, horizontalalignment='center',
                verticalalignment='bottom')
-   fig.text(x = 0.5, y = 0.02, s = options.xLabel,
-            fontsize = 14, horizontalalignment='center',
-            verticalalignment='bottom')
-   fig.text(x = options.axLeft - 0.06, y = 0.28, s = 'Stacked Proportion',
-            fontsize = 14, horizontalalignment='center',
-            verticalalignment='bottom',
-            rotation=90)
+      fig.text(x = options.axLeft - 0.06, y = 0.28, s = 'Stacked Proportion',
+               fontsize = 14, horizontalalignment='center',
+               verticalalignment='bottom',
+               rotation=90 )
+   else:
+      data.axDict['blowUp'].text( x=0.9, y=0.8, s = options.title,
+                                  fontsize = 80, horizontalalignment='right',
+                                  verticalalignment = 'top', family='Helvetica',
+                                  color='w',
+                                  transform=data.axDict['blowUp'].transAxes )
+   
 
 def main():
    data = Data()
