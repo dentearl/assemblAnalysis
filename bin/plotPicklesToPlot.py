@@ -225,7 +225,8 @@ def loadMafs( options, data ):
          if n not in spokenFor:
             data.orderedMafs.append( n )
    data.numberOfMafs = len( data.mafNamesDict )
-   data.numRows = data.numberOfMafs + 12.0 # + 10.0 # 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
+   data.numRows = data.numberOfMafs + 7.0 # 12.0 + 10.0 # 55.0 # data.numberOfMafs + 10 # number of total rows in the figure
+   
    # discover which size categories are absent from all datasets... used in legend plotting
    labs = [ '1e2', '1e3', '1e4',
          '1e5', '1e6', '1e7' ]
@@ -246,7 +247,7 @@ def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'both':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   figHeight = ( data.numberOfMafs + 6.0 ) / 4.0 
+   figHeight = ( data.numberOfMafs + 6.5 ) / 4.0 
    fig = plt.figure( figsize=( 8, figHeight ), dpi=options.dpi, facecolor='w' )
    return ( fig, pdf )
 
@@ -323,7 +324,10 @@ def labelAxes( fig, axDict, options, data ):
                 horizontalalignment='left',
                 verticalalignment='bottom', 
                 color= (0.5, 0.5, 0.5,), fontsize=6 )
-   data.increment = 1.0 / ( data.numRows * 0.9 )
+   data.increment = 1.0 / float( data.numRows )
+   # value of 1.0 will plot track tops and bottoms on top of each other
+   # value of 0.9 will have a small amount of margin between tracks
+   # value of 1.1 will have overlap of tracks onto one another
    j = 0.02
    for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
       yPos =  1.0 - j
@@ -350,7 +354,7 @@ def drawLegend( options, data ):
                           s = 'Fill Color Key', fontsize = 8)
       data.footerAx.text( x=0.22, y = 0.56, horizontalalignment='right',
                           verticalalignment = 'top',
-                          s = 'Maf block >=', fontsize = 7)
+                          s = 'Item >=', fontsize = 7)
       xPos = 0.2
       xunit = 0.05
       labs = [ '0', '1e2', '1e3', '1e4',
@@ -383,7 +387,7 @@ def drawLegend( options, data ):
    if options.blockEdgeDensity:
       data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
                           verticalalignment = 'center',
-                          s = 'Maf block edge density', fontsize = 8 )
+                          s = 'Gapless block edge density', fontsize = 8 )
       # block edge denisty demo line
       data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959, 0.96, 0.961, 0.97 ],
                                             ydata = [ 0.25, 0.24, 0.25, 0.24, 0.24,  0.35, 0.23,  0.23, 0.36, 0.25, 0.245 ],
@@ -450,8 +454,8 @@ def drawMafs( axDict, options, data ):
                        'mafHpErrorCount' ]:
                # adjust the height and the position of the track to fit in the plot
                data.mafWigDict[ c ][ n ][ r ][ i ] = ( data.mafYPos[j] + 
-                                                       float( data.mafWigDict[ c ][ n ][ r ][ i ] ) / 
-                                                       data.numRows )
+                                                       float( data.mafWigDict[ c ][ n ][ r ][ i ] ) *
+                                                       ( data.increment * 0.92 ) )
          # draw the baseline
          axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
                                              ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
@@ -493,20 +497,21 @@ def drawMafs( axDict, options, data ):
             
          # old red = "#FA698D"
          # new red = "#FA9AAB"
-         myRed = '#FA9AAB'
+         myRed  = '#FA9AAB'
+         myBlue = '#C5C3E2'
          # --blockEdgeDensity track
          if options.blockEdgeDensity:
             axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                 ydata = data.mafWigDict[ c ][ n ]['blockEdgeCount'], 
-                                                c = myRed, linewidth=0.0, linestyle='None',
-                                                marker='o', markerfacecolor=myRed, mec='None',
-                                                markersize=0.3) )
+                                                c = myRed, linewidth=0.3)) # , linestyle='None',
+                                                #marker='o', markerfacecolor=myRed, mec='None',
+                                                #markersize=0.3) )
          # --hapPathEdgeDensity track
-         # if options.hapPathEdgeDensity:
-         #    axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
-         #                                        ydata = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'], 
-         #                                        c = 'b', linewidth=0.3))#linestyle='None', linewidth=0.0, 
-         #                                        #marker='.', markerfacecolor='b', markersize=1.0) )
+         if options.hapPathEdgeDensity:
+            axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
+                                                ydata = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'], 
+                                                c = myBlue, linewidth=0.3)) #linestyle='None', linewidth=0.0, 
+                                                #marker='.', markerfacecolor='b', markersize=1.0) )
          # --hapPathErrorDensity track
          if options.hapPathErrorDensity:
             axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
@@ -549,13 +554,34 @@ def prettyPrintLength( n ):
         units = 'bases'
     return '%s %s' % ( v, units )
 
-def transformErrorDensities( options, data ):
+def normalizeErrorDensities( options, data ):
    if not options.relative:
-      ultimateMax = 0
+      globalErrorMax = 0
+      globalEdgeMax = 0
       for c in data.chrNames:
          for n in data.orderedMafs:
-            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > ultimateMax:
-               ultimateMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > globalErrorMax:
+               globalErrorMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+            if data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ] > globalEdgeMax:
+               globalEdgeMax = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+   else:
+      localErrorMaxes = {}
+      localEdgeMaxes  = {}
+      localMaxes      = {}
+      for n in data.orderedMafs:
+         localErrorMaxes[ n ] = 0
+         localEdgeMaxes[ n ]  = 0
+         localMaxes[ n ]      = 0
+         for c in data.chrNames:
+            if localErrorMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]:
+               localErrorMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+            if localEdgeMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]:
+               localEdgeMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]:
+               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]:
+               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+            
    for c in data.chrNames:
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
@@ -563,13 +589,13 @@ def transformErrorDensities( options, data ):
                if options.zerosToNan:
                   data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
             if not options.relative:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( ultimateMax  ))
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( globalErrorMax  ))
+               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] / float( globalEdgeMax  ))
             else:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( data.mafWigDict[ c ][ n ]['mafHpErrorMax']  )) 
-            if options.transform:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] ** 0.25
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( localMaxes[ n ]  )) 
+               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] / float( localMaxes[ n ]  )) 
 
-def transformBlockEdgeDensities( options, data ):
+def normalizeBlockEdgeDensities( options, data ):
    if not options.relative:
       ultimateMax = 0
       for c in data.chrNames:
@@ -583,12 +609,29 @@ def transformBlockEdgeDensities( options, data ):
                data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( ultimateMax )
             else:
                data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
-            if options.transform:
-               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
-               
+
+
+def transformErrorDensities( options, data ):
+   for c in data.chrNames:
+      for n in data.orderedMafs:
+         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
+            data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] ** 0.25
+            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
+
+def transformBlockEdgeDensities( options, data ):
+   for c in data.chrNames:
+      for n in data.orderedMafs:
+         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
+            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
+
+def normalizeData( options, data ):
+   normalizeErrorDensities( options, data )
+   normalizeBlockEdgeDensities( options, data )
+
 def transformData( options, data ):
-   transformBlockEdgeDensities( options, data )
-   transformErrorDensities( options, data )
+   if options.transform:
+      transformErrorDensities( options, data )
+      transformBlockEdgeDensities( options, data )
 
 def main():
    data = Data()
@@ -599,6 +642,7 @@ def main():
    loadAnnots( options, data )
    loadMafs( options, data )
 
+   normalizeData( options, data )
    transformData( options, data )
 
    ( fig, pdf ) = initImage( options, data )
