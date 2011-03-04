@@ -89,6 +89,9 @@ def initOptions( parser ):
    parser.add_option( '--transform', dest='transform', default=False,
                       action='store_true',
                       help='Transform the block and haplotype errors by y^(1/4) to reduce spikes from extreme values.' )
+   parser.add_option( '--zerosToNan', dest='zerosToNan', default=False,
+                      action='store_true',
+                      help='Transform the errors that are 0 to NaNs, so they are not plotted. Creates discontinuous plots.' )
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
                       help='Debug option, turns on the plotting of all axes frames. ' )
@@ -557,8 +560,8 @@ def transformErrorDensities( options, data ):
       for n in data.orderedMafs:
          for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
             if data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] == 0:
-               pass
-               #data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
+               if options.zerosToNan:
+                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
             if not options.relative:
                data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( ultimateMax  ))
             else:
