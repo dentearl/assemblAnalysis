@@ -97,6 +97,9 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
                  data[ t + 'Count' ] = numpy.zeros( shape = ( numBins ))
                  data[ t + 'Max' ]   = 0
+        # populate xAxis
+        for i in range( 0, numBins ):
+            data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
 
         annotTypes = { 'CDS':1, 'UTR':1, 'NXE':1, 'NGE':1, 
                        'island':1, 'tandem':1, 'repeat':1 }
