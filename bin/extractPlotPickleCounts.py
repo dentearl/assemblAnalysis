@@ -45,9 +45,14 @@ def checkOptions( args, options, parser, data ):
 def printData( valuesDict, options, data ):
    if isinstance( valuesDict[ options.key ], float ):
       print valuesDict[ options.key ]
-   elif isinstance( valuesDict[ options.key ], list ):
+   elif isinstance( valuesDict[ options.key ], numpy.ndarray ):
       for i in range( 0, len( valuesDict[ options.key ]) ):
          print valuesDict[ options.key ][i]
+   else:
+      sys.stderr.write( 'Error, unexpected object type '
+                        'for valuesDict[ %s ]: %s\n' % ( options.key, 
+                                                         valuesDict[ options.key ].__class__ ))
+      sys.exit( 1 )
 
 def unpackData( filename, options, data ):
    if not os.path.exists( filename ):
