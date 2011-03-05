@@ -121,8 +121,8 @@ def setAxisLimits( axDict, options, data ):
       upperlimit = 6
    axDict[ 'main' ].set_ylim( 0.0, 1.01 )
    axDict[ 'main' ].set_xlim( 0.9, upperlimit + 0.1 )
-   if options.SMM:
-      axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
+   #if options.SMM:
+   #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
       axDict[ 'crazy' ].set_xlim( 0.9, upperlimit + 0.6 )
@@ -132,8 +132,8 @@ def setAxisLimits( axDict, options, data ):
    axDict[ 'blowUp' ].set_ylim( 0.9, 1.01 )
    axDict[ 'blowUp' ].set_xlim( 0.9, upperlimit + 0.1 )
    axDict[ 'blowUp' ].xaxis.set_major_locator( pylab.NullLocator() )
-   if options.SMM:
-      axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
+   #if options.SMM:
+   #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
@@ -176,10 +176,12 @@ def establishTicks( options, data ):
       if not options.SMM:
          data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
-   if not options.SMM:
-      data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
-      data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
-                                          0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
+   data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
+   data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
+                                       0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
+   if options.SMM:
+      data.axDict['blowUp'].set_yticklabels( [] )
+      data.axDict['main'].set_yticklabels( [] )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
