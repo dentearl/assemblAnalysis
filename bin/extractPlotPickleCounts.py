@@ -28,7 +28,7 @@ def checkOptions( args, options, parser, data ):
                     'island':1, 'tandem':1, 'repeat':1, 'CDSCount':1, 'UTRCount':1,
                     'NXECount':1, 'NGECount':1, 'islandCount':1, 'tandemCount':1, 
                     'repeatCount':1, 'CDSMax':1, 'UTRMax':1, 'NXEMax':1, 'NGEMax':1,
-                    'islandMax':1, 'tandemMax':1, 'repeatMax':1
+                    'islandMax':1, 'tandemMax':1, 'repeatMax':1, 'xAxis':1
                     }
    if options.key == '':
       parser.error('Error, please specify --key\n')
