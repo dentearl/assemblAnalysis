@@ -10,7 +10,6 @@ import glob
 from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
 from libMafGffPlot import GffRecord
-
 import math
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -88,13 +87,19 @@ def initOptions( parser ):
                       help='Plots errors as relative to the genome max. Otherwise is to global genomes max.' )
    parser.add_option( '--transform', dest='transform', default=False,
                       action='store_true',
-                      help='Transform the block and haplotype errors by y^(1/4) to reduce spikes from extreme values.' )
+                      help=('Transform the block and haplotype errors by y^(1/4) to '
+                            'reduce spikes from extreme values.' ))
    parser.add_option( '--zerosToNan', dest='zerosToNan', default=False,
                       action='store_true',
-                      help='Transform the errors that are 0 to NaNs, so they are not plotted. Creates discontinuous plots.' )
+                      help=( 'Transform the errors that are 0 to NaNs, so they are not plotted.'
+                             'Creates discontinuous plots.' ))
+   parser.add_option( '--edgeErrorCeiling', dest='edgeErrorCeiling',
+                      type='int',
+                      help=( 'Changes the edge and error scales to go from 0 to --edgeErrorCeiling '
+                             'and *clip* values greater.' ))
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
-                      help='Debug option, turns on the plotting of all axes frames. ' )
+                      help='Debug option, turns on the plotting of all axes frame boxes.' )
 
 def checkOptions( options, parser, data ):
    if options.ref == None:
@@ -555,16 +560,7 @@ def prettyPrintLength( n ):
     return '%s %s' % ( v, units )
 
 def normalizeErrorDensities( options, data ):
-   if not options.relative:
-      globalErrorMax = 0
-      globalEdgeMax = 0
-      for c in data.chrNames:
-         for n in data.orderedMafs:
-            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > globalErrorMax:
-               globalErrorMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
-            if data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ] > globalEdgeMax:
-               globalEdgeMax = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
-   else:
+   if options.relative:
       localErrorMaxes = {}
       localEdgeMaxes  = {}
       localMaxes      = {}
@@ -581,19 +577,39 @@ def normalizeErrorDensities( options, data ):
                localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
             if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]:
                localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+   else:
+      globalErrorMax = 0
+      globalEdgeMax = 0
+      for c in data.chrNames:
+         for n in data.orderedMafs:
+            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > globalErrorMax:
+               globalErrorMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
+            if data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ] > globalEdgeMax:
+               globalEdgeMax = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
             
    for c in data.chrNames:
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
-            if data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] == 0:
-               if options.zerosToNan:
-                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
-            if not options.relative:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( globalErrorMax  ))
-               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] / float( globalEdgeMax  ))
+         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
+            if options.zerosToNan and data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] == 0:
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
+            if options.edgeErrorCeiling:
+               if data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] >= float( options.edgeErrorCeiling ):
+                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = 1.0
+               else:
+                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( options.edgeErrorCeiling )
+                  
+               if data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] > float( options.edgeErrorCeiling ):
+                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = 1.0
+               else:
+                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] /= float( options.edgeErrorCeiling )
             else:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] / float( localMaxes[ n ]  )) 
-               data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] / float( localMaxes[ n ]  )) 
+               if options.relative:
+                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( localMaxes[ n ] )
+                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ]  /= float( localMaxes[ n ] )
+               else:
+                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( globalErrorMax )
+                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ]  /= float( globalEdgeMax  )
+                  
 
 def normalizeBlockEdgeDensities( options, data ):
    if not options.relative:
@@ -610,6 +626,8 @@ def normalizeBlockEdgeDensities( options, data ):
             else:
                data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
 
+def normalizeAnnotatinos( options, data ):
+   pass
 
 def transformErrorDensities( options, data ):
    for c in data.chrNames:
@@ -627,6 +645,7 @@ def transformBlockEdgeDensities( options, data ):
 def normalizeData( options, data ):
    normalizeErrorDensities( options, data )
    normalizeBlockEdgeDensities( options, data )
+   normalizeAnnotations( options, data )
 
 def transformData( options, data ):
    if options.transform:
