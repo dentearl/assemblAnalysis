@@ -51,7 +51,7 @@ def unpackData( filename, options, data ):
    f.close()
    return d
 
-def loadMafs( args, options, data ):
+def loadPickles( args, options, data ):
    for f in args:
       printData( unpackData( f, options, data ), options, data )
 
@@ -61,7 +61,7 @@ def main():
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( args, options, parser, data )
-   loadMafs( args, options, data )
+   loadPickles( args, options, data )
 
 if __name__ == '__main__':
    main()
