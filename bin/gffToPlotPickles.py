@@ -23,8 +23,9 @@ from libMafGffPlot import objListToBinnedWiggle
 import numpy
 from optparse import OptionParser
 import os
-import sys
 import re
+import sys
+import time
 
 def initOptions( parser ):
    parser.add_option( '--gff', dest='gff',
@@ -106,7 +107,7 @@ def readGff( options, data ):
    """
    data.chromsInGff = {}
    for c in data.chrNames:
-      data.gffRecordsByChrom[ c ] = {}
+      data.gffRecordsByChrom[ c ] = []
    gf = open( options.gff )
    for line in gf:
       line = line.strip()
@@ -120,11 +121,9 @@ def readGff( options, data ):
       r.chr = t[ 0 ]
       if r.chr not in data.chromsInGff:
          data.chromsInGff[ r.chr ] = True
-         data.gffRecordsByChrom[ r.chr ] = {}
+         data.gffRecordsByChrom[ r.chr ] = []
       r.source = t[ 1 ]
       r.type   = t[ 2 ]
-      if r.type not in data.gffRecordsByChrom[ r.chr ]:
-         data.gffRecordsByChrom[ r.chr ][ r.type ] = []
       r.start  = int( t[ 3 ] )
       r.end    = int( t[ 4 ] )
       if t[ 5 ] != '.':
@@ -136,42 +135,46 @@ def readGff( options, data ):
       # we don't need this information, it just takes up space
       #if len( t ) == 9:
       #   r.group  = t[ 8 ]
-      data.gffRecordsByChrom[ r.chr ][ r.type ].append( r )
+      data.gffRecordsByChrom[ r.chr ].append( r )
 
-def annotDataOrNone( gffRecordsByChrom, c, a ):
+def annotDataOrNone( gffRecordsByChrom, c ):
    """ return d which is either the list of GffRecords
-   for a given chromosome, c, and a given annotation type,
-   a, or return None.
+   for a given chromosome, c, or return None.
    """
    if c not in gffRecordsByChrom:
-      d = None
-   else:
-      if gffRecordsByChrom[ c ] == None:
-         d = None
-      else:
-         if a not in gffRecordsByChrom[ c ]:
-            d = None
-         else:
-            d = gffRecordsByChrom[ c ][ a ]
-   return d
+      return None
+   if gffRecordsByChrom[ c ] == None:
+      return None
+   if len( gffRecordsByChrom[ c ] ) < 1:
+      return None
+   return gffRecordsByChrom[ c ]
 
 def convertDataToWiggle( options, data ):
-   """ the annotWigDict is keyed first on chromosome, then on annotation or
-   xAxis. This will be pulled apart by chr in the packData() function.
+   """ the annotWigDict is keyed on chromosome, then on annotationCount,
+   annotationMax and xAxis. This will be pulled apart by chr keys in the 
+   packData() function.
    """
    annotWigDict = {}
-   annotOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat']
-   annotOrder.reverse() # reversing it will allow it to appear in the 'correct' top-bot order
    for c in data.chrNames:
       thisChrNumBins = int( ( float( data.chrLengthsByChrom[ c ] ) / data.genomeLength ) * options.numBins )
       annotWigDict[ c ] = {}
-      annotWigDict[ c ]['xAxis'] = numpy.zeros( shape = thisChrNumBins )
-      for a in annotOrder:
-         d = annotDataOrNone( data.gffRecordsByChrom, c, a )
-         annotWigDict[ c ][ a ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins, options.gff )
-      for j in range( 0, thisChrNumBins ):
-         annotWigDict[ c ]['xAxis'][ j ] = ( float( j ) / ( thisChrNumBins - 1 )) * data.chrLengthsByChrom[ c ]
+      d = annotDataOrNone( data.gffRecordsByChrom, c )
+      if d == None:
+         annotWigDict[ c ]['xAxis'] = numpy.zeros( shape = ( thisChrNumBins ))
+         for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
+            annotWigDict[ c ][ t + 'Count' ] = numpy.zeros( shape = ( thisChrNumBins ))
+            annotWigDict[ c ][ t + 'Max' ]   = 0
+
+         for i in range( 0, thisChrNumBins ):
+            annotWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
+                                             float( data.chrLengthsByChrom[ c ] ) )
+      else:
+         annotWigDict[ c ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], thisChrNumBins, options.gff )
    data.annotWigDict = annotWigDict
+
+def verbosePrint( s, options, data ):
+   if options.isVerbose:
+      print s
 
 def main():
    data = Data()
@@ -179,11 +182,16 @@ def main():
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
+   t0 = time.time()
    readGff( options, data )
+   verbosePrint( 'reading the GFF and creating object took %.1f seconds' % ( time.time() - t0 ), options, data )
+   t0 = time.time()
    for c in data.chrNames:
-      for a in data.gffRecordsByChrom[ c ]:
-         data.gffRecordsByChrom[ c ][ a ].sort( key = lambda x: x.start, reverse=False )
+      data.gffRecordsByChrom[ c ].sort( key = lambda x: x.start, reverse=False )
+   verbosePrint( 'sorting took %.1f seconds' % ( time.time() - t0 ), options, data )
+   t0 = time.time()
    convertDataToWiggle( options, data )
+   verbosePrint( 'converting data to the wigpic format took %.1f seconds' % ( time.time() - t0 ), options, data)
    packData( options, data )
 
 if __name__ == '__main__':

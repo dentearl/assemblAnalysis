@@ -89,15 +89,20 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     import numpy
     import sys
     if objList == None or len( objList ) < 1:
-            return None
+        return None
     if isinstance( objList[0], GffRecord ):
         """ the Gff return is a single numpy vector of numBins length
         """
-        vec = numpy.zeros( shape = ( numBins ))
-        if objList == None or len( objList ) < 1:
-            return vec
-        maxCount = 0
+        data = { 'xAxis'    : numpy.zeros( shape = ( numBins ))}
+        for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
+                 data[ t + 'Count' ] = numpy.zeros( shape = ( numBins ))
+                 data[ t + 'Max' ]   = 0
+
+        annotTypes = { 'CDS':1, 'UTR':1, 'NXE':1, 'NGE':1, 
+                       'island':1, 'tandem':1, 'repeat':1 }
         for a in objList:
+            if a.type not in annotTypes:
+                continue
             # index position in a 'numBins' length array.
             if a.start > featLen or a.end > featLen:
                 sys.stderr.write( 'Error, file %s has annotation on chr %s '
@@ -106,12 +111,10 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 sys.exit( 1 )
             for i in range( a.start, a.end + 1 ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) )))
-                vec[ pos ] += 1
-                if vec[ pos ] > maxCount:
-                    maxCount = vec[ pos ]
-        for i in range( 0, numBins):
-            vec[ i ] /= float( maxCount )
-        return vec
+                data[ a.type + 'Count' ][ pos ] += 1
+                if data[ a.type + 'Max' ] < data[ a.type + 'Count' ][ pos ]:
+                   data[ a.type + 'Max' ] = data[ a.type + 'Count' ][ pos ]
+        return data
     elif isinstance( objList[0], MafBlock ):
         """ the Maf return is a dictionary with the following keys
         maf               all maf block bases
