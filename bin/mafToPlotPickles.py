@@ -250,13 +250,15 @@ def readMaf( options, data ):
 
 def mafDataOrNone( mafBlocksByChrom, c ):
    """ return d which is either the list of MafBlocks
-   for a given chromosome, c, and a given annotation type,
-   a, or return None.
+   for a given chromosome, c, or return None.
    """
-   if len( mafBlocksByChrom[c ] ) < 1:
+   if c not in mafBlocksByChrom:
       return None
-   else:
-      return mafBlocksByChrom[ c ]
+   if mafBlocksByChrom[ c ] == None:
+      return None
+   if len( mafBlocksByChrom[ c ] ) < 1:
+      return None
+   return mafBlocksByChrom[ c ]
 
 def convertDataToWiggle( options, data ):
    """ the mafWigDict is keyed on chromosome and then
