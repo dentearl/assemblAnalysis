@@ -24,8 +24,7 @@ def checkOptions( args, options, parser, data ):
                     'maf1e5':1, 'maf1e6':1, 'maf1e7':1, 'blockEdgeCount':1,
                     'mafHpl1e2':1, 'mafHpl1e3':1, 'mafHpl1e4':1, 
                     'mafHpl1e5':1, 'mafHpl1e6':1, 'mafHpl1e7':1, 'mafHpEdgeCount':1,
-                    'mafHpErrorCount':1, 'CDS':1, 'UTR':1, 'NXE':1, 'NGE':1, 
-                    'island':1, 'tandem':1, 'repeat':1, 'CDSCount':1, 'UTRCount':1,
+                    'mafHpErrorCount':1, 'CDSCount':1, 'UTRCount':1,
                     'NXECount':1, 'NGECount':1, 'islandCount':1, 'tandemCount':1, 
                     'repeatCount':1, 'CDSMax':1, 'UTRMax':1, 'NXEMax':1, 'NGEMax':1,
                     'islandMax':1, 'tandemMax':1, 'repeatMax':1, 'xAxis':1
