@@ -194,11 +194,11 @@ def checkOptions( options, parser, data ):
       data.annotationCeilings = []
       for ceiling in ceilings:
          data.annotationCeilings.append( int( ceiling ))
-      data.annotationClippingDict = {} 
-      # annotationClippingDict is keyed first on chromosomes, 
-      # then on the data type, i.e. CDS, or maf, or whatever
    else:
-      data.annotationCeilings = [ 1.0 ] * len( data.annotationOrder )
+      data.annotationCeilings = [ -1 ] * len( data.annotationOrder )
+   data.annotationClippingDict = {} 
+   # annotationClippingDict is keyed first on chromosomes, 
+   # then on the data type, i.e. CDS, or maf, or whatever
    
 def unpackData( filename, options, data ):
    t0 = time.time()
@@ -710,9 +710,12 @@ def arrayIndexToClippingList( where, options, data ):
 def normalizeAnnotations( options, data ):
    localMaxes = { 'CDS':0, 'UTR':0, 'NXE':0, 'NGE':0, 'island':0, 'tandem':0, 'repeat':0 }
    for c in data.chrNames:
-      for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
+      i = -1
+      for t in data.annotationOrder:
+         i += 1
          if localMaxes[ t ] < data.annotWigDict[ c ][ t + 'Max' ]:
             localMaxes[ t ] = data.annotWigDict[ c ][ t + 'Max' ]
+            data.annotationCeilings[ i ] = localMaxes[ t ]
    for c in data.chrNames:
       data.annotationClippingDict[ c ] = {}
       i = -1
@@ -737,7 +740,7 @@ def normalizeCoverages( options, data ):
                     'maf1e5', 'maf1e6', 'maf1e7',
                     'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
                     'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ] :
-            data.mafWigDict[ c ][ n ][ r ] *= data.axCeilings[ n ] * 0.99
+            data.mafWigDict[ c ][ n ][ r ] *= data.axCeilings[ n ] * 0.98
 
 def transformErrorDensities( options, data ):
    for c in data.chrNames:
