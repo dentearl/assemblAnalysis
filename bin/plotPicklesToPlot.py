@@ -97,9 +97,19 @@ def initOptions( parser ):
                       type='int',
                       help=( 'Changes the edge and error scales to go from 0 to --edgeErrorCeiling '
                              'and *clip* values greater.' ))
+   parser.add_option( '--annotationOrder', dest='annotationOrder',
+                      type='string',
+                      help=( 'Change the order that annotations are drawn, top to bottom. '
+                             'Comma separated list.'))
+   parser.add_option( '--annotationCeilings', dest='annotationCeilings',
+                      type='string',
+                      help=( 'Independently set the value ceiling for annotations. '
+                             'Comma separated list, must be same length and order as '
+                             ' --annotationOrder.'))
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
                       help='Debug option, turns on the plotting of all axes frame boxes.' )
+   
 
 def checkOptions( options, parser, data ):
    if options.ref == None:
@@ -169,6 +179,26 @@ def checkOptions( options, parser, data ):
                             ( '#9467bd' ), # dark purple
                             ( '#c5b0d5' )  # light purple
                             ]
+   if options.annotationOrder:
+      annots = options.annotationOrder.split(',')
+      for d in annots:
+         if d not in options.annotColors:
+            parser.error('Error, %s is not a valid annotation' % a )
+      data.annotationOrder = annots
+   else:
+      data.annotationOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat' ]
+   if options.annotationCeilings:
+      ceilings = options.annotationCeilings.split(',')
+      if len( ceilings ) != len( data.annotationOrder ):
+         parser.error('Error, length of --annotationCeilings (%d) is not equal to --annotationOrder (%d)' % ( len( ceilings ), len( data.annotationOrder )))
+      data.annotationCeilings = []
+      for ceiling in ceilings:
+         data.annotationCeilings.append( int( ceiling ))
+      data.annotationClippingDict = {} 
+      # annotationClippingDict is keyed first on chromosomes, 
+      # then on the data type, i.e. CDS, or maf, or whatever
+   else:
+      data.annotationCeilings = []
    
 def unpackData( filename, options, data ):
    t0 = time.time()
@@ -252,7 +282,7 @@ def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'both':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   figHeight = ( data.numberOfMafs + 6.5 ) / 4.0 
+   figHeight = ( data.numberOfMafs + len( data.annotationOrder ) + 0.5 ) / 4.0 
    fig = plt.figure( figsize=( 8, figHeight ), dpi=options.dpi, facecolor='w' )
    return ( fig, pdf )
 
@@ -334,7 +364,7 @@ def labelAxes( fig, axDict, options, data ):
    # value of 0.9 will have a small amount of margin between tracks
    # value of 1.1 will have overlap of tracks onto one another
    j = 0.02
-   for a in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat']: # 'tandem'
+   for a in data.annotationOrder:
       yPos =  1.0 - j
       data.labelAx.text( x= 0.8, y= yPos, s = a, 
                          horizontalalignment='right', verticalalignment='bottom', fontsize=8 )
@@ -376,18 +406,19 @@ def drawLegend( options, data ):
          data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
                              verticalalignment='top', fontsize = 7 )
    if not options.stackFillBlocks and not options.fill and not options.stackFillHapPaths:
-      data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
-                          verticalalignment = 'center',
-                          s = 'Coverage', fontsize = 8 )
-      # baseline
-      data.footerAx.add_line( lines.Line2D( xdata=[0.91, 0.97],
-                                            ydata=[ 0.45, 0.45],
-                                            color= ( 0.8, 0.8, 0.8),
-                                            linewidth=0.3) )
-      # maf demo line
-      data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959,.96, 0.97 ],
-                                            ydata = [ 0.55, 0.55, 0.55, 0.55, 0.52,  0.505, 0.45, 0.45, 0.54, 0.55 ],
-                                            c = (0.2, 0.2, 0.2), linewidth = 0.3 ))
+      pass
+      # data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
+      #                     verticalalignment = 'center',
+      #                     s = 'Coverage', fontsize = 8 )
+      # # baseline
+      # data.footerAx.add_line( lines.Line2D( xdata=[0.91, 0.97],
+      #                                       ydata=[ 0.45, 0.45],
+      #                                       color= ( 0.8, 0.8, 0.8),
+      #                                       linewidth=0.3) )
+      # # maf demo line
+      # data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959,.96, 0.97 ],
+      #                                       ydata = [ 0.55, 0.55, 0.55, 0.55, 0.52,  0.505, 0.45, 0.45, 0.54, 0.55 ],
+      #                                       c = (0.2, 0.2, 0.2), linewidth = 0.3 ))
       
    if options.blockEdgeDensity:
       data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
@@ -413,7 +444,6 @@ def scaleFont( c, chrLen, genLen, axLen, options, data):
    return fs
 
 def drawAnnotations( axDict, options, data ):
-   annotOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat'] # 'tandem'
    for c in data.chrNames:
       if c not in data.annotWigDict:
          sys.stderr.write('Error, unable to locate chromosome %s in annotWigDict!\n' % c )
@@ -421,26 +451,44 @@ def drawAnnotations( axDict, options, data ):
       if 'xAxis' not in data.annotWigDict[ c ]:
          sys.stderr.write('Error, unable to locate xAxis in annotWigDict[ %s ]!\n' % c )
          sys.exit( 1 )
-      for i in range( 0, len( data.annotWigDict[ c ]['xAxis']) ):
-         j = 0
-         for a in annotOrder:
-            
-            data.annotWigDict[ c ][ a ][ i ] =  ( data.annotYPos[ j ] + 
-                                                  float( data.annotWigDict[ c ][ a ][ i ] ) / 
-                                                  data.numRows )
-            j += 1
       j = 0
-      for a in annotOrder:
-         axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
-                                                ydata=[data.annotYPos[ j ], data.annotYPos[ j ]],
-                                                color= options.annotColors[ a ],
-                                                linewidth=0.3))
-         axDict[ c ].fill_between( x=data.annotWigDict[ c ]['xAxis'], 
-                                   y1=data.annotWigDict[ c ][ a ], 
-                                   y2=data.annotYPos[ j ],
-                                   facecolor = options.annotColors[ a ], 
-                                   linewidth = 0.0 )
+      for a in data.annotationOrder:
+         # adjust the height and the position of the track to fit in the plot
+         data.annotWigDict[ c ][ a + 'Count' ] =  ( data.annotYPos[ j ] + 
+                                                    data.annotWigDict[ c ][ a + 'Count' ] *
+                                                    ( data.increment * 0.92 ))
          j += 1
+      j = 0
+      for a in data.annotationOrder:
+         # baseline
+         axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
+                                             ydata=[data.annotYPos[ j ], data.annotYPos[ j ]],
+                                             color= options.annotColors[ a ],
+                                             linewidth=0.3))
+         # draw the polys
+         axDict[ c ].fill_between( x=data.annotWigDict[ c ]['xAxis'], 
+                                   y1=data.annotWigDict[ c ][ a + 'Count' ], 
+                                   y2=data.annotYPos[ j ],
+                                   facecolor = options.annotColors[ a ],
+                                   linewidth = 0.0 )
+         # draw clipping regions
+         if len( data.annotationCeilings ) > 0:
+            drawClippedAnnotationRegions( axDict, c, a, j, options, data )
+         j += 1
+
+def drawClippedAnnotationRegions( axDict, c, a, j, options, data ):
+   if c not in data.annotationClippingDict:
+      return
+   if a not in data.annotationClippingDict[ c ]:
+      return
+   for i in range( 0, len( data.annotationClippingDict[ c ][ a ] )):
+      nudge = data.annotWigDict[ c ][ 'xAxis' ][ 1 ] / 2.0
+      axDict[ c ].add_line( lines.Line2D( xdata=[ data.annotWigDict[ c ][ 'xAxis' ][ data.annotationClippingDict[ c ][ a ][ i ][ 0 ]] - nudge,
+                                                  data.annotWigDict[ c ][ 'xAxis' ][ data.annotationClippingDict[ c ][ a ][ i ][ 1 ]] + nudge],
+                                          ydata=[ data.annotYPos[ j ] + data.increment * 0.92, 
+                                                  data.annotYPos[ j ] + data.increment * 0.92 ], 
+                                          linewidth=0.4,
+                                          color='r'))
 
 def drawMafs( axDict, options, data ):
    alternatingColors = { True: ( 0.2, 0.2, 0.2 ),
@@ -451,16 +499,15 @@ def drawMafs( axDict, options, data ):
       col = True
       j = 0
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
-            for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
-                       'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeCount',
-                       'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
-                       'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7', 'mafHpEdgeCount',
-                       'mafHpErrorCount' ]:
-               # adjust the height and the position of the track to fit in the plot
-               data.mafWigDict[ c ][ n ][ r ][ i ] = ( data.mafYPos[j] + 
-                                                       float( data.mafWigDict[ c ][ n ][ r ][ i ] ) *
-                                                       ( data.increment * 0.92 ) )
+         for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
+                    'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeCount',
+                    'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
+                    'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7', 'mafHpEdgeCount',
+                    'mafHpErrorCount' ]:
+            # adjust the height and the position of the track to fit in the plot
+            data.mafWigDict[ c ][ n ][ r ] = ( data.mafYPos[ j ] + 
+                                               data.mafWigDict[ c ][ n ][ r ] *
+                                               ( data.increment * 0.92 ))
          # draw the baseline
          axDict[ c ].add_line( lines.Line2D( xdata=[0, data.chrLengthsByChrom[ c ]],
                                              ydata=[data.mafYPos[ j ], data.mafYPos[ j ]],
@@ -499,9 +546,6 @@ def drawMafs( axDict, options, data ):
                                          y2=data.mafYPos[ j ],
                                          facecolor = data.stackFillColors[ k ],
                                          linewidth = 0.0 )
-            
-         # old red = "#FA698D"
-         # new red = "#FA9AAB"
          myRed  = '#FA9AAB'
          myBlue = '#C5C3E2'
          # --blockEdgeDensity track
@@ -530,7 +574,6 @@ def drawMafs( axDict, options, data ):
             axDict[ c ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                 ydata = data.mafWigDict[ c ][ n ]['maf'], 
                                                 c = alternatingColors[ col ], linewidth = 0.3 ))
-
          j +=1
          col = not col
 
@@ -589,27 +632,24 @@ def normalizeErrorDensities( options, data ):
             
    for c in data.chrNames:
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis']) ):
-            if options.zerosToNan and data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] == 0:
-               data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = float( 'nan' )
-            if options.edgeErrorCeiling:
-               if data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] >= float( options.edgeErrorCeiling ):
-                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = 1.0
-               else:
-                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( options.edgeErrorCeiling )
-                  
-               if data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] > float( options.edgeErrorCeiling ):
-                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = 1.0
-               else:
-                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] /= float( options.edgeErrorCeiling )
+         if options.zerosToNan:
+            whereZeros = data.mafWigDict[ c ][ n ]['mafHpErrorCount'] == 0
+            data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ whereZeros ] = float( 'nan' )
+         if options.edgeErrorCeiling:
+            whereGreater = data.mafWigDict[ c ][ n ]['mafHpErrorCount']  > float( options.edgeErrorCeiling )
+            data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ whereGreater ] = float( options.edgeErrorCeiling )
+            data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( options.edgeErrorCeiling )
+               
+            whereGreater = data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  > float( options.edgeErrorCeiling )
+            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ whereGreater ] = float( options.edgeErrorCeiling )
+            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] /= float( options.edgeErrorCeiling )
+         else:
+            if options.relative:
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( localMaxes[ n ] )
+               data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  /= float( localMaxes[ n ] )
             else:
-               if options.relative:
-                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( localMaxes[ n ] )
-                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ]  /= float( localMaxes[ n ] )
-               else:
-                  data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] /= float( globalErrorMax )
-                  data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ]  /= float( globalEdgeMax  )
-                  
+               data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( globalErrorMax )
+               data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  /= float( globalEdgeMax  )
 
 def normalizeBlockEdgeDensities( options, data ):
    if not options.relative:
@@ -620,27 +660,62 @@ def normalizeBlockEdgeDensities( options, data ):
                ultimateMax = data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]
    for c in data.chrNames:
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
-            if not options.relative:
-               data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( ultimateMax )
-            else:
-               data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'][ i ] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
+         if not options.relative:
+            data.mafWigDict[ c ][ n ]['blockEdgeCount'] = data.mafWigDict[ c ][ n ]['blockEdgeCount']   / float( ultimateMax )
+         else:
+            data.mafWigDict[ c ][ n ]['blockEdgeCount'] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
 
-def normalizeAnnotatinos( options, data ):
-   pass
+def arrayIndexToClippingList( where, options, data ):
+   """ where is a list of booleans. True means this value was 
+   clipped on the ceiling, false means it was not altered. The clipping
+   list is the list of tuples, which are coordinates of strings of True.
+   """
+   cList = []
+   start = False
+   for i in range( 0, len( where ) ):
+      if where[ i ] and not start:
+         start = i
+      if not where[ i ] and start:
+         cList.append( (start, i - 1) )
+         start = False
+   if start:
+      cList.append( ( start, len( where ) - 1 ) )
+   return cList
+
+def normalizeAnnotations( options, data ):
+   localMaxes = { 'CDS':0, 'UTR':0, 'NXE':0, 'NGE':0, 'island':0, 'tandem':0, 'repeat':0 }
+   for c in data.chrNames:
+      for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
+         if localMaxes[ t ] < data.annotWigDict[ c ][ t + 'Max' ]:
+            localMaxes[ t ] = data.annotWigDict[ c ][ t + 'Max' ]
+   for c in data.chrNames:
+      data.annotationClippingDict[ c ] = {}
+      i = -1
+      for t in data.annotationOrder:
+         i += 1
+         if localMaxes[ t ] == 0:
+            sys.stderr.write( 'Warning, annotation "%s" has a max of 0\n' % t )
+         if len( data.annotationCeilings ) > 0:
+            data.annotWigDict[ c ][ t + 'Count' ] /= float( data.annotationCeilings[ i ] )
+            whereGreater = data.annotWigDict[ c ][ t + 'Count' ]  > 1.0
+            if isinstance( whereGreater, numpy.ndarray ):
+               data.annotationClippingDict[ c ][ t ] = arrayIndexToClippingList( whereGreater, options, data )
+               data.annotWigDict[ c ][ t + 'Count' ][ whereGreater ] = 1.0
+         else:
+            data.annotWigDict[ c ][ t + 'Count' ] /= float( localMaxes[ t ] )
+         if sum( data.annotWigDict[ c ][ t + 'Count' ] == 0 ) == len( data.annotWigDict[ c ][ t + 'Count' ] ):
+            sys.stderr.write('Warning, annotation "%s" in chr %s has no data\n' %( t, c ))
 
 def transformErrorDensities( options, data ):
    for c in data.chrNames:
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
-            data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ i ] ** 0.25
-            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
+         data.mafWigDict[ c ][ n ]['mafHpErrorCount'] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'] ** 0.25
+         data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  = data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  ** 0.25
 
 def transformBlockEdgeDensities( options, data ):
    for c in data.chrNames:
       for n in data.orderedMafs:
-         for i in range( 0, len( data.mafWigDict[ c ][ n ]['xAxis'])):
-            data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ i ] ** 0.25
+         data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] ** 0.25
 
 def normalizeData( options, data ):
    normalizeErrorDensities( options, data )
