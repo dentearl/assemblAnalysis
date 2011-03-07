@@ -271,7 +271,10 @@ def loadMafs( options, data ):
          for l in labs:
             if l in data.lengthThresholdPresent:
                continue
-            key = 'mafHpl' + l
+            if options.stackFillBlocks:
+               key = 'maf' + l
+            elif options.stackFillHapPaths:
+               key = 'mafHpl' + l
             if key not in data.mafWigDict[ c ][ n ]:
                print 'thats weird, this key: %s is not in file: %s chr: %s' % ( key, n, c )
                continue
