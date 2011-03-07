@@ -42,6 +42,9 @@ def checkOptions( args, options, parser, data ):
          parser.error('Error, file "%s" does not end in ".pickle", aborting.\n' % f )
 
 def printData( valuesDict, options, data ):
+   if options.key not in valuesDict:
+      sys.stderr.write( 'Error, key %s not in this dictionary.\n' % options.key )
+      sys.exit( 1 )
    if isinstance( valuesDict[ options.key ], float ):
       print valuesDict[ options.key ]
    elif isinstance( valuesDict[ options.key ], numpy.ndarray ):
