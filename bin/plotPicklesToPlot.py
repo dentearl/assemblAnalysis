@@ -293,12 +293,16 @@ def establishAxes( fig, options, data ):
    options.axLeft = 0.1
    options.axWidth = 0.88
    options.axTop = 0.98
-   options.axBottom = 0.08
-   options.axHeight = options.axTop - options.axBottom
    options.chrMargin = 0.02
-   data.footerAx = fig.add_axes( [ 0.02, 0.01, 0.96, options.axBottom - 0.02] )
-   if not options.frames:
-      plt.box( on=False )
+   if not options.stackFillBlocks and not options.stackFillHapPaths:
+      options.axBottom = 0.02
+      options.axHeight = options.axTop - options.axBottom
+   else:
+      options.axBottom = 0.08
+      options.axHeight = options.axTop - options.axBottom
+      data.footerAx = fig.add_axes( [ 0.02, 0.01, 0.96, options.axBottom - 0.02] )
+      if not options.frames:
+         plt.box( on=False )
    curXPos = options.axLeft
    #data.labelAx = fig.add_axes( [ 0.02, options.axBottom, 0.08, options.axHeight] )
    #if not options.frames:
@@ -314,11 +318,11 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def setAxisLimits( axDict, options, data ):
-   for ax in [ data.footerAx ]:
-      ax.set_ylim( 0.0, 1.01 )
-      ax.set_xlim( 0.0, 1.0 )
-      ax.xaxis.set_major_locator( pylab.NullLocator() )
-      ax.yaxis.set_major_locator( pylab.NullLocator() )
+   if options.stackFillBlocks or options.stackFillHapPaths:
+      data.footerAx.set_ylim( 0.0, 1.01 )
+      data.footerAx.set_xlim( 0.0, 1.0 )
+      data.footerAx.xaxis.set_major_locator( pylab.NullLocator() )
+      data.footerAx.yaxis.set_major_locator( pylab.NullLocator() )
    for c in data.chrNames:
       i = -1
       for a in data.annotationOrder:
@@ -450,13 +454,14 @@ def drawLegend( options, data ):
       #                                       c = (0.2, 0.2, 0.2), linewidth = 0.3 ))
       
    if options.blockEdgeDensity:
-      data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
-                          verticalalignment = 'center',
-                          s = 'Gapless block edge density', fontsize = 8 )
-      # block edge denisty demo line
-      data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959, 0.96, 0.961, 0.97 ],
-                                            ydata = [ 0.25, 0.24, 0.25, 0.24, 0.24,  0.35, 0.23,  0.23, 0.36, 0.25, 0.245 ],
-                                            c = '#FA698D', linewidth = 0.3 ))
+      pass
+      # data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
+      #                     verticalalignment = 'center',
+      #                     s = 'Gapless block edge density', fontsize = 8 )
+      # # block edge denisty demo line
+      # data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959, 0.96, 0.961, 0.97 ],
+      #                                       ydata = [ 0.25, 0.24, 0.25, 0.24, 0.24,  0.35, 0.23,  0.23, 0.36, 0.25, 0.245 ],
+      #                                       c = '#FA698D', linewidth = 0.3 ))
          
 
 def scaleFont( c, chrLen, genLen, axLen, options, data):
@@ -480,13 +485,6 @@ def drawAnnotations( axDict, options, data ):
       if 'xAxis' not in data.annotWigDict[ c ]:
          sys.stderr.write('Error, unable to locate xAxis in annotWigDict[ %s ]!\n' % c )
          sys.exit( 1 )
-      # j = 0
-      # for a in data.annotationOrder:
-         # adjust the height and the position of the track to fit in the plot
-         # data.annotWigDict[ c ][ a + 'Count' ] =  ( data.annotYPos[ j ] + 
-         #                                            data.annotWigDict[ c ][ a + 'Count' ] *
-         #                                            ( data.increment * 0.92 ))
-         # j += 1
       i = -1
       for a in data.annotationOrder:
          i += 1
@@ -661,34 +659,42 @@ def normalizeEdgeErrorDensities( options, data ):
             data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ whereZeros ] = float( 'nan' )
          if options.edgeErrorCeiling:
             whereGreater = data.mafWigDict[ c ][ n ]['mafHpErrorCount']  > float( options.edgeErrorCeiling )
-            #data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ whereGreater ] = float( options.edgeErrorCeiling )
-            #data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( options.edgeErrorCeiling )
-               
+            # do something with whereGreater here...
             whereGreater = data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  > float( options.edgeErrorCeiling )
-            #data.mafWigDict[ c ][ n ]['mafHpEdgeCount'][ whereGreater ] = float( options.edgeErrorCeiling )
-            #data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] /= float( options.edgeErrorCeiling )
-         else:
-            pass
-            # if options.relative:
-            #    data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( localMaxes[ n ] )
-            #    data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  /= float( localMaxes[ n ] )
-            # else:
-            #    data.mafWigDict[ c ][ n ]['mafHpErrorCount'] /= float( globalErrorMax )
-            #    data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  /= float( globalEdgeMax  )
+            # do something with whereGreater here...
 
 def normalizeBlockEdgeDensities( options, data ):
-   if not options.relative:
+   # establish ultimateMax
+   if options.relative:
+      localMaxes      = {}
+      for n in data.orderedMafs:
+         localMaxes[ n ]      = 0
+         for c in data.chrNames:
+            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]:
+               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]
+         data.axCeilings[ n ] = localMaxes[ n ]
+   else:
       ultimateMax = 0
       for c in data.chrNames:
          for n in data.orderedMafs:
-            if data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]> ultimateMax:
+            if ultimateMax < data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]:
                ultimateMax = data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ]
+      for n in data.orderedMafs:
+         if options.edgeErrorCeiling:
+            data.axCeilings[ n ] = options.edgeErrorCeiling
+         else:
+            data.axCeilings[ n ] = ultimateMax
+   # record clipping
    for c in data.chrNames:
       for n in data.orderedMafs:
-         if not options.relative:
-            data.mafWigDict[ c ][ n ]['blockEdgeCount'] = data.mafWigDict[ c ][ n ]['blockEdgeCount']   / float( ultimateMax )
-         else:
-            data.mafWigDict[ c ][ n ]['blockEdgeCount'] = ( data.mafWigDict[ c ][ n ]['blockEdgeCount'] / float( data.mafWigDict[ c ][ n ][ 'blockEdgeMax' ] ))
+         if options.zerosToNan:
+            whereZeros = data.mafWigDict[ c ][ n ]['blockEdgeCount'] == 0
+            data.mafWigDict[ c ][ n ]['blockEdgeCount'][ whereZeros ] = float( 'nan' )
+         if options.edgeErrorCeiling:
+            whereGreater = data.mafWigDict[ c ][ n ]['blockEdgeCount']  > float( options.edgeErrorCeiling )
+            # do something with whereGreater here...
+            whereGreater = data.mafWigDict[ c ][ n ]['blockEdgeCount']  > float( options.edgeErrorCeiling )
+            # do something with whereGreater here...
 
 def arrayIndexToClippingList( where, options, data ):
    """ where is a list of booleans. True means this value was 
@@ -715,7 +721,8 @@ def normalizeAnnotations( options, data ):
          i += 1
          if localMaxes[ t ] < data.annotWigDict[ c ][ t + 'Max' ]:
             localMaxes[ t ] = data.annotWigDict[ c ][ t + 'Max' ]
-            data.annotationCeilings[ i ] = localMaxes[ t ]
+            if data.annotationCeilings[ i ] == -1:
+               data.annotationCeilings[ i ] = localMaxes[ t ]
    for c in data.chrNames:
       data.annotationClippingDict[ c ] = {}
       i = -1
@@ -727,7 +734,6 @@ def normalizeAnnotations( options, data ):
             whereGreater = data.annotWigDict[ c ][ t + 'Count' ]  > float( data.annotationCeilings[ i ] )
             if isinstance( whereGreater, numpy.ndarray ):
                data.annotationClippingDict[ c ][ t ] = arrayIndexToClippingList( whereGreater, options, data )
-               #data.annotWigDict[ c ][ t + 'Count' ][ whereGreater ] = float( data.annotationCeilings[ i ] )
          else:
             data.annotWigDict[ c ][ t + 'Count' ] /= float( localMaxes[ t ] )
          if sum( data.annotWigDict[ c ][ t + 'Count' ] == 0 ) == len( data.annotWigDict[ c ][ t + 'Count' ] ):
