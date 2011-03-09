@@ -38,7 +38,7 @@ def initOptions( parser ):
                       help='output pdf where figure will be created. No extension.' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
-                      help='output format [pdf|png|both]' )
+                      help='output format [pdf|png|all|eps]' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
@@ -159,7 +159,8 @@ def checkOptions( options, parser, data ):
                            'NXE':'#ff600e', 'NGE':'#ffbb78',
                            'island':'#00662c', 'repeat':'#00e32c',
                            'tandem':'#946FA9', 'spare':'#662D91' }
-   if options.out[-4:] == '.png' or options.out[-4:] == '.pdf':
+   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
+        options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]
    data.stackFillColors = [ ( '#17becf' ), # dark blue
                             ( '#9edae5' ), # light blue
@@ -275,6 +276,8 @@ def loadMafs( options, data ):
                key = 'maf' + l
             elif options.stackFillHapPaths:
                key = 'mafHpl' + l
+            else:
+               continue
             if key not in data.mafWigDict[ c ][ n ]:
                print 'thats weird, this key: %s is not in file: %s chr: %s' % ( key, n, c )
                continue
@@ -283,7 +286,7 @@ def loadMafs( options, data ):
 
 def initImage( options, data ):
    pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'both':
+   if options.outFormat == 'pdf' or options.outFormat == 'all':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
    figHeight = ( data.numberOfMafs + len( data.annotationOrder ) + 0.5 ) / 4.0 
    fig = plt.figure( figsize=( 8, figHeight ), dpi=options.dpi, facecolor='w' )
@@ -352,10 +355,13 @@ def writeImage( fig, pdf, options, data ):
       pdf.close()
    elif options.outFormat == 'png':
       fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'both':
+   elif options.outFormat == 'all':
       fig.savefig( pdf, format='pdf' )
       pdf.close()
       fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
+      fig.savefig( options.out + '.eps', format='eps' )
+   elif options.outFormat == 'eps':
+      fig.savefig( options.out + '.eps', format='eps' )
 
 def drawChrLines( ax, options, data):
    for c in data.chrNames:
