@@ -127,9 +127,10 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      axCrazy.set_ylim( 0.0, 1.02 )
-      axCrazy.set_xscale('log')
-      axCrazy.set_xlim( 1, xData[ -1 ] )
+      if options.mode != 'hapPaths':
+         axCrazy.set_ylim( 0.0, 1.02 )
+         axCrazy.set_xscale('log')
+         axCrazy.set_xlim( 1, xData[ -1 ] )
       
    axBlowUp.set_xscale('log')
    axBlowUp.set_xlim( 1, xData[ -1 ] )
@@ -137,12 +138,14 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
    
    if options.SMM:
-      axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
+      if options.mode != 'hapPaths':
+         axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
+         axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
+         axCrazy.xaxis.set_minor_locator( pylab.NullLocator() )
       axMain.xaxis.set_major_locator( pylab.NullLocator() )
       axMain.xaxis.set_minor_locator( pylab.NullLocator() )
       axBlowUp.xaxis.set_minor_locator( pylab.NullLocator() )
-      axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
-      axCrazy.xaxis.set_minor_locator( pylab.NullLocator() )
+      
 
    #if options.SMM:
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
@@ -154,15 +157,24 @@ def establishAxes( fig, options, data ):
    options.axLeft = 0.11
    options.axWidth = 0.85
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
-                                         options.axWidth , 0.58 ] )
-      plt.box( on=False )
-      axDict[ 'crazy' ] = fig.add_axes( [ options.axLeft, 0.68, # 0.655
-                                          options.axWidth , 0.04 ] ) # 0.085
-      plt.box( on=False )
-      axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.75,
-                                           options.axWidth , 0.20 ] )
-      plt.box( on=False )
+      if options.mode == 'hapPaths':
+         axDict[ 'crazy' ] = None
+         axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
+                                            options.axWidth , 0.66 ] )
+         plt.box( on=False )
+         axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.75,
+                                              options.axWidth , 0.20 ] )
+         plt.box( on=False )
+      else:
+         axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
+                                            options.axWidth , 0.58 ] )
+         plt.box( on=False )
+         axDict[ 'crazy' ] = fig.add_axes( [ options.axLeft, 0.68, # 0.655
+                                             options.axWidth , 0.06 ] ) # 0.085
+         plt.box( on=False )
+         axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.75,
+                                              options.axWidth , 0.20 ] )
+         plt.box( on=False )
    else:
       axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
                                          options.axWidth , 0.60 ] )
@@ -178,8 +190,9 @@ def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       if not options.SMM:
-         axCrazy.set_yticks( [0, 1 ] )
-         axCrazy.set_yticklabels( [ 0, '%d' % data.crazyMax ] )
+         if options.mode != 'hapPaths':
+            axCrazy.set_yticks( [0, 1 ] )
+            axCrazy.set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
    
    if options.SMM:
@@ -321,17 +334,18 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
                                 y2= [0] * len( xData ), 
                                 facecolor = data.colors[ i ], 
                                 linewidth = 0.0 )
-      # add baseline for homespun bar plot:
-      axCrazy.add_line( lines.Line2D( xdata=[1, xData[-1]],
-                                      ydata=[0,0],
-                                      color=( 0.6, 0.6, 0.6 ),
-                                      linewidth=0.5 ))
-      # Error fills
-      axCrazy.fill_between( x=xData, 
-                            y1=yData[ '!hapA1/!hapA2/assembly' ],
-                            y2= [0] * len( xData ), 
-                            facecolor = 'r', 
-                            linewidth = 0.0 )
+      if options.mode != 'hapPaths':
+         # add baseline for homespun bar plot:
+         axCrazy.add_line( lines.Line2D( xdata=[1, xData[-1]],
+                                         ydata=[0,0],
+                                         color=( 0.6, 0.6, 0.6 ),
+                                         linewidth=0.5 ))
+         # Error fills
+         axCrazy.fill_between( x=xData, 
+                               y1=yData[ '!hapA1/!hapA2/assembly' ],
+                               y2= [0] * len( xData ), 
+                               facecolor = 'r', 
+                               linewidth = 0.0 )
    else:
       data.colors = [ "#8ca252", "#b5cf6b" ]
       for n in options.topBotOrder:
@@ -381,18 +395,18 @@ def drawLegend( options, data ):
                                                            height = 0.025, color = data.colors[i], 
                                                            edgecolor = '#ffffff',
                                                            transform=data.axDict['main'].transAxes ))
-         data.axDict['main'].text( x = left + .09, y = yPos, s = legendText[i], 
+         data.axDict['main'].text( x = left + .08, y = yPos, s = legendText[i], 
                                    color = (0.1, 0.1, 0.1), horizontalalignment='left',
                                    verticalalignment='center', transform=data.axDict['main'].transAxes,
-                                   fontsize=9)
+                                   fontsize=9.5)
          yPos -= 0.045
       data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02,
                                                         height = 0.025, color = 'r',
                                                         transform=data.axDict['main'].transAxes ))
-      data.axDict['main'].text( x = left + .09, y = yPos, s = 'no hap1, no hap2, Assembly', 
+      data.axDict['main'].text( x = left + .08, y = yPos, s = 'no hap1, no hap2, Assembly', 
                                 color = (0.1, 0.1, 0.1), horizontalalignment='left',
                                 verticalalignment='center', transform=data.axDict['main'].transAxes,
-                                fontsize = 9)
+                                fontsize = 9.5)
       options.topBotOrder.reverse()
    elif options.mode == 'contamination':
       width = 3.0

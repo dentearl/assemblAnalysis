@@ -142,28 +142,39 @@ def createAxes( left, top, width, height, options, data ):
    figWidth  = width * options.axWidth
    figHeight = height * options.axHeight
    figBottom = figTop - figHeight
-   axMain  = data.fig.add_axes( [ figLeft, figBottom,
-                                  figWidth, figHeight * 0.65 ] )
-   axMain.yaxis.set_major_locator( pylab.NullLocator() )
-   axMain.xaxis.set_major_locator( pylab.NullLocator() )
-   # axMain.text( x=0.5, y=0.5, s = str(i),
-   #              fontsize = 14, horizontalalignment='center',
-   #              verticalalignment = 'center', family='Helvetica',
-   #              color=(0.7, 0.7, 0.7) )
-   if not options.frames:
-      plt.box( on=False )
-   axCrazy = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.68,
-                                  figWidth, figHeight * 0.04 ] )
-   axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
-   axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
-   if not options.frames:
-      plt.box( on=False )
-   axBlowUp = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.75,
-                                   figWidth, figHeight * 0.25 ] )
-   axBlowUp.yaxis.set_major_locator( pylab.NullLocator() )
-   axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
-   if not options.frames:
-      plt.box( on=False )
+   if options.mode != 'hapPaths':
+      axMain  = data.fig.add_axes( [ figLeft, figBottom,
+                                     figWidth, figHeight * 0.65 ] )
+      axMain.yaxis.set_major_locator( pylab.NullLocator() )
+      axMain.xaxis.set_major_locator( pylab.NullLocator() )
+      if not options.frames:
+         plt.box( on=False )
+      axCrazy = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.68,
+                                     figWidth, figHeight * 0.04 ] )
+      axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
+      axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
+      if not options.frames:
+         plt.box( on=False )
+      axBlowUp = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.75,
+                                      figWidth, figHeight * 0.25 ] )
+      axBlowUp.yaxis.set_major_locator( pylab.NullLocator() )
+      axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
+      if not options.frames:
+         plt.box( on=False )
+   else:
+      axMain  = data.fig.add_axes( [ figLeft, figBottom,
+                                     figWidth, figHeight * 0.72 ] )
+      axMain.yaxis.set_major_locator( pylab.NullLocator() )
+      axMain.xaxis.set_major_locator( pylab.NullLocator() )
+      if not options.frames:
+         plt.box( on=False )
+      axCrazy = None
+      axBlowUp = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.75,
+                                      figWidth, figHeight * 0.25 ] )
+      axBlowUp.yaxis.set_major_locator( pylab.NullLocator() )
+      axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
+      if not options.frames:
+         plt.box( on=False )
    return ( axMain, axCrazy, axBlowUp )
 
 def drawID( axBlowUp, a, options, data, color='w' ):
