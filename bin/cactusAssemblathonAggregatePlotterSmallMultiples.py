@@ -56,6 +56,9 @@ def initOptions( parser ):
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
+   parser.add_option( '--frames', dest='frames', default=False,
+                      action='store_true',
+                      help='Debug option, turns on the printing of frames around axes.' )
 
 def checkOptions( options, parser ):
    if options.dir == None:
@@ -116,7 +119,8 @@ def establishAxis( options, data ):
                                   options.axWidth, options.axHeight ] )
    data.ax.yaxis.set_major_locator( pylab.NullLocator() )
    data.ax.xaxis.set_major_locator( pylab.NullLocator() )
-   #plt.box( on=False )
+   if not options.frames:
+      plt.box( on=False )
 
 def drawPlaceHolder( i, left, top, width, height, options, data ):
    data.ax.add_patch( patches.Rectangle( xy=(left, top - height ), width = width,
@@ -126,6 +130,40 @@ def drawPlaceHolder( i, left, top, width, height, options, data ):
                  fontsize = 14, horizontalalignment='center',
                  verticalalignment = 'center', family='Helvetica',
                  color='w' )
+
+def createAxes( i, left, top, width, height, options, data ):
+   # transform coordinates
+   figLeft   = options.axLeft + left * options.axWidth
+   figTop    = options.axBottom + options.axHeight * top
+   figWidth  = width * options.axWidth
+   figHeight = height * options.axHeight
+   figBottom = figTop - figHeight
+   axMain  = data.fig.add_axes( [ figLeft, figBottom,
+                                  figWidth, figHeight * 0.65 ] )
+   axMain.yaxis.set_major_locator( pylab.NullLocator() )
+   axMain.xaxis.set_major_locator( pylab.NullLocator() )
+   axMain.text( x=0.5, y=0.5, s = str(i),
+                fontsize = 14, horizontalalignment='center',
+                verticalalignment = 'center', family='Helvetica',
+                color=(0.7, 0.7, 0.7) )
+   
+   if not options.frames:
+      plt.box( on=False )
+   axCrazy = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.68,
+                                  figWidth, figHeight * 0.04 ] )
+   axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
+   axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
+
+   if not options.frames:
+      plt.box( on=False )
+   axBlowUp = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.75,
+                                   figWidth, figHeight * 0.25 ] )
+   axBlowUp.yaxis.set_major_locator( pylab.NullLocator() )
+   axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
+
+   if not options.frames:
+      plt.box( on=False )
+   return ( axMain, axCrazy, axBlowUp )
 
 def drawPlots( options, data ):
    row = -1
@@ -138,7 +176,9 @@ def drawPlots( options, data ):
          row += 1
       top  = 1.0 - row * float( plotHeight + options.margins )
       left = ( i % numCols ) * float( plotWidth + options.margins )
-      drawPlaceHolder( i, left, top, plotWidth, plotHeight, options, data )
+      ( axMain, axCrazy, axBlowUp ) = createAxes( i, left, top, plotWidth, 
+                                                  plotHeight, options, data )
+      #drawPlaceHolder( i, left, top, plotWidth, plotHeight, options, data )
    
 def writeImage( options, data ):
    if options.outFormat == 'pdf':
