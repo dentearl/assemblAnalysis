@@ -90,20 +90,27 @@ def readFile( filename, options ):
       d = line.split('\t')
       data[ d[0] ] = d[ 1: ]
    
-   data[ 'columnLength' ] = data[ 'block/contig_lengths/haplotype_path_lengths' ]
-   del data[ 'block/contig_lengths/haplotype_path_lengths' ]
-   position = { 'contigs':0, 'blocks':1, 'hapPaths':2 }
-   for i in range(0, len( data[ 'columnLength' ])):
-      # this will break first time we do contamination mode
-      #print regexs[ options.mode ], data[ 'columnLength'][ i ]
-      data[ 'columnLength' ][ i ] = int( data[ 'columnLength'][ i ].split('_')[ position[ options.mode ]] )
-   data['columnLength'][0] = 1 # this is technically true
+   #data[ 'columnLength' ] = data[ 'block/contig_lengths/haplotype_path_lengths' ]
+   #del data[ 'block/contig_lengths/haplotype_path_lengths' ]
+   data[ 'columnLength' ] = data[ 'category' ]
+   del data[ 'category' ]
    
+   redundantColumns = {}
+   prev = -1
+   i = -1
+   for d in data[ 'columnLength' ]:
+      i += 1
+      if d == prev:
+         redundantColumns[ i ] = True
+      prev = d
+   trimmedData = {}
    for d in data:
+      trimmedData[ d ] = []
       for i in range(0, len( data[d])):
-         data[d][i] = int( data[d][i] )
+         if i not in redundantColumns:
+            trimmedData[ d ].append( int( data[d][i] ) )
    f.close()
-   return data
+   return trimmedData
 
 def initImage( options, data ):
    pdf = None
@@ -114,10 +121,9 @@ def initImage( options, data ):
    return ( fig, pdf )
 
 def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
-   axMain.set_ylim( 0.0, 1.01 )
    axMain.set_xscale('log')
    axMain.set_xlim( 1, xData[ -1 ] )
-
+   axMain.set_ylim( 0.0, 1.0 )
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
@@ -145,7 +151,7 @@ def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
    axDict = {}
-   options.axLeft = 0.1
+   options.axLeft = 0.11
    options.axWidth = 0.85
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
@@ -234,12 +240,7 @@ def normalizeDataNormalMode( valuesDict, options, data ):
       valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
       
    # collect column sums, they should all be the same
-   if options.mode == 'contigs':
-      upperlimit = 8
-   elif options.mode == 'hapPaths':
-      upperlimit = 7
-   elif options.mode == 'blocks':
-      upperlimit = 6
+   upperlimit = len( valuesDict[ '!hapA1/!hapA2/assembly' ])
    colSum = [ 0 ] * upperlimit
    for i in range( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
@@ -308,23 +309,16 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
       data.colors = [ '#a89e89', '#6e5d3a', 
                       '#ba759e', '#f2aad2' ]
    if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1 }:
-      if options.mode == 'contigs':
-         upperlimit = 8
-      elif options.mode == 'hapPaths':
-         upperlimit = 7
-      elif options.mode == 'blocks':
-         upperlimit = 6
-      y2 = [0] * upperlimit
       for n in options.topBotOrder:
          i += 1
          axMain.fill_between( x=xData,
                               y1=yData[ n ],
-                              y2=y2, 
+                              y2= [0] * len( xData ), 
                               facecolor = data.colors[ i ],
                               linewidth = 0.0 )
          axBlowUp.fill_between( x=xData,
                                 y1=yData[ n ],
-                                y2=y2, 
+                                y2= [0] * len( xData ), 
                                 facecolor = data.colors[ i ], 
                                 linewidth = 0.0 )
       # add baseline for homespun bar plot:
@@ -335,7 +329,7 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
       # Error fills
       axCrazy.fill_between( x=xData, 
                             y1=yData[ '!hapA1/!hapA2/assembly' ],
-                            y2=y2, 
+                            y2= [0] * len( xData ), 
                             facecolor = 'r', 
                             linewidth = 0.0 )
    else:
@@ -344,12 +338,12 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
          i += 1
          axMain.fill_between( x=xData,
                               y1=yData[ n ],
-                              y2=[0]*7, 
+                              y2=[0]* len( xData ), 
                               facecolor = data.colors[ i ],
                               linewidth = 0.0)
          axBlowUp.fill_between( x=xData,
                                 y1=yData[ n ],
-                                y2=[0]*7, 
+                                y2=[0] * len( xData ), 
                                 facecolor = data.colors[ i ], 
                                 linewidth = 0.0)
 
@@ -366,7 +360,7 @@ def drawLegend( options, data ):
       top = bottom + height
       data.axDict['main'].add_patch( patches.Rectangle( xy=(left, bottom), width = width,
                                                         height = height, color = (0.95, 0.95, 0.95),
-                                                        alpha=0.5, edgecolor='None' ,
+                                                        edgecolor='None' ,
                                                         transform=data.axDict['main'].transAxes ))
       data.axDict['main'].text( x = (left + right)/2.0, y = top - 0.04, s = 'Legend', 
                                 color = (0.1, 0.1, 0.1), horizontalalignment='center',
