@@ -50,7 +50,7 @@ def initOptions( parser ):
                       help='output pdf where figure will be created. No extension.' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
-                      help='output format [pdf|png|both]' )
+                      help='output format [pdf|png|all|eps]' )
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
                       help='Plotting mode [contigs|hapPaths|blocks|contamination].' )
@@ -65,7 +65,8 @@ def initOptions( parser ):
 def checkOptions( options, parser ):
    if options.file == None:
       parser.error( 'Error, specify --file.\n' )
-   if options.out[-4:] == '.png' or options.out[-4:] == '.pdf':
+   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
+        options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]
    if not os.path.exists( options.file ):
       parser.error( 'Error, --file %s does not exist.\n' % options.file )
@@ -96,42 +97,43 @@ def readFile( filename, options ):
       # this will break first time we do contamination mode
       #print regexs[ options.mode ], data[ 'columnLength'][ i ]
       data[ 'columnLength' ][ i ] = int( data[ 'columnLength'][ i ].split('_')[ position[ options.mode ]] )
-
+   data['columnLength'][0] = 1 # this is technically true
+   
    for d in data:
       for i in range(0, len( data[d])):
          data[d][i] = int( data[d][i] )
    f.close()
-   
    return data
 
 def initImage( options, data ):
    pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'both':
+   if options.outFormat == 'pdf' or options.outFormat == 'all':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
    fig = plt.figure( figsize=(8, 10), dpi=options.dpi, facecolor='w' )
    data.fig = fig
    return ( fig, pdf )
 
 def setAxisLimits( axDict, options, data ):
-   if options.mode == 'contigs':
-      upperlimit = 7 # this could actually be 8, but no one is going to get a score of 10 million.
-   elif options.mode == 'hapPaths':
-      upperlimit = 7
-   elif options.mode == 'blocks':
-      upperlimit = 6
    axDict[ 'main' ].set_ylim( 0.0, 1.01 )
-   axDict[ 'main' ].set_xlim( 0.9, upperlimit + 0.1 )
+   axDict[ 'main' ].set_xscale('log')
+   axDict[ 'main' ].set_xlim( 1, data.xData[ -1 ] )
+
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
-      axDict[ 'crazy' ].set_xlim( 0.9, upperlimit + 0.6 )
+      axDict[ 'crazy' ].set_xscale('log')
+      axDict[ 'crazy' ].set_xlim( 1, data.xData[ -1 ] )
+      
       if options.SMM:
          axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
       axDict[ 'crazy' ].xaxis.set_major_locator( pylab.NullLocator() )
-   axDict[ 'blowUp' ].set_ylim( 0.9, 1.01 )
-   axDict[ 'blowUp' ].set_xlim( 0.9, upperlimit + 0.1 )
+      axDict[ 'crazy' ].xaxis.set_minor_locator( pylab.NullLocator() )
+   axDict[ 'blowUp' ].set_xscale('log')
+   axDict[ 'blowUp' ].set_xlim( 1, data.xData[ -1 ] )
+   axDict[ 'blowUp' ].set_ylim( 0.9, 1.0 )
    axDict[ 'blowUp' ].xaxis.set_major_locator( pylab.NullLocator() )
+   
    #if options.SMM:
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
@@ -149,7 +151,7 @@ def establishAxes( fig, options, data ):
                                           options.axWidth , 0.04 ] ) # 0.085
       plt.box( on=False )
       axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.75,
-                                           options.axWidth , 0.22 ] )
+                                           options.axWidth , 0.20 ] )
       plt.box( on=False )
    else:
       axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
@@ -158,24 +160,18 @@ def establishAxes( fig, options, data ):
       axDict[ 'blowUp' ] = fig.add_axes( [ options.axLeft, 0.71,
                                            options.axWidth , 0.27 ] )
       plt.box( on=False )
-   setAxisLimits( axDict, options, data )
    data.axDict = axDict
    return ( axDict )
 
 def establishTicks( options, data ):
-   if options.mode == 'contigs':
-      data.xData = range(1, 9)
-   elif options.mode == 'hapPaths':
-      data.xData = range(1, 8)
-   elif options.mode == 'blocks':
-      data.xData = range(1, 7)
-   data.axDict['main'].set_xticks( data.xData )
-   data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
+   #data.axDict['main'].set_xticks( data.xData )
+   #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
       data.axDict['crazy'].set_yticks( [0, 1 ] )
       if not options.SMM:
          data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
+   
    data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
    data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
                                        0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
@@ -189,10 +185,13 @@ def writeImage( fig, pdf, options, data ):
       pdf.close()
    elif options.outFormat == 'png':
       fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'both':
+   elif options.outFormat == 'all':
       fig.savefig( pdf, format='pdf' )
       pdf.close()
       fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
+      fig.savefig( options.out + '.eps', format='eps' )
+   elif options.outFormat == 'eps':
+      fig.savefig( options.out + '.eps', format='eps' )
 
 def prettyList( uglyList ):
    """ takes a list of numbers in str format,
@@ -321,17 +320,10 @@ def drawData( fig, options, data ):
                                              facecolor = data.colors[ i ], 
                                              linewidth = 0.0 )
       # add baseline for homespun bar plot:
-      data.axDict['crazy'].add_line( lines.Line2D( xdata=[0.9, 8.6],
+      data.axDict['crazy'].add_line( lines.Line2D( xdata=[1, data.xData[-1]],
                                                    ydata=[0,0],
                                                    color=( 0.6, 0.6, 0.6 ),
                                                    linewidth=0.5 ))
-      # for i in range(1, upperlimit ):
-      #    data.axDict['crazy'].add_patch( patches.Rectangle( xy=(i, 0), 
-      #                                                       height = data.valuesDict['!hapA1/!hapA2/assembly'][i-1],
-      #                                                       width=0.5,
-      #                                                       color='r',
-      #                                                       edgecolor=None ))
-      
       # Error fills
       data.axDict['crazy'].fill_between( x=data.xData, 
                                          y1=data.valuesDict[ '!hapA1/!hapA2/assembly' ],
@@ -358,9 +350,9 @@ def drawLegend( options, data ):
       return
    if options.mode != 'contamination':
       height = 0.3
-      left = 0.05
+      left = 0.03
       bottom = 0.05
-      width = 0.5
+      width = 0.4
       height = 0.3
       right = left + width
       top = bottom + height
@@ -383,20 +375,22 @@ def drawLegend( options, data ):
       i = -1
       for n in options.topBotOrder:
          i += 1
-         data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.05, yPos - 0.01), width = 0.02 ,
+         data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02 ,
                                                            height = 0.025, color = data.colors[i], 
                                                            edgecolor = '#ffffff',
                                                            transform=data.axDict['main'].transAxes ))
          data.axDict['main'].text( x = left + .09, y = yPos, s = legendText[i], 
                                    color = (0.1, 0.1, 0.1), horizontalalignment='left',
-                                   verticalalignment='center', transform=data.axDict['main'].transAxes )
+                                   verticalalignment='center', transform=data.axDict['main'].transAxes,
+                                   fontsize=9)
          yPos -= 0.045
-      data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.05, yPos - 0.01), width = 0.02,
+      data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02,
                                                         height = 0.025, color = 'r',
                                                         transform=data.axDict['main'].transAxes ))
       data.axDict['main'].text( x = left + .09, y = yPos, s = 'no hap1, no hap2, Assembly', 
                                 color = (0.1, 0.1, 0.1), horizontalalignment='left',
-                                verticalalignment='center', transform=data.axDict['main'].transAxes )
+                                verticalalignment='center', transform=data.axDict['main'].transAxes,
+                                fontsize = 9)
       options.topBotOrder.reverse()
    elif options.mode == 'contamination':
       width = 3.0
@@ -445,7 +439,6 @@ def drawAxisLabels( fig, options, data ):
                                   verticalalignment = 'top', family='Helvetica',
                                   color='w',
                                   transform=data.axDict['blowUp'].transAxes )
-   
 
 def main():
    data = Data()
@@ -457,17 +450,19 @@ def main():
    axDict = establishAxes( fig, options, data )
    
    data.valuesDict = readFile( options.file, options )
+   data.xData = data.valuesDict['columnLength']
    if options.mode != 'contamination':
       normalizeDataNormalMode( options, data )
    else:
       normalizeDataContaminationMode( options, data )
 
-   establishTicks( options, data )
+   setAxisLimits( axDict, options, data )
    drawData( fig, options, data )
    drawLegend( options, data )
    drawAxisLabels( fig, options, data )
    
    setAxisLimits( axDict, options, data )
+   establishTicks( options, data )
    writeImage( fig, pdf, options, data )
 
 if __name__ == '__main__':
