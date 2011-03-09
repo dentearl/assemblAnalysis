@@ -85,6 +85,9 @@ def checkOptions( options, parser ):
       options.order = options.order.split(',')
    else:
       options.order = []
+   if options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs':
+      options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
+                              'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    options.SMM = True
 
 def readFiles( options, data ):
@@ -97,7 +100,8 @@ def readFiles( options, data ):
    pat = re.compile( regEx )
    for m in matches:
       aName = re.match( pat, os.path.basename( m ) ).group( 1 )
-      data.recordsDict[ aName ] = cacPlot.readFile( m, options )
+      data.recordsDict[ aName ] = { 'valuesDict': cacPlot.readFile( m, options ) }
+      data.recordsDict[ aName ][ 'xData' ] = data.recordsDict[ aName ][ 'valuesDict' ][ 'columnLength' ]
 
 def initImage( options, data ):
    pdf = None
@@ -131,7 +135,7 @@ def drawPlaceHolder( i, left, top, width, height, options, data ):
                  verticalalignment = 'center', family='Helvetica',
                  color='w' )
 
-def createAxes( i, left, top, width, height, options, data ):
+def createAxes( left, top, width, height, options, data ):
    # transform coordinates
    figLeft   = options.axLeft + left * options.axWidth
    figTop    = options.axBottom + options.axHeight * top
@@ -142,28 +146,32 @@ def createAxes( i, left, top, width, height, options, data ):
                                   figWidth, figHeight * 0.65 ] )
    axMain.yaxis.set_major_locator( pylab.NullLocator() )
    axMain.xaxis.set_major_locator( pylab.NullLocator() )
-   axMain.text( x=0.5, y=0.5, s = str(i),
-                fontsize = 14, horizontalalignment='center',
-                verticalalignment = 'center', family='Helvetica',
-                color=(0.7, 0.7, 0.7) )
-   
+   # axMain.text( x=0.5, y=0.5, s = str(i),
+   #              fontsize = 14, horizontalalignment='center',
+   #              verticalalignment = 'center', family='Helvetica',
+   #              color=(0.7, 0.7, 0.7) )
    if not options.frames:
       plt.box( on=False )
    axCrazy = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.68,
                                   figWidth, figHeight * 0.04 ] )
    axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
    axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
-
    if not options.frames:
       plt.box( on=False )
    axBlowUp = data.fig.add_axes( [ figLeft, figBottom + figHeight * 0.75,
                                    figWidth, figHeight * 0.25 ] )
    axBlowUp.yaxis.set_major_locator( pylab.NullLocator() )
    axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
-
    if not options.frames:
       plt.box( on=False )
    return ( axMain, axCrazy, axBlowUp )
+
+def drawID( axBlowUp, a, options, data, color='w' ):
+   axBlowUp.text( x=0.9, y=0.8, s = a,
+                  fontsize = 12, horizontalalignment='right',
+                  verticalalignment = 'top', family='Helvetica',
+                  color=color,
+                  transform=axBlowUp.transAxes )
 
 def drawPlots( options, data ):
    row = -1
@@ -171,13 +179,29 @@ def drawPlots( options, data ):
    numCols = 9.0
    plotHeight = ( 1.0 - ( numRows - 1.0 ) * options.margins ) / numRows
    plotWidth  = ( 1.0 - ( numCols - 1.0 ) * options.margins ) / numCols
-   for i in range( 0, 63 ):
+   i = -1
+   for a in options.order:
+      i += 1
       if not i % numCols:
          row += 1
       top  = 1.0 - row * float( plotHeight + options.margins )
       left = ( i % numCols ) * float( plotWidth + options.margins )
-      ( axMain, axCrazy, axBlowUp ) = createAxes( i, left, top, plotWidth, 
+      ( axMain, axCrazy, axBlowUp ) = createAxes( left, top, plotWidth, 
                                                   plotHeight, options, data )
+      if a in data.recordsDict:
+         cacPlot.setAxisLimits( axMain, axCrazy, axBlowUp, 
+                                data.recordsDict[ a ][ 'xData' ], options, data )
+         data.recordsDict[ a ]['valuesDict'] = cacPlot.normalizeDataNormalMode( data.recordsDict[ a ]['valuesDict'],
+                                                                                options, data )
+         cacPlot.drawData( axMain, axCrazy, axBlowUp, data.recordsDict[ a ][ 'xData' ],
+                           data.recordsDict[ a ][ 'valuesDict' ],
+                           options, data )
+         drawID( axBlowUp, a, options, data )
+         cacPlot.setAxisLimits( axMain, axCrazy, axBlowUp, 
+                                data.recordsDict[ a ][ 'xData' ], options, data )
+         cacPlot.establishTicks( axMain, axCrazy, axBlowUp, options, data )
+      else:
+         drawID( axBlowUp, a, options, data, color=( 0.7, 0.7, 0.7) )
       #drawPlaceHolder( i, left, top, plotWidth, plotHeight, options, data )
    
 def writeImage( options, data ):

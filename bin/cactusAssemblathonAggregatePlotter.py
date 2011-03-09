@@ -113,27 +113,31 @@ def initImage( options, data ):
    data.fig = fig
    return ( fig, pdf )
 
-def setAxisLimits( axDict, options, data ):
-   axDict[ 'main' ].set_ylim( 0.0, 1.01 )
-   axDict[ 'main' ].set_xscale('log')
-   axDict[ 'main' ].set_xlim( 1, data.xData[ -1 ] )
+def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
+   axMain.set_ylim( 0.0, 1.01 )
+   axMain.set_xscale('log')
+   axMain.set_xlim( 1, xData[ -1 ] )
 
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      axDict[ 'crazy' ].set_ylim( 0.0, 1.02 )
-      axDict[ 'crazy' ].set_xscale('log')
-      axDict[ 'crazy' ].set_xlim( 1, data.xData[ -1 ] )
+      axCrazy.set_ylim( 0.0, 1.02 )
+      axCrazy.set_xscale('log')
+      axCrazy.set_xlim( 1, xData[ -1 ] )
       
-      if options.SMM:
-         axDict[ 'crazy' ].yaxis.set_major_locator( pylab.NullLocator() )
-      axDict[ 'crazy' ].xaxis.set_major_locator( pylab.NullLocator() )
-      axDict[ 'crazy' ].xaxis.set_minor_locator( pylab.NullLocator() )
-   axDict[ 'blowUp' ].set_xscale('log')
-   axDict[ 'blowUp' ].set_xlim( 1, data.xData[ -1 ] )
-   axDict[ 'blowUp' ].set_ylim( 0.9, 1.0 )
-   axDict[ 'blowUp' ].xaxis.set_major_locator( pylab.NullLocator() )
+   axBlowUp.set_xscale('log')
+   axBlowUp.set_xlim( 1, xData[ -1 ] )
+   axBlowUp.set_ylim( 0.9, 1.0 )
+   axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
    
+   if options.SMM:
+      axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
+      axMain.xaxis.set_major_locator( pylab.NullLocator() )
+      axMain.xaxis.set_minor_locator( pylab.NullLocator() )
+      axBlowUp.xaxis.set_minor_locator( pylab.NullLocator() )
+      axCrazy.xaxis.set_major_locator( pylab.NullLocator() )
+      axCrazy.xaxis.set_minor_locator( pylab.NullLocator() )
+
    #if options.SMM:
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
@@ -163,21 +167,24 @@ def establishAxes( fig, options, data ):
    data.axDict = axDict
    return ( axDict )
 
-def establishTicks( options, data ):
+def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticks( data.xData )
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
    if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      data.axDict['crazy'].set_yticks( [0, 1 ] )
       if not options.SMM:
-         data.axDict['crazy'].set_yticklabels( [ 0, '%d' % data.crazyMax ] )
+         axCrazy.set_yticks( [0, 1 ] )
+         axCrazy.set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
    
-   data.axDict['blowUp'].set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
-   data.axDict['blowUp'].set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
-                                       0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
    if options.SMM:
-      data.axDict['blowUp'].set_yticklabels( [] )
-      data.axDict['main'].set_yticklabels( [] )
+      axBlowUp.set_yticklabels( [] )
+      axBlowUp.set_xticklabels( [] )
+      axMain.set_yticklabels( [] )
+      axMain.set_xticklabels( [] )
+   else:
+      axBlowUp.set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
+      axBlowUp.set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
+                             0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
@@ -214,17 +221,17 @@ def vectorAddition( v1, v2 ):
       r.append( v1[i] + v2[i] )
    return r
 
-def normalizeDataNormalMode( options, data ):
+def normalizeDataNormalMode( valuesDict, options, data ):
    if options.crazyMax == None:
       data.crazyMax = 0
-      for v in data.valuesDict[ '!hapA1/!hapA2/assembly' ]:
+      for v in valuesDict[ '!hapA1/!hapA2/assembly' ]:
          if v > data.crazyMax:
             data.crazyMax = v
    else:
       data.crazyMax = options.crazyMax
    # normalize crazy data against itself
-   for i in range( 0, len( data.valuesDict[ '!hapA1/!hapA2/assembly' ])):
-      data.valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
+   for i in range( 0, len( valuesDict[ '!hapA1/!hapA2/assembly' ])):
+      valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
       
    # collect column sums, they should all be the same
    if options.mode == 'contigs':
@@ -237,30 +244,31 @@ def normalizeDataNormalMode( options, data ):
    for i in range( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
                 'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly']:
-         colSum[ i ] += data.valuesDict[ j ][ i ]
+         colSum[ i ] += valuesDict[ j ][ i ]
    # verify the columns all have the same sum
    for i in range(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
          sys.stderr.write('Error, column sums do not equal one another, col 0 != col %d\n' % i)
          sys.exit( 1 )
    # create the OR categories where we collapse hap1/!hap2 and !hap1/hap2 into hap1ORhap2
-   data.valuesDict[ 'hapA1ORhapA2/assembly' ] = vectorAddition( data.valuesDict['!hapA1/hapA2/assembly'], 
-                                                                data.valuesDict['hapA1/!hapA2/assembly'] )
-   data.valuesDict[ 'hapA1ORhapA2/!assembly' ] = vectorAddition( data.valuesDict['!hapA1/hapA2/!assembly'], 
-                                                                 data.valuesDict['hapA1/!hapA2/!assembly'] )
+   valuesDict[ 'hapA1ORhapA2/assembly' ] = vectorAddition( valuesDict['!hapA1/hapA2/assembly'], 
+                                                           valuesDict['hapA1/!hapA2/assembly'] )
+   valuesDict[ 'hapA1ORhapA2/!assembly' ] = vectorAddition( valuesDict['!hapA1/hapA2/!assembly'], 
+                                                            valuesDict['hapA1/!hapA2/!assembly'] )
    # normalize the data
    for i in range( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1ORhapA2/assembly',
                 'hapA1ORhapA2/!assembly' ]:
-         data.valuesDict[ j ][ i ] /= float( colSum[ 0 ] )
+         valuesDict[ j ][ i ] /= float( colSum[ 0 ] )
    # stack the data
    options.topBotOrder.reverse()
    for i in range( 0, upperlimit ):
       cumSum = 0.0
       for j in options.topBotOrder:
-         data.valuesDict[ j ][ i ] += cumSum
-         cumSum = data.valuesDict[ j ][ i ]
+         valuesDict[ j ][ i ] += cumSum
+         cumSum = valuesDict[ j ][ i ]
    options.topBotOrder.reverse()
+   return valuesDict
 
 def normalizeDataContaminationMode( options, data ):
    # collect column sums, they should all be the same
@@ -287,7 +295,7 @@ def normalizeDataContaminationMode( options, data ):
          cumSum = data.valuesDict[ j ][ i ]
    options.topBotOrder.reverse()
 
-def drawData( fig, options, data ):
+def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
    i = -1
    # colors order is top to bottom
    if options.mode == 'contigs':
@@ -309,41 +317,41 @@ def drawData( fig, options, data ):
       y2 = [0] * upperlimit
       for n in options.topBotOrder:
          i += 1
-         data.axDict['main'].fill_between( x=data.xData,
-                                           y1=data.valuesDict[ n ],
-                                           y2=y2, 
-                                           facecolor = data.colors[ i ],
-                                           linewidth = 0.0)
-         data.axDict['blowUp'].fill_between( x=data.xData,
-                                             y1=data.valuesDict[ n ],
-                                             y2=y2, 
-                                             facecolor = data.colors[ i ], 
-                                             linewidth = 0.0 )
+         axMain.fill_between( x=xData,
+                              y1=yData[ n ],
+                              y2=y2, 
+                              facecolor = data.colors[ i ],
+                              linewidth = 0.0 )
+         axBlowUp.fill_between( x=xData,
+                                y1=yData[ n ],
+                                y2=y2, 
+                                facecolor = data.colors[ i ], 
+                                linewidth = 0.0 )
       # add baseline for homespun bar plot:
-      data.axDict['crazy'].add_line( lines.Line2D( xdata=[1, data.xData[-1]],
-                                                   ydata=[0,0],
-                                                   color=( 0.6, 0.6, 0.6 ),
-                                                   linewidth=0.5 ))
+      axCrazy.add_line( lines.Line2D( xdata=[1, xData[-1]],
+                                      ydata=[0,0],
+                                      color=( 0.6, 0.6, 0.6 ),
+                                      linewidth=0.5 ))
       # Error fills
-      data.axDict['crazy'].fill_between( x=data.xData, 
-                                         y1=data.valuesDict[ '!hapA1/!hapA2/assembly' ],
-                                         y2=y2, 
-                                         facecolor = 'r', 
-                                         linewidth = 0.0 )
+      axCrazy.fill_between( x=xData, 
+                            y1=yData[ '!hapA1/!hapA2/assembly' ],
+                            y2=y2, 
+                            facecolor = 'r', 
+                            linewidth = 0.0 )
    else:
       data.colors = [ "#8ca252", "#b5cf6b" ]
       for n in options.topBotOrder:
          i += 1
-         data.axDict['main'].fill_between( x=data.xData,
-                                           y1=data.valuesDict[ n ],
-                                           y2=[0]*7, 
-                                           facecolor = data.colors[ i ],
-                                           linewidth = 0.0)
-         data.axDict['blowUp'].fill_between( x=data.xData,
-                                             y1=data.valuesDict[ n ],
-                                             y2=[0]*7, 
-                                             facecolor = data.colors[ i ], 
-                                             linewidth = 0.0)
+         axMain.fill_between( x=xData,
+                              y1=yData[ n ],
+                              y2=[0]*7, 
+                              facecolor = data.colors[ i ],
+                              linewidth = 0.0)
+         axBlowUp.fill_between( x=xData,
+                                y1=yData[ n ],
+                                y2=[0]*7, 
+                                facecolor = data.colors[ i ], 
+                                linewidth = 0.0)
 
 def drawLegend( options, data ):
    if options.SMM:
@@ -452,17 +460,24 @@ def main():
    data.valuesDict = readFile( options.file, options )
    data.xData = data.valuesDict['columnLength']
    if options.mode != 'contamination':
-      normalizeDataNormalMode( options, data )
+      data.valuesDict = normalizeDataNormalMode( data.valuesDict, options, data )
    else:
       normalizeDataContaminationMode( options, data )
 
-   setAxisLimits( axDict, options, data )
-   drawData( fig, options, data )
+   setAxisLimits( axDict['main'], axDict['crazy'], 
+                  axDict['blowUp'], data.xData, 
+                  options, data )
+   drawData( axDict['main'], axDict['crazy'], 
+             axDict['blowUp'], data.xData, data.valuesDict, options, data )
    drawLegend( options, data )
    drawAxisLabels( fig, options, data )
    
-   setAxisLimits( axDict, options, data )
-   establishTicks( options, data )
+   setAxisLimits( axDict['main'], axDict['crazy'], 
+                  axDict['blowUp'], data.xData,
+                  options, data )
+
+   establishTicks( axDict['main'], axDict['crazy'], 
+                   axDict['blowUp'], options, data )
    writeImage( fig, pdf, options, data )
 
 if __name__ == '__main__':
