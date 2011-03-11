@@ -43,6 +43,9 @@ def initOptions( parser ):
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
+   parser.add_option( '--log', dest='log', default=False,
+                      action='store_true',
+                      help='Puts y axis into log scale.')
    
    
 def checkOptions( options, parser ):
@@ -78,18 +81,19 @@ def initImage( options ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'all':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 6), dpi=options.dpi, facecolor='w' )
+   fig = plt.figure( figsize=(8, 5), dpi=options.dpi, facecolor='w' )
    return ( fig, pdf )
 
 def establishAxis( fig, options ):
    """ create one axes per chromosome
    """
-   options.axLeft  = 0.05
-   options.axWidth = 0.9
-   options.axBottom  = 0.05
-   options.axHeight  = 0.9
-   
-   ax = fig.add_subplot(111)
+   options.axLeft  = 0.2
+   options.axWidth = 0.7
+   options.axBottom  = 0.2
+   options.axHeight  = 0.7
+   ax = fig.add_axes( [options.axLeft, options.axBottom,
+                       options.axWidth, options.axHeight ] )
+   #ax = fig.add_subplot(111)
    #plt.box( on= False )
    return ax
 
@@ -103,13 +107,19 @@ def drawData( scaffolds, contigs, ax, options ):
       elif loc in ['right','top']:
          spine.set_color('none') # don't draw spine               
       else:
-         raise ValueError('unknown spine location: %s'%loc)
+         raise ValueError('unknown spine location: %s' % loc )
    ax.set_xlim( 0, 1.0 )
    ax.set_xticks( [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ] )
+   # turn off ticks where there is no spine
    ax.xaxis.set_ticks_position('bottom')
    ax.yaxis.set_ticks_position('left')
    plt.xlabel('Cumulative length proportional to Haplotype 2')
-   plt.ylabel('Size')
+   
+   if options.log:
+      ax.set_yscale('log')
+      plt.ylabel('log Size')
+   else:
+      plt.ylabel('Size')
    leg = plt.legend([p1, p2], ['Scaffolds', 'Contigs'])
    leg._drawFrame=False
 
