@@ -30,6 +30,8 @@ class Assembly:
       self.ID    = ''
       self.snpStatsLower = {}
       self.snpStatsUpper = {}
+      self.allUp = -1
+      self.allLo = -1
 
 def initOptions( parser ):
    parser.add_option( '--snpStatsDir', dest='snpStatsDir',
@@ -97,11 +99,20 @@ def readSnpStatsDir( assembliesDict, options ):
       f.close()
    return assembliesDict
 
+def sumErrors( assembliesDict ):
+   for a in assembliesDict:
+      assembliesDict[ a ].allUp = 0
+      assembliesDict[ a ].allLo = 0
+      for e in [ 'Total-errors-in-homozygous', 'Total-errors-in-heterozygous', 
+                 'Total-errors-in-one-haplotype-only' ]:
+         assembliesDict[ a ].allLo += int( assembliesDict[ a ].snpStatsLower[ e ] )
+         assembliesDict[ a ].allUp += int( assembliesDict[ a ].snpStatsUpper[ e ] )
+
 def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'all':
       pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(6, 8), dpi=options.dpi, facecolor='w' )
+   fig = plt.figure( figsize=(9, 11), dpi=options.dpi, facecolor='w' )
    data.fig = fig
    return ( fig, pdf )
 
@@ -152,10 +163,122 @@ def establishAxes( fig, options, data ):
       # turn off ticks where there is no spine
       axDict[ ax ].xaxis.set_ticks_position('bottom')
       axDict[ ax ].yaxis.set_ticks_position('left')
-      axDict[ ax ].set_xticks( [] )
+      # if ax != 'all':
+         # axDict[ ax ].set_xticks( [] )
+   return axDict
 
-def drawData( assembliesDict, axDict, options, data ):
-   pass
+def drawData( assembliesDict, sortOrder, axDict, options, data ):
+   lGray = ( 0.9, 0.9, 0.9 )
+   for ax in axDict:
+      axDict[ ax ].set_xlim( 0, len(assembliesDict) + 3 )
+
+   # all plot
+   yMax = 0
+   yMin = sys.maxint
+   xNames = []
+   i = 0
+   for aName in sortOrder:
+      i += 1
+      a = assembliesDict[ aName ]
+      if yMax < int( a.allUp ):
+         yMax = int( a.allUp )
+      if yMin > int( a.allLo ): 
+         yMin = int( a.allLo )
+      
+   yMin = logLower( yMin )
+   for i in range( 1, len( assembliesDict ) ):
+      if not i % 10:
+         axDict[ 'all' ].add_line( lines.Line2D( xdata=[ i, i ],
+                                                 ydata=[ 1, yMax ],
+                                                 color=lGray))
+   i = 0
+   for aName in sortOrder:
+      a = assembliesDict[ aName ]
+      i += 1
+      axDict[ 'all' ].add_line( lines.Line2D( xdata=[ i, i ],
+                                              ydata=[ a.allLo, a.allUp ],
+                                              color='#1f77b4'))
+      xNames.append( aName )
+   axDict[ 'all' ].set_yscale('log')
+   axDict[ 'all' ].set_ylim( [ yMin, yMax] )
+   axDict[ 'all' ].set_xticks( range( 1, len(xNames) + 1 ))
+   axDict[ 'all' ].set_xticklabels( xNames )
+   for tick in axDict[ 'all' ].xaxis.get_major_ticks():
+      tick.label1.set_fontsize( 6 )
+   for label in axDict[ 'all' ].xaxis.get_ticklabels():
+      label.set_rotation( 90 )
+
+   
+
+   # other plots
+   plotAxes = { 'Total-errors-in-homozygous' : 'hom',
+                'Total-errors-in-heterozygous': 'het',
+                'Total-errors-in-one-haplotype-only':'indel' }
+   for key in plotAxes:
+      yMax = 0
+      yMin = sys.maxint
+      xNames = []
+      i = 0
+      for aName in sortOrder:
+         i += 1
+         a = assembliesDict[ aName ]
+         if yMax < int( a.snpStatsUpper[ key ] ):
+            yMax = int( a.snpStatsUpper[ key ] )
+         if yMin > int( a.snpStatsLower[ key ] ):
+            yMin = int( a.snpStatsLower[ key ] )
+      yMin = logLower( yMin )
+      for i in range( 1, len( assembliesDict ) ):
+         if not i % 10:
+            axDict[ plotAxes[ key ] ].add_line( lines.Line2D( xdata=[ i, i ],
+                                                    ydata=[ 1, yMax ],
+                                                    color=lGray))
+      i = 0
+      for aName in sortOrder:
+         i += 1
+         a = assembliesDict[ aName ]
+         axDict[ plotAxes[ key ] ].add_line( lines.Line2D( xdata=[ i, i ],
+                                                 ydata=[ a.snpStatsLower[ key ],
+                                                         a.snpStatsUpper[ key ]],
+                                                 color='#1f77b4'))
+         xNames.append( aName )
+      axDict[ plotAxes[ key ] ].set_yscale('log')
+      axDict[ plotAxes[ key ] ].set_ylim( [yMin, yMax] )
+      axDict[ plotAxes[ key ] ].set_xticks( range( 1, len(xNames) + 1 ))
+      axDict[ plotAxes[ key ] ].set_xticklabels( xNames )
+      for tick in axDict[ plotAxes[ key ] ].xaxis.get_major_ticks():
+         tick.label1.set_fontsize( 6 )
+      for label in axDict[ plotAxes[ key ] ].xaxis.get_ticklabels():
+         label.set_rotation( 90 )
+   
+   axDict[ 'all' ].text( x=0.01, y=0.98, s = 'All Snp Errors',
+                  fontsize = 12, horizontalalignment='left',
+                  verticalalignment = 'top', family='Helvetica',
+                  color=( 0.3, 0.3, 0.3 ),
+                  transform=axDict['all'].transAxes )
+   axDict[ 'hom' ].text( x=0.01, y=0.98, s = 'Homozygous Snp Errors',
+                  fontsize = 12, horizontalalignment='left',
+                  verticalalignment = 'top', family='Helvetica',
+                  color=( 0.3, 0.3, 0.3 ),
+                  transform=axDict['hom'].transAxes )
+   axDict[ 'het' ].text( x=0.01, y=0.98, s = 'Heterozygous Snp Errors',
+                  fontsize = 12, horizontalalignment='left',
+                  verticalalignment = 'top', family='Helvetica',
+                  color=( 0.3, 0.3, 0.3 ),
+                  transform=axDict['het'].transAxes )
+   axDict[ 'indel' ].text( x=0.01, y=0.98, s = 'Indel Snp Errors',
+                  fontsize = 12, horizontalalignment='left',
+                  verticalalignment = 'top', family='Helvetica',
+                  color=( 0.3, 0.3, 0.3 ),
+                  transform=axDict[ 'indel' ].transAxes )
+   
+   
+def logLower( y ):
+   """ find the approprate lower bound for y
+   if y is going to be displayed on a log plot
+   """
+   for i in range( 1, 8 ):
+      if y == ( y % float( 10.0 ** i)):
+         return ( 10.0 ** ( i - 1 ) )
 
 def main():
    data = Data()
@@ -168,8 +291,11 @@ def main():
    
    assembliesDict = {}
    assembliesDict = readSnpStatsDir( assembliesDict, options )
+   sumErrors( assembliesDict )
+   sortOrder = sorted( assembliesDict, key=lambda key: assembliesDict[ key ].allLo, reverse=False )
+
+   drawData( assembliesDict, sortOrder, axDict, options, data )
    
-   drawData( assembliesDict, axDict, options, data )
    
    writeImage( fig, pdf, options, data )
    
