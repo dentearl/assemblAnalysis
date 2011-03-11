@@ -346,6 +346,20 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
                                y2= [0] * len( xData ), 
                                facecolor = 'r', 
                                linewidth = 0.0 )
+      
+      # create the 50 line
+      if not options.SMM:
+         axMain.add_line( lines.Line2D( xdata=[ xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ],
+                                                xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ]],
+                                        ydata=[ 0, 0.5],
+                                        color='w',
+                                        linewidth= 0.5))
+         axMain.add_line( lines.Line2D( xdata=[ 1,
+                                                xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ]],
+                                        ydata=[ 0.5, 0.5],
+                                        color='w',
+                                        linewidth= 0.5))
+                                     
    else:
       data.colors = [ "#8ca252", "#b5cf6b" ]
       for n in options.topBotOrder:
