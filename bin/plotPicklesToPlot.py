@@ -434,7 +434,7 @@ def drawLegend( options, data ):
                           s = 'Item >=', fontsize = 7)
       xPos = 0.2
       xunit = 0.05
-      labs = [ '0', '1e2', '1e3', '1e4',
+      labs = [ '1', '1e2', '1e3', '1e4',
                '1e5', '1e6', '1e7', '1e8' ]
       i = -1
       for col in data.stackFillColors:
