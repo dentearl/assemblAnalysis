@@ -22,6 +22,7 @@ class MafBlock:
     * 0 = contig ends.
     * 1 = correct adjacency.
     * 2 = error adjacency.
+    * 3 = scaffold gap
    """
    def __init__( self ):
       self.refGenome   = ''
@@ -40,7 +41,8 @@ class MafBlock:
       self.pairSeq     = '' # future use
       self.hpl         = -1
       self.hplStart    = -1
-      self.hplEnd   = -1
+      self.hplEnd      = -1
+      self.spl         = -1
    def increment( self ):
       self.refEnd  += self.refStrand
       self.pairEnd += self.pairStrand
@@ -135,10 +137,16 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
 
         mafCtg1eX         maf contigs of X or greater. taken from totalLength field of maf.
         
+        mafSpl1eX         maf scaffold paths of X or greater
+        
         mafHpEdgeCounts   each haplotype path has two edges, a left and a right
         mafHpEdgeMax      max count
         mafHpErrorCounts  haplotype paths are made up of segments, segments may have errors at junctions.
         mafHpErrorMax     max count
+        mafSpEdgeCounts   Same as above, but for scaffold paths
+        mafSpEdgeMax      
+        mafSpErrorCounts  
+        mafSpErrorMax     
         blockEdgeCounts   each block has two edges, a left and a right
         blockEdgeMax      max count
         
@@ -163,10 +171,18 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                  'mafCtg1e5' : numpy.zeros( shape = ( numBins )),
                  'mafCtg1e6' : numpy.zeros( shape = ( numBins )),
                  'mafCtg1e7' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e2' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e3' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e4' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e5' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e6' : numpy.zeros( shape = ( numBins )),
+                 'mafSpl1e7' : numpy.zeros( shape = ( numBins )),
                  'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
                  'mafHpEdgeMax'    : 0,
                  'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
                  'mafHpErrorMax'   : 0,
+                 'mafHpScafGapCount' : numpy.zeros( shape = ( numBins )),
+                 'mafHpScafGapMax'   : 0,
                  'blockEdgeCount'  : numpy.zeros( shape = ( numBins )),
                  'blockEdgeMax'   : 0 }
         maxPossibleCount = float( featLen ) / float( numBins )
@@ -189,25 +205,32 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 data['mafHpEdgeCount'][ posSt ] += 1.0
                 if data['mafHpEdgeCount'][ posSt ] > data[ 'mafHpEdgeMax' ]:
                     data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posSt ]
-#                print 'added 0 to hplStart at [%d] = %d, max: %d' % ( posSt, data['mafHpEdgeCount'][ posSt ], data['mafHpEdgeMax'])
             elif mb.hplStart == 2:
                 # error
                 data['mafHpErrorCount'][ posSt ] += 1.0
                 if data['mafHpErrorCount'][ posSt ] > data[ 'mafHpErrorMax' ]:
                     data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posSt ]
+            elif mb.hplStart == 3:
+                # scaffold gap
+                data['mafHpScafGapCount'][ posSt ] += 1.0
+                if data['mafHpScafGapCount'][ posSt ] > data[ 'mafHpScafGapMax' ]:
+                    data[ 'mafHpScafGapMax' ] = data['mafHpScafGapCount'][ posSt ]
             # three prime
             if mb.hplEnd == 0:
                 # edge
                 data['mafHpEdgeCount'][ posEnd ] += 1.0
                 if data['mafHpEdgeCount'][ posEnd ] > data[ 'mafHpEdgeMax' ]:
                     data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posEnd ]
-#                print 'added 0 to hplSEnd at [%d] = %d, max: %d' % ( posEnd, data['mafHpEdgeCount'][ posEnd ], data[ 'mafHpEdgeMax' ] )
             elif mb.hplEnd == 2:
                 # error
                 data['mafHpErrorCount'][ posEnd ] += 1.0
                 if data['mafHpErrorCount'][ posEnd ] > data[ 'mafHpErrorMax' ]:
                     data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posEnd ]
-                    
+            elif mb.hplEnd == 3:
+                # scaffold gap
+                data['mafHpScafGapCount'][ posEnd ] += 1.0
+                if data['mafHpScafGapCount'][ posEnd ] > data[ 'mafHpScafGapMax' ]:
+                    data[ 'mafHpScafGapMax' ] = data['mafHpScafGapCount'][ posEnd ]
             # do all of the different maf block flavors
             for i in range( mb.refStart, mb.refEnd + 1 ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
@@ -216,17 +239,22 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 for i in range( 2, 8 ):
                     if length >= 10 ** i:
                         data[ 'maf1e%d' % i ][ pos ] += 1
-                    if mb.hpl >= 10 ** i:
-                        data[ 'mafHpl1e%d' % i ][ pos ] += 1
+                    if mb.spl >= 10 ** i:
+                        data[ 'mafSpl1e%d' % i ][ pos ] += 1
                     if mb.pairTotalLength >= 10 ** i:
                         data[ 'mafCtg1e%d' % i ][ pos ] += 1
+                    if mb.hpl >= 10 ** i:
+                        data[ 'mafHpl1e%d' % i ][ pos ] += 1
                     
         for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
                    'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2',
                    'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
                    'mafHpl1e6', 'mafHpl1e7',
                    'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
-                   'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7']:
+                   'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7', 
+                   'mafSpl1e2',
+                   'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
+                   'mafSpl1e6', 'mafSpl1e7' ]:
             for i in range( 0, numBins ):
                 data[ r ][ i ] /= float( maxPossibleCount )
         return data

@@ -171,8 +171,9 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
    if len( hplList ) > 0:
       if jLine.order < len( hplList ):
          mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
-         mb.hplStart   = hplList[ jLine.order ][ 'five' ]
-         mb.hplEnd     = hplList[ jLine.order ][ 'three' ]
+         mb.hplStart   = hplList[ jLine.order ][ 'hFive' ]
+         mb.hplEnd     = hplList[ jLine.order ][ 'hThree' ]
+         mb.spl        = hplList[ jLine.order ][ 'spl' ]
       else:
          sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
                            'greating than the length of the hpl list (%d))\n' % ( jLine.order, 
@@ -213,13 +214,15 @@ def readMaf( options, data ):
       if line[ 0 ] == '#':
          if line[ :4 ] == '#HPL':
             d = line.split(' ')
-            # example line: "#HPL=12049 5=1 3=1"
+            # example line: "#HPL=12049 5=1 3=1 SPL=123412 S5=0 S3=12"
             # there will be one hpl line per options.other line
             # in blocks that contain the options.ref
-            hpl   = int( d[0][5:] )
-            five  = int( d[1][2] )
-            three = int( d[2][2] )
-            hplList.append( { 'hpl': hpl, 'five': five, 'three': three } )
+            hpl    = int( d[0][5:] ) # comment at start of this field
+            hFive  = int( d[1][2] )
+            hThree = int( d[2][2] )
+            spl    = int( d[3][4:] ) # no comment at start of this field
+            hplList.append( { 'hpl': hpl, 'hFive': hFive, 
+                              'hThree': hThree, 'spl': spl } )
          continue
       if line[ 0 ] == 's':
          line = line.strip()
@@ -293,10 +296,18 @@ def convertDataToWiggle( options, data ):
                              'mafCtg1e5' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafCtg1e6' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafCtg1e7' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e2' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e3' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e4' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafSpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpEdgeMax'     : 0,
                              'mafHpErrorCounts' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpErrorMax'    : 0,
+                             'mafHpScafGapCounts' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpScafGapMax'    : 0,
                              'blockEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
                              'blockEdgeMax'     : 0 }
          for i in range( 0, thisChrNumBins ):
