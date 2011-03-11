@@ -2,7 +2,7 @@
 """
 cactusAssemblathonAggregatePlotter.py
 22 February 2011
-dent earl, dearl@soe.ucsc.edu
+dent earl, dearl(a)soe ucsc edu
 
 This script takes an aggregate text file and produces
 a pretty picture. Files look like:
