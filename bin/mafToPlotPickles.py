@@ -161,11 +161,13 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
    mb.refStart   = iLine.start + 1
    mb.refEnd     = iLine.start + iLine.strand * iLine.length
    mb.refStrand  = iLine.strand
+   mb.refTotalLength = iLine.totalLength
    mb.pairGenome = jLine.genome
    mb.pairChr    = jLine.chr
    mb.pairStart  = jLine.start + 1
    mb.pairEnd    = jLine.start - 1 + jLine.strand * jLine.length
    mb.pairStrand = jLine.strand
+   mb.pairTotalLength = jLine.totalLength
    if len( hplList ) > 0:
       if jLine.order < len( hplList ):
          mb.hpl        = hplList[ jLine.order ][ 'hpl' ]
@@ -285,6 +287,12 @@ def convertDataToWiggle( options, data ):
                              'mafHpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e2' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e3' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e4' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e5' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e6' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafCtg1e7' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpEdgeMax'     : 0,
                              'mafHpErrorCounts' : numpy.zeros( shape = ( thisChrNumBins )),

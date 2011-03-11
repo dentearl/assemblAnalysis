@@ -24,19 +24,21 @@ class MafBlock:
     * 2 = error adjacency.
    """
    def __init__( self ):
-      self.refGenome  = ''
-      self.refChr     = ''
-      self.refStart   = -1
-      self.refEnd     = -1
-      self.refStrand  = 0
-      self.refSeq     = '' # future use
-      self.pairGenome = ''
-      self.pairChr    = ''
-      self.pairStart  = -1
-      self.pairEnd    = -1
-      self.pairStrand = 0
-      self.pairSeq    = '' # future use
-      self.hpl        = -1
+      self.refGenome   = ''
+      self.refChr      = ''
+      self.refStart    = -1
+      self.refEnd      = -1
+      self.refStrand   = 0
+      self.refTotalLength = -1
+      self.refSeq      = '' # future use
+      self.pairGenome  = ''
+      self.pairChr     = ''
+      self.pairStart   = -1
+      self.pairEnd     = -1
+      self.pairStrand  = 0
+      self.pairTotalLength = -1
+      self.pairSeq     = '' # future use
+      self.hpl         = -1
       self.hplStart    = -1
       self.hplEnd   = -1
    def increment( self ):
@@ -128,12 +130,11 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         maf1e6            maf blocks 1,000,000 or greater
         maf1e7            maf blocks 10,000,000 or greater
         xAxis             x Values
-        mafHpl1e2         maf haplotype paths of 100 or greater
-        mafHpl1e3         maf haplotype paths of 1,000 or greater
-        mafHpl1e4         maf haplotype paths of 10,000 or greater
-        mafHpl1e5         maf haplotype paths of 100,000 or greater
-        mafHpl1e6         maf haplotype paths of 1,000,000 or greater
-        mafHpl1e7         maf haplotype paths of 10,000,000 or greater
+
+        mafHpl1eX         maf haplotype paths of X or greater
+
+        mafCtg1eX         maf contigs of X or greater. taken from totalLength field of maf.
+        
         mafHpEdgeCounts   each haplotype path has two edges, a left and a right
         mafHpEdgeMax      max count
         mafHpErrorCounts  haplotype paths are made up of segments, segments may have errors at junctions.
@@ -156,6 +157,12 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                  'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
                  'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
                  'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e2' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e3' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e4' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e5' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e6' : numpy.zeros( shape = ( numBins )),
+                 'mafCtg1e7' : numpy.zeros( shape = ( numBins )),
                  'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
                  'mafHpEdgeMax'    : 0,
                  'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
@@ -206,34 +213,20 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
                 data['maf'][ pos ] += 1
                 length = mb.refEnd - mb.refStart
-                if ( length ) >= 100:
-                    data['maf1e2'][ pos ] += 1
-                if ( length ) >= 1000:
-                    data['maf1e3'][ pos ] += 1
-                if ( length ) >= 10000:
-                    data['maf1e4'][ pos ] += 1
-                if ( length ) >= 100000:
-                    data['maf1e5'][ pos ] += 1
-                if ( length ) >= 1000000:
-                    data['maf1e6'][ pos ] += 1
-                if ( length ) >= 10000000:
-                    data['maf1e7'][ pos ] += 1
-                if ( mb.hpl ) >= 100:
-                    data['mafHpl1e2'][ pos ] += 1
-                if ( mb.hpl ) >= 1000:
-                    data['mafHpl1e3'][ pos ] += 1
-                if ( mb.hpl ) >= 10000:
-                    data['mafHpl1e4'][ pos ] += 1
-                if ( mb.hpl ) >= 100000:
-                    data['mafHpl1e5'][ pos ] += 1
-                if ( mb.hpl ) >= 1000000:
-                    data['mafHpl1e6'][ pos ] += 1
-                if ( mb.hpl ) >= 10000000:
-                    data['mafHpl1e7'][ pos ] += 1
+                for i in range( 2, 8 ):
+                    if length >= 10 ** i:
+                        data[ 'maf1e%d' % i ][ pos ] += 1
+                    if mb.hpl >= 10 ** i:
+                        data[ 'mafHpl1e%d' % i ][ pos ] += 1
+                    if mb.pairTotalLength >= 10 ** i:
+                        data[ 'mafCtg1e%d' % i ][ pos ] += 1
+                    
         for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
                    'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2',
                    'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
-                   'mafHpl1e6', 'mafHpl1e7' ]:
+                   'mafHpl1e6', 'mafHpl1e7',
+                   'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
+                   'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7']:
             for i in range( 0, numBins ):
                 data[ r ][ i ] /= float( maxPossibleCount )
         return data
