@@ -43,6 +43,9 @@ def initOptions( parser ):
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps]' )
+   parser.add_option( '--normalize', dest='normalize', default=False,
+                      action='store_true', 
+                      help='Normalize errors by the "Correct (bits)" field.')
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
@@ -99,14 +102,14 @@ def readSnpStatsDir( assembliesDict, options ):
       f.close()
    return assembliesDict
 
-def sumErrors( assembliesDict ):
+def sumErrors( assembliesDict, options ):
    for a in assembliesDict:
       assembliesDict[ a ].allUp = 0
       assembliesDict[ a ].allLo = 0
       for e in [ 'Total-errors-in-homozygous', 'Total-errors-in-heterozygous', 
                  'Total-errors-in-one-haplotype-only' ]:
-         assembliesDict[ a ].allLo += int( assembliesDict[ a ].snpStatsLower[ e ] )
-         assembliesDict[ a ].allUp += int( assembliesDict[ a ].snpStatsUpper[ e ] )
+         assembliesDict[ a ].allLo += float( assembliesDict[ a ].snpStatsLower[ e ] )
+         assembliesDict[ a ].allUp += float( assembliesDict[ a ].snpStatsUpper[ e ] )
 
 def initImage( options, data ):
    pdf = None
@@ -134,7 +137,7 @@ def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
    axDict = {}
-   options.axLeft   = 0.11
+   options.axLeft   = 0.1
    options.axRight  = 0.95
    options.axWidth  = options.axRight - options.axLeft
    options.margin   = 0.05
@@ -180,16 +183,16 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    for aName in sortOrder:
       i += 1
       a = assembliesDict[ aName ]
-      if yMax < int( a.allUp ):
-         yMax = int( a.allUp )
-      if yMin > int( a.allLo ): 
-         yMin = int( a.allLo )
-      
-   yMin = logLower( yMin )
+      if yMax < float( a.allUp ):
+         yMax = float( a.allUp )
+      if yMin > float( a.allLo ): 
+         yMin = float( a.allLo )
+   if not options.normalize:
+      yMin = logLower( yMin )
    for i in range( 1, len( assembliesDict ) ):
       if not i % 10:
          axDict[ 'all' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ 1, yMax ],
+                                                 ydata=[ yMin, yMax ],
                                                  color=lGray))
    i = 0
    for aName in sortOrder:
@@ -199,8 +202,12 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
                                               ydata=[ a.allLo, a.allUp ],
                                               color='#1f77b4'))
       xNames.append( aName )
+   #if not options.normalize:
    axDict[ 'all' ].set_yscale('log')
-   axDict[ 'all' ].set_ylim( [ yMin, yMax] )
+   if yMin > yMax:
+      sys.stderr.write( 'Error, yMin > yMax: %f > %f\n' % ( yMin, yMax ))
+      sys.exit( 1 )
+   axDict[ 'all' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
    axDict[ 'all' ].set_xticks( range( 1, len(xNames) + 1 ))
    axDict[ 'all' ].set_xticklabels( xNames )
    for tick in axDict[ 'all' ].xaxis.get_major_ticks():
@@ -208,64 +215,67 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    for label in axDict[ 'all' ].xaxis.get_ticklabels():
       label.set_rotation( 90 )
 
-   
-
-   # other plots
-   plotAxes = { 'Total-errors-in-homozygous' : 'hom',
-                'Total-errors-in-heterozygous': 'het',
-                'Total-errors-in-one-haplotype-only':'indel' }
-   for key in plotAxes:
+   # all the other plots
+   axNames = { 'hom':'Total-errors-in-homozygous', 
+               'het':'Total-errors-in-heterozygous', 
+               'indel':'Total-errors-in-one-haplotype-only' }
+   for key in axNames:
       yMax = 0
       yMin = sys.maxint
-      xNames = []
       i = 0
       for aName in sortOrder:
          i += 1
          a = assembliesDict[ aName ]
-         if yMax < int( a.snpStatsUpper[ key ] ):
-            yMax = int( a.snpStatsUpper[ key ] )
-         if yMin > int( a.snpStatsLower[ key ] ):
-            yMin = int( a.snpStatsLower[ key ] )
-      yMin = logLower( yMin )
+         if yMax < float( a.snpStatsUpper[ axNames[ key ] ]):
+            yMax = float( a.snpStatsUpper[ axNames[ key ] ])
+         if yMin > float( a.snpStatsLower[ axNames[ key ] ]): 
+            yMin = float( a.snpStatsLower[ axNames[ key ] ])
+         if not options.normalize:
+            yMin = logLower( yMin )
       for i in range( 1, len( assembliesDict ) ):
          if not i % 10:
-            axDict[ plotAxes[ key ] ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                    ydata=[ 1, yMax ],
-                                                    color=lGray))
+            axDict[ key ].add_line( lines.Line2D( xdata=[ i, i ],
+                                                  ydata=[ yMin, yMax ],
+                                                  color=lGray))
       i = 0
       for aName in sortOrder:
-         i += 1
          a = assembliesDict[ aName ]
-         axDict[ plotAxes[ key ] ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ a.snpStatsLower[ key ],
-                                                         a.snpStatsUpper[ key ]],
+         i += 1
+         axDict[ key ].add_line( lines.Line2D( xdata=[ i, i ],
+                                                 ydata=[ a.snpStatsLower[ axNames[ key ]], 
+                                                         a.snpStatsUpper[ axNames[ key ]]],
                                                  color='#1f77b4'))
-         xNames.append( aName )
-      axDict[ plotAxes[ key ] ].set_yscale('log')
-      axDict[ plotAxes[ key ] ].set_ylim( [yMin, yMax] )
-      axDict[ plotAxes[ key ] ].set_xticks( range( 1, len(xNames) + 1 ))
-      axDict[ plotAxes[ key ] ].set_xticklabels( xNames )
-      for tick in axDict[ plotAxes[ key ] ].xaxis.get_major_ticks():
+      #if not options.normalize:
+      axDict[ key ].set_yscale('log')
+      axDict[ key ].set_ylim( [ yMin, yMax] )
+      axDict[ key ].set_xticks( range( 1, len(xNames) + 1 ))
+      axDict[ key ].set_xticklabels( xNames )
+      for tick in axDict[ key ].xaxis.get_major_ticks():
          tick.label1.set_fontsize( 6 )
-      for label in axDict[ plotAxes[ key ] ].xaxis.get_ticklabels():
+      for label in axDict[ key ].xaxis.get_ticklabels():
          label.set_rotation( 90 )
-   
-   axDict[ 'all' ].text( x=0.01, y=0.98, s = 'All Snp Errors',
+      
+
+   if options.normalize:
+      suffix = ' / Correct'
+   else:
+      suffix = ''
+   axDict[ 'all' ].text( x=0.01, y=0.98, s = 'All Sub Errors%s' % suffix,
                   fontsize = 12, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['all'].transAxes )
-   axDict[ 'hom' ].text( x=0.01, y=0.98, s = 'Homozygous Snp Errors',
+   axDict[ 'hom' ].text( x=0.01, y=0.98, s = 'Homozygous Sub Errors%s' % suffix,
                   fontsize = 12, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['hom'].transAxes )
-   axDict[ 'het' ].text( x=0.01, y=0.98, s = 'Heterozygous Snp Errors',
+   axDict[ 'het' ].text( x=0.01, y=0.98, s = 'Heterozygous Sub Errors' + suffix,
                   fontsize = 12, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['het'].transAxes )
-   axDict[ 'indel' ].text( x=0.01, y=0.98, s = 'Indel Snp Errors',
+   axDict[ 'indel' ].text( x=0.01, y=0.98, s = 'Indel Sub Errors%s' % suffix,
                   fontsize = 12, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
@@ -280,6 +290,18 @@ def logLower( y ):
       if y == ( y % float( 10.0 ** i)):
          return ( 10.0 ** ( i - 1 ) )
 
+def normalizeData( assembliesDict, options ):
+   if not options.normalize:
+      return
+   names = { 'Total-errors-in-homozygous':'Total-correct-in-homozygous',
+             'Total-errors-in-heterozygous':'Total-correct-in-heterozygous',
+             'Total-errors-in-one-haplotype-only':'Total-correct-in-one-haplotype-only' }
+   for a in assembliesDict:
+      for key in names:
+         assembliesDict[ a ].snpStatsLower[ key ] = ( float(assembliesDict[ a ].snpStatsLower[ key ]) / 
+                                                      float(assembliesDict[ a ].snpStatsLower[ names[ key ] ]) )
+         assembliesDict[ a ].snpStatsUpper[ key ] = ( float(assembliesDict[ a ].snpStatsUpper[ key ]) / 
+                                                      float(assembliesDict[ a ].snpStatsUpper[ names[ key ] ]) )
 def main():
    data = Data()
    parser = OptionParser()
@@ -291,7 +313,10 @@ def main():
    
    assembliesDict = {}
    assembliesDict = readSnpStatsDir( assembliesDict, options )
-   sumErrors( assembliesDict )
+   
+   normalizeData( assembliesDict, options )
+   
+   sumErrors( assembliesDict, options )
    sortOrder = sorted( assembliesDict, key=lambda key: assembliesDict[ key ].allLo, reverse=False )
 
    drawData( assembliesDict, sortOrder, axDict, options, data )
