@@ -76,6 +76,10 @@ def initOptions( parser ):
                       action='store_true',
                       help='Turns on the fill color for the contig wiggles. Shows different coverage '
                       'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
+   parser.add_option( '--stackFillScaffPaths', dest='stackFillScaffPaths', default=False,
+                      action='store_true',
+                      help='Turns on the fill color for the scaffold-path wiggles. Shows different coverage '
+                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
    parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
                       action='store_true',
                       help='Turns on the wiggle track that shows relative density of block edges. ' )
@@ -132,14 +136,17 @@ def checkOptions( options, parser, data ):
    for a in opts:
       if opts[ a ] == None:
          parser.error('Error, specify --%s.\n' % a )
-   if ( options.stackFillBlocks or options.stackFillHapPaths or options.stackFillContigs ) and options.fill:
-      parser.error('Error, specify either --stackFillBlocks or --stackFillContigs or --stackFillHapPaths or --fill, not more than one.\n')
-   if options.stackFillBlocks and options.stackFillHapPaths:
-      parser.error('Error, specify either --stackFillBlocks or --stackFillHapPaths not more than one.\n')
-   if options.stackFillBlocks and options.stackFillContigs:
-      parser.error('Error, specify either --stackFillBlocks or --stackFillContigs not more than one.\n')
-   if options.stackFillContigs and options.stackFillHapPaths:
-      parser.error('Error, specify either --stackFillContigs or --stackFillHapPaths not more than one.\n')
+   combos = [ { 'name':'stackFillBlocks',     'value':options.stackFillBlocks }, 
+              { 'name':'stackFillHapPaths',   'value':options.stackFillHapPaths },
+              { 'name':'stackFillContigs',    'value':options.stackFillContigs }, 
+              { 'name':'stackFillScaffPaths', 'value':options.stackFillScaffPaths },
+              { 'name':'fill',                'value':options.fill } ]
+   for i in range(0, len(combos) - 1):
+      for j in range(i+1, len(combos)):
+         if combos[ i ]['value'] and combos[ j ][ 'value' ]:
+            parser.error('Error, specify either --%s or --%s not more than one.\n' %
+                         ( combos[ i ][ 'name' ], combos[ j ][ 'name' ] ))
+
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    data.chrLabelsByChrom  = {}
@@ -286,6 +293,8 @@ def loadMafs( options, data ):
                key = 'mafHpl' + l
             elif options.stackFillContigs:
                key = 'mafCtg' + l
+            elif options.stackFillScaffPaths:
+               key = 'mafSpl' + l
             else:
                continue
             if key not in data.mafWigDict[ c ][ n ]:
@@ -310,7 +319,8 @@ def establishAxes( fig, options, data ):
    options.axWidth = 0.88
    options.axTop = 0.98
    options.chrMargin = 0.02
-   if not options.stackFillBlocks and not options.stackFillHapPaths and not options.stackFillContigs:
+   if ( not options.stackFillBlocks and not options.stackFillHapPaths 
+        and not options.stackFillContigs and not options.stackFillScaffPaths ):
       options.axBottom = 0.02
       options.axHeight = options.axTop - options.axBottom
    else:
@@ -334,7 +344,8 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def setAxisLimits( axDict, options, data ):
-   if options.stackFillBlocks or options.stackFillHapPaths or options.stackFillContigs:
+   if ( options.stackFillBlocks or options.stackFillHapPaths or 
+        options.stackFillContigs or options.stackFillScaffPaths ):
       data.footerAx.set_ylim( 0.0, 1.01 )
       data.footerAx.set_xlim( 0.0, 1.0 )
       data.footerAx.xaxis.set_major_locator( pylab.NullLocator() )
@@ -418,10 +429,11 @@ def labelAxes( fig, axDict, options, data ):
    for n in data.orderedMafs:
       yPos = options.axTop - j
       fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = '%s' % n, 
-                         horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
-      fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
-                         horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
-                         color=(0.5, 0.5, 0.5) )
+                horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
+      fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, 
+                s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+                horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
+                color=(0.5, 0.5, 0.5) )
 
       for c in data.chrNames:
          chrLeft  = axDict[ c ].get_position().get_points()[0][0]
@@ -435,7 +447,8 @@ def labelAxes( fig, axDict, options, data ):
 
 def drawLegend( options, data ):
    # LEGEND
-   if options.stackFillBlocks or options.stackFillHapPaths or options.stackFillContigs:
+   if ( options.stackFillBlocks or options.stackFillHapPaths or 
+        options.stackFillContigs or options.stackFillScaffPaths ):
       data.footerAx.text( x=0.22, y = 0.75, horizontalalignment='right',
                           verticalalignment = 'center',
                           s = 'Fill Color Key', fontsize = 8)
@@ -560,7 +573,7 @@ def drawMafs( axDict, options, data ):
                                           y2=0,
                                           facecolor = myGray,
                                           linewidth = 0.0 )
-            # Stack Fills
+         # Stack Fills
          elif options.stackFillBlocks:
             k = -1
             for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
@@ -591,6 +604,16 @@ def drawMafs( axDict, options, data ):
                                              y2=data.mafYPos[ j ],
                                              facecolor = data.stackFillColors[ k ],
                                              linewidth = 0.0 )
+         elif options.stackFillScaffPaths:
+            k = -1
+            for r in [ 'maf', 'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
+                       'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7' ]:
+               k += 1
+               axDict[ c + n ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
+                                             y1=data.mafWigDict[ c ][ n ][ r ],
+                                             y2=data.mafYPos[ j ],
+                                             facecolor = data.stackFillColors[ k ],
+                                             linewidth = 0.0 )
          myRed  = '#FA9AAB'
          myBlue = '#C5C3E2'
          # --blockEdgeDensity track
@@ -614,8 +637,8 @@ def drawMafs( axDict, options, data ):
                                                     # marker='o', markerfacecolor=myRed, mec='None', 
                                                     # markersize=0.3) )
 
-         if ((not options.stackFillBlocks) and (not options.stackFillHapPaths) and (not options.fill)
-             and ( not options.stackFillContigs )):
+         if (( not options.stackFillBlocks ) and ( not options.stackFillHapPaths ) and ( not options.fill )
+             and ( not options.stackFillContigs ) and ( not  options.stackFillScaffPaths )):
             # No Fills, basic wiggle
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                     ydata = data.mafWigDict[ c ][ n ]['maf'], 
@@ -777,7 +800,9 @@ def normalizeCoverages( options, data ):
                     'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
                     'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7',
                     'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4', 
-                    'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7'] :
+                    'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7',
+                    'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
+                    'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7',] :
             data.mafWigDict[ c ][ n ][ r ] *= data.axCeilings[ n ] * 0.98
 
 def transformErrorDensities( options, data ):
