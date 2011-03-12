@@ -52,7 +52,7 @@ def initOptions( parser ):
                             'separated. Names must match file prefixes in the --dir.' ))
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
-                      help='Plotting mode [contigs|hapPaths|blocks|contamination].' )
+                      help='Plotting mode [scaffolds|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
@@ -74,9 +74,11 @@ def checkOptions( options, parser ):
    if options.dpi < 72:
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
-        options.mode != 'blocks' and options.mode != 'hapPaths' ):
+        options.mode != 'blocks' and options.mode != 'hapPaths' and 
+        options.mode != 'scaffolds' ):
       parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
-   if options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs':
+   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
+        options.mode == 'scaffolds' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    elif options.mode == 'contamination':
@@ -85,18 +87,23 @@ def checkOptions( options, parser ):
       options.order = options.order.split(',')
    else:
       options.order = []
-   if options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs':
+   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
+        options.mode == 'scaffolds' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    options.SMM = True
 
 def readFiles( options, data ):
-   matches = glob.glob( os.path.join( options.dir, '*.' + options.mode+ '.*'))
+   if options.mode == 'scaffolds':
+      fileType = 'scaffPaths'
+   else:
+      fileType = options.mode
+   matches = glob.glob( os.path.join( options.dir, '*.' + fileType + '.*'))
    if len( matches ) < 1:
       sys.stderr.write( 'Error, unable to locate any %s files in %s' % ( options.mode, options.dir ))
       sys.exit( 1 )
    data.recordsDict = {} # keyed by assemblyID
-   regEx = '([A-Z]\d{1,2})\.' + options.mode + '.*'
+   regEx = '([A-Z]\d{1,2})\.' + fileType + '.*'
    pat = re.compile( regEx )
    for m in matches:
       aName = re.match( pat, os.path.basename( m ) ).group( 1 )

@@ -327,9 +327,9 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
                       '#fff200', '#cbdb2a' ]
    elif options.mode == 'blocks':
       data.colors = [ '#a89e89', '#6e5d3a', 
-                      '#ba759e', '#f2aad2' ]
+                      '#f2aad2', '#ba759e' ]
    elif options.mode == 'scaffolds':
-      data.colors = [ '#F58742', '#F2DC9D', 
+      data.colors = [ '#468666', '#F2DC9D', 
                       '#1C4169', '#72929D' ]
    if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1, 'scaffolds':1 }:
       for n in options.topBotOrder:

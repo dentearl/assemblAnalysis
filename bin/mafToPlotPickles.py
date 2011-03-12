@@ -302,13 +302,13 @@ def convertDataToWiggle( options, data ):
                              'mafSpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafSpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafSpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpEdgeCount'  : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpEdgeMax'     : 0,
-                             'mafHpErrorCounts' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpErrorCount' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpErrorMax'    : 0,
-                             'mafHpScafGapCounts' : numpy.zeros( shape = ( thisChrNumBins )),
+                             'mafHpScafGapCount' : numpy.zeros( shape = ( thisChrNumBins )),
                              'mafHpScafGapMax'    : 0,
-                             'blockEdgeCounts'  : numpy.zeros( shape = ( thisChrNumBins )),
+                             'blockEdgeCount'  : numpy.zeros( shape = ( thisChrNumBins )),
                              'blockEdgeMax'     : 0 }
          for i in range( 0, thisChrNumBins ):
             mafWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
