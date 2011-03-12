@@ -25,7 +25,7 @@ import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter # minor tick marks
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
 import numpy
 from optparse import OptionParser
 import os
@@ -53,7 +53,7 @@ def initOptions( parser ):
                       help='output format [pdf|png|all|eps]' )
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
-                      help='Plotting mode [contigs|hapPaths|blocks|contamination].' )
+                      help='Plotting mode [scaffolds|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
@@ -74,9 +74,11 @@ def checkOptions( options, parser ):
    if options.dpi < 72:
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
-        options.mode != 'blocks' and options.mode != 'hapPaths' ):
+        options.mode != 'blocks' and options.mode != 'hapPaths' and 
+        options.mode != 'scaffolds' ):
       parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
-   if options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs':
+   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
+        options.mode == 'scaffolds' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    elif options.mode == 'contamination':
@@ -126,8 +128,8 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axMain.set_ylim( 0.0, 1.0 )
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      if options.mode != 'hapPaths':
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
+      if options.mode != 'hapPaths' and options.mode != 'scaffolds':
          axCrazy.set_ylim( 0.0, 1.02 )
          axCrazy.set_xscale('log')
          axCrazy.set_xlim( 1, xData[ -1 ] )
@@ -156,8 +158,8 @@ def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft = 0.11
    options.axWidth = 0.85
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
-      if options.mode == 'hapPaths':
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
+      if options.mode == 'hapPaths' or options.mode == 'scaffolds':
          axDict[ 'crazy' ] = None
          axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
                                             options.axWidth , 0.66 ] )
@@ -188,12 +190,13 @@ def establishAxes( fig, options, data ):
 def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticks( data.xData )
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1 }:
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
       if not options.SMM:
-         if options.mode != 'hapPaths':
+         if options.mode != 'hapPaths' and options.mode != 'scaffolds':
             axCrazy.set_yticks( [0, 1 ] )
             axCrazy.set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
+   minorLocator = LogLocator( base=10, subs = range(1,10) )
    
    if options.SMM:
       axBlowUp.set_yticklabels( [] )
@@ -204,6 +207,10 @@ def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
       axBlowUp.set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
       axBlowUp.set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
                              0.96, 0.97, 0.98, 0.99, 1.0 ], minor=True )
+      axMain.xaxis.set_minor_locator( minorLocator )
+      axBlowUp.xaxis.set_minor_locator( minorLocator )
+      if axCrazy:
+         axCrazy.xaxis.set_minor_locator( minorLocator )
 
 def writeImage( fig, pdf, options, data ):
    if options.outFormat == 'pdf':
@@ -257,7 +264,7 @@ def normalizeDataNormalMode( valuesDict, options, data ):
    colSum = [ 0 ] * upperlimit
    for i in range( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
-                'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly']:
+                'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly' ]:
          colSum[ i ] += valuesDict[ j ][ i ]
    # verify the columns all have the same sum
    for i in range(1, len( colSum )):
@@ -321,7 +328,10 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
    elif options.mode == 'blocks':
       data.colors = [ '#a89e89', '#6e5d3a', 
                       '#ba759e', '#f2aad2' ]
-   if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1 }:
+   elif options.mode == 'scaffolds':
+      data.colors = [ '#F58742', '#F2DC9D', 
+                      '#1C4169', '#72929D' ]
+   if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1, 'scaffolds':1 }:
       for n in options.topBotOrder:
          i += 1
          axMain.fill_between( x=xData,
@@ -334,7 +344,7 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
                                 y2= [0] * len( xData ), 
                                 facecolor = data.colors[ i ], 
                                 linewidth = 0.0 )
-      if options.mode != 'hapPaths':
+      if options.mode != 'hapPaths' and options.mode != 'scaffolds':
          # add baseline for homespun bar plot:
          axCrazy.add_line( lines.Line2D( xdata=[1, xData[-1]],
                                          ydata=[0,0],
@@ -481,6 +491,7 @@ def main():
    
    data.valuesDict = readFile( options.file, options )
    data.xData = data.valuesDict['columnLength']
+   
    if options.mode != 'contamination':
       data.valuesDict = normalizeDataNormalMode( data.valuesDict, options, data )
    else:
