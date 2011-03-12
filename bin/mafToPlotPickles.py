@@ -20,6 +20,7 @@ import cPickle
 from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
 from libMafGffPlot import MafLine
+from libMafGffPlot import newMafWigDict
 from libMafGffPlot import objListToBinnedWiggle
 import numpy
 from optparse import OptionParser
@@ -276,40 +277,7 @@ def convertDataToWiggle( options, data ):
       mafWigDict[ c ] = {}
       d = mafDataOrNone( data.mafBlocksByChrom, c )
       if d == None:
-         mafWigDict[ c ] = { 'maf'    : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e2' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e3' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e4' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e5' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e6' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'maf1e7' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'xAxis'  : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e2' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e3' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e4' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e2' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e3' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e4' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e5' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e6' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafCtg1e7' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e2' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e3' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e4' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e5' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e6' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafSpl1e7' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpEdgeCount'  : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpEdgeMax'     : 0,
-                             'mafHpErrorCount' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpErrorMax'    : 0,
-                             'mafHpScafGapCount' : numpy.zeros( shape = ( thisChrNumBins )),
-                             'mafHpScafGapMax'    : 0,
-                             'blockEdgeCount'  : numpy.zeros( shape = ( thisChrNumBins )),
-                             'blockEdgeMax'     : 0 }
+         mafWigDict[ c ] = newMafWigDict( thisChrNumBins )
          for i in range( 0, thisChrNumBins ):
             mafWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
                                            float( data.chrLengthsByChrom[ c ] ) )

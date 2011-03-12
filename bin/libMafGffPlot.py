@@ -82,6 +82,43 @@ class GffRecord:
       self.frame  = ''
       self.group  = ''
 
+def newMafWigDict( numBins ):
+    import numpy
+    return { 'maf'    : numpy.zeros( shape = ( numBins )),
+             'maf1e2' : numpy.zeros( shape = ( numBins )),
+             'maf1e3' : numpy.zeros( shape = ( numBins )),
+             'maf1e4' : numpy.zeros( shape = ( numBins )),
+             'maf1e5' : numpy.zeros( shape = ( numBins )),
+             'maf1e6' : numpy.zeros( shape = ( numBins )),
+             'maf1e7' : numpy.zeros( shape = ( numBins )),
+             'xAxis'  : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e2' : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e3' : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e4' : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
+             'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e2' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e3' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e4' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e5' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e6' : numpy.zeros( shape = ( numBins )),
+             'mafCtg1e7' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e2' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e3' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e4' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e5' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e6' : numpy.zeros( shape = ( numBins )),
+             'mafSpl1e7' : numpy.zeros( shape = ( numBins )),
+             'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
+             'mafHpEdgeMax'    : 0,
+             'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
+             'mafHpErrorMax'   : 0,
+             'mafHpScafGapCount' : numpy.zeros( shape = ( numBins )),
+             'mafHpScafGapMax'   : 0,
+             'blockEdgeCount'  : numpy.zeros( shape = ( numBins )),
+             'blockEdgeMax'   : 0 }
+
 def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     """ obj can be either a GffRecord object or a MafBlock object.
     featLen is the length of the chromosome.
@@ -90,6 +127,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     """
     from libMafGffPlot import GffRecord
     from libMafGffPlot import MafBlock
+    from libMafGffPlot import newMafWigDict
     import numpy
     import sys
     if objList == None or len( objList ) < 1:
@@ -151,40 +189,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         blockEdgeMax      max count
         
         """
-        data = { 'maf'    : numpy.zeros( shape = ( numBins )),
-                 'maf1e2' : numpy.zeros( shape = ( numBins )),
-                 'maf1e3' : numpy.zeros( shape = ( numBins )),
-                 'maf1e4' : numpy.zeros( shape = ( numBins )),
-                 'maf1e5' : numpy.zeros( shape = ( numBins )),
-                 'maf1e6' : numpy.zeros( shape = ( numBins )),
-                 'maf1e7' : numpy.zeros( shape = ( numBins )),
-                 'xAxis'  : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e2' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e3' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e4' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
-                 'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e2' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e3' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e4' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e5' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e6' : numpy.zeros( shape = ( numBins )),
-                 'mafCtg1e7' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e2' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e3' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e4' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e5' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e6' : numpy.zeros( shape = ( numBins )),
-                 'mafSpl1e7' : numpy.zeros( shape = ( numBins )),
-                 'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
-                 'mafHpEdgeMax'    : 0,
-                 'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
-                 'mafHpErrorMax'   : 0,
-                 'mafHpScafGapCount' : numpy.zeros( shape = ( numBins )),
-                 'mafHpScafGapMax'   : 0,
-                 'blockEdgeCount'  : numpy.zeros( shape = ( numBins )),
-                 'blockEdgeMax'   : 0 }
+        data = newMafWigDict( numBins )
         maxPossibleCount = float( featLen ) / float( numBins )
         # populate xAxis
         for i in range( 0, numBins ):
