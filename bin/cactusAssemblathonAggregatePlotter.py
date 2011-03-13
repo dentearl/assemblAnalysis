@@ -53,7 +53,7 @@ def initOptions( parser ):
                       help='output format [pdf|png|all|eps]' )
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
-                      help='Plotting mode [scaffolds|contigs|hapPaths|blocks|contamination].' )
+                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output.')
@@ -75,10 +75,10 @@ def checkOptions( options, parser ):
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
         options.mode != 'blocks' and options.mode != 'hapPaths' and 
-        options.mode != 'scaffolds' ):
+        options.mode != 'scaffPaths' ):
       parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
    if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
-        options.mode == 'scaffolds' ):
+        options.mode == 'scaffPaths' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    elif options.mode == 'contamination':
@@ -128,8 +128,8 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axMain.set_ylim( 0.0, 1.0 )
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
-      if options.mode != 'hapPaths' and options.mode != 'scaffolds':
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
+      if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
          axCrazy.set_ylim( 0.0, 1.02 )
          axCrazy.set_xscale('log')
          axCrazy.set_xlim( 1, xData[ -1 ] )
@@ -158,8 +158,8 @@ def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft = 0.11
    options.axWidth = 0.85
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
-      if options.mode == 'hapPaths' or options.mode == 'scaffolds':
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
+      if options.mode == 'hapPaths' or options.mode == 'scaffPaths':
          axDict[ 'crazy' ] = None
          axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
                                             options.axWidth , 0.66 ] )
@@ -190,9 +190,9 @@ def establishAxes( fig, options, data ):
 def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticks( data.xData )
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffolds':1 }:
+   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
       if not options.SMM:
-         if options.mode != 'hapPaths' and options.mode != 'scaffolds':
+         if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
             axCrazy.set_yticks( [0, 1 ] )
             axCrazy.set_yticklabels( [ 0, '%d' % data.crazyMax ] )
    minorLocator = MultipleLocator( 5 )
@@ -203,6 +203,12 @@ def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
       axBlowUp.set_xticklabels( [] )
       axMain.set_yticklabels( [] )
       axMain.set_xticklabels( [] )
+      for i in range( 1, 8 ):
+         axMain.add_line( lines.Line2D( xdata=[ 10**i, 10**i ],
+                                        ydata=[ 0, 0.1 ],
+                                        color=( 0.8, 0.8, 0.8 ),
+                                        linewidth = 0.5 )
+                          )
    else:
       axBlowUp.set_yticks( [ 0.9, 0.92, 0.94, 0.96, 0.98, 1.0 ], minor=False )
       axBlowUp.set_yticks( [ 0.91, 0.92, 0.93, 0.94, 0.95,
@@ -328,10 +334,10 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
    elif options.mode == 'blocks':
       data.colors = [ '#a89e89', '#6e5d3a', 
                       '#f2aad2', '#ba759e' ]
-   elif options.mode == 'scaffolds':
-      data.colors = [ '#468666', '#F2DC9D', 
+   elif options.mode == 'scaffPaths':
+      data.colors = [ '#6FB586', '#F2DC9D', 
                       '#1C4169', '#72929D' ]
-   if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1, 'scaffolds':1 }:
+   if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1, 'scaffPaths':1 }:
       for n in options.topBotOrder:
          i += 1
          axMain.fill_between( x=xData,
@@ -344,7 +350,7 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
                                 y2= [0] * len( xData ), 
                                 facecolor = data.colors[ i ], 
                                 linewidth = 0.0 )
-      if options.mode != 'hapPaths' and options.mode != 'scaffolds':
+      if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
          # add baseline for homespun bar plot:
          axCrazy.add_line( lines.Line2D( xdata=[1, xData[-1]],
                                          ydata=[0,0],
@@ -389,11 +395,14 @@ def drawLegend( options, data ):
    if options.SMM:
       return
    if options.mode != 'contamination':
-      height = 0.3
+      
       left = 0.03
+      if options.mode == 'scaffPaths' or options.mode == 'hapPaths':
+         height = 0.25
+      else:
+         height = 0.3
       bottom = 0.05
       width = 0.4
-      height = 0.3
       right = left + width
       top = bottom + height
       data.axDict['main'].add_patch( patches.Rectangle( xy=(left, bottom), width = width,
@@ -424,13 +433,14 @@ def drawLegend( options, data ):
                                    verticalalignment='center', transform=data.axDict['main'].transAxes,
                                    fontsize=9.5)
          yPos -= 0.045
-      data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02,
-                                                        height = 0.025, color = 'r',
-                                                        transform=data.axDict['main'].transAxes ))
-      data.axDict['main'].text( x = left + .08, y = yPos, s = 'no hap1, no hap2, Assembly', 
-                                color = (0.1, 0.1, 0.1), horizontalalignment='left',
-                                verticalalignment='center', transform=data.axDict['main'].transAxes,
-                                fontsize = 9.5)
+      if (not options.mode == 'scaffPaths') and ( not options.mode == 'hapPaths' ):
+         data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02,
+                                                           height = 0.025, color = 'r',
+                                                           transform=data.axDict['main'].transAxes ))
+         data.axDict['main'].text( x = left + .08, y = yPos, s = 'no hap1, no hap2, Assembly', 
+                                   color = (0.1, 0.1, 0.1), horizontalalignment='left',
+                                   verticalalignment='center', transform=data.axDict['main'].transAxes,
+                                   fontsize = 9.5)
       options.topBotOrder.reverse()
    elif options.mode == 'contamination':
       width = 3.0
