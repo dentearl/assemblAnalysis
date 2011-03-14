@@ -59,7 +59,7 @@ def initOptions( parser ):
    parser.add_option( '--forceOrder', dest='forceOrder', 
                       help='Specify either the complete ordering of the assemblies or '
                       'a partial ordering. In the case of a partial ordering, the remaining '
-                      'assemblies will be listed in name sorted order.' )
+                      'assemblies will be listed in name sorted (alphabetical) order.' )
    parser.add_option( '--fill', dest='fill', default=False,
                       action='store_true',
                       help='Turns on the fill color for the coverage wiggles. Useful for viewing '
@@ -117,6 +117,9 @@ def initOptions( parser ):
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
                       help='Debug option, turns on the plotting of all axes frame boxes.' )
+   parser.add_option( '--printCoverageNumbers', dest='printCoverageNumbers', default=False,
+                      action='store_true',
+                      help='Print the coverage values to the left of the assembly ID.' )
    
 
 def checkOptions( options, parser, data ):
@@ -430,10 +433,11 @@ def labelAxes( fig, axDict, options, data ):
       yPos = options.axTop - j
       fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = '%s' % n, 
                 horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
-      fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, 
-                s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
-                horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
-                color=(0.5, 0.5, 0.5) )
+      if options.printCoverageNumbers:
+         fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, 
+                   s = '%.4f' % ( float( data.mafNamesDict[ n ]) / data.genomeLength ), 
+                   horizontalalignment='right', verticalalignment='bottom', fontsize=7, 
+                   color=(0.5, 0.5, 0.5) )
 
       for c in data.chrNames:
          chrLeft  = axDict[ c ].get_position().get_points()[0][0]
