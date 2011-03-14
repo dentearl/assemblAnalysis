@@ -153,7 +153,7 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
 def establishAxes( fig, options, data ):
-   """ create one axes per chromosome
+   """ 
    """
    axDict = {}
    options.axLeft = 0.11
