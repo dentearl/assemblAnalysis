@@ -133,12 +133,19 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
          axCrazy.set_ylim( 0.0, 1.02 )
          axCrazy.set_xscale('log')
          axCrazy.set_xlim( 1, xData[ -1 ] )
+         axCrazy.xaxis.set_ticklabels( [] )   
       
    axBlowUp.set_xscale('log')
    axBlowUp.set_xlim( 1, xData[ -1 ] )
    axBlowUp.set_ylim( 0.9, 1.0 )
-   axBlowUp.xaxis.set_major_locator( pylab.NullLocator() )
-   
+   axBlowUp.xaxis.set_ticklabels( [] )   
+
+   # turn off ticks
+   for ax in [ axMain, axCrazy, axBlowUp ]:
+      if not ax == None:
+         ax.xaxis.set_ticks_position('bottom')
+         ax.yaxis.set_ticks_position('left')
+
    if options.SMM:
       if options.mode != 'hapPaths':
          axCrazy.yaxis.set_major_locator( pylab.NullLocator() )
@@ -147,7 +154,6 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
       axMain.xaxis.set_major_locator( pylab.NullLocator() )
       axMain.xaxis.set_minor_locator( pylab.NullLocator() )
       axBlowUp.xaxis.set_minor_locator( pylab.NullLocator() )
-      
 
    #if options.SMM:
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )

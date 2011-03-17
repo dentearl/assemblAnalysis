@@ -107,14 +107,15 @@ def drawData( scaffolds, contigs, ax, options ):
    globalMin = min( min( scaffolds['values']), min( contigs['values'] ))
    if options.n50Line:
       color50 = ( 0.4, 0.4, 0.4 )
+      # vertical line
+      # ax.add_line( lines.Line2D( xdata=[ 0.5, 0.5],
+      #                            ydata=[ globalMin,
+      #                                    scaffolds['values'][ - sum( numpy.array( scaffolds[ 'xData' ] ) > 0.5 ) ]],
+      #                            color=color50,
+      #                            linewidth= 0.75,
+      #                            linestyle= ':'))
       for d in [ scaffolds, contigs ]:
-         ax.add_line( lines.Line2D( xdata=[ 0.5, 0.5],
-                                    ydata=[ globalMin,
-                                            d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ]],
-                                    
-                                    color=color50,
-                                    linewidth= 0.75,
-                                    linestyle= ':'))
+         # horizontal lines
          ax.add_line( lines.Line2D( xdata=[ 0.0, 0.5],
                                     ydata=[ d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ],
                                             d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ]],
@@ -140,6 +141,7 @@ def drawData( scaffolds, contigs, ax, options ):
       plt.ylabel('Size')
 
    ax.set_xticks( [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ] )
+   ax.xaxis.set_ticklabels( [ 0, '', '', '', '', 0.5, '', '', '', '', 1.0 ] )
    # turn off ticks where there is no spine
    ax.xaxis.set_ticks_position('bottom')
    ax.yaxis.set_ticks_position('left')
