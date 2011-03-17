@@ -15,6 +15,7 @@ import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
 import numpy
 from optparse import OptionParser
 import os
@@ -46,6 +47,9 @@ def initOptions( parser ):
    parser.add_option( '--log', dest='log', default=False,
                       action='store_true',
                       help='Puts y axis into log scale.')
+   parser.add_option( '--n50Line', dest='n50Line', default=False,
+                      action='store_true',
+                      help=('Adds straight lines from y axis and x axis to the curves.'))
    
    
 def checkOptions( options, parser ):
@@ -87,10 +91,10 @@ def initImage( options ):
 def establishAxis( fig, options ):
    """ create one axes per chromosome
    """
-   options.axLeft  = 0.2
-   options.axWidth = 0.7
-   options.axBottom  = 0.2
-   options.axHeight  = 0.7
+   options.axLeft  = 0.1
+   options.axWidth = 0.85
+   options.axBottom  = 0.15
+   options.axHeight  = 0.75
    ax = fig.add_axes( [options.axLeft, options.axBottom,
                        options.axWidth, options.axHeight ] )
    #ax = fig.add_subplot(111)
@@ -99,6 +103,25 @@ def establishAxis( fig, options ):
 
 def drawData( scaffolds, contigs, ax, options ):
    ax.set_title( options.title + ' N Stats' )
+   # create the N50 line
+   globalMin = min( min( scaffolds['values']), min( contigs['values'] ))
+   if options.n50Line:
+      color50 = ( 0.4, 0.4, 0.4 )
+      for d in [ scaffolds, contigs ]:
+         ax.add_line( lines.Line2D( xdata=[ 0.5, 0.5],
+                                    ydata=[ globalMin,
+                                            d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ]],
+                                    
+                                    color=color50,
+                                    linewidth= 0.75,
+                                    linestyle= ':'))
+         ax.add_line( lines.Line2D( xdata=[ 0.0, 0.5],
+                                    ydata=[ d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ],
+                                            d['values'][ - sum( numpy.array( d[ 'xData' ] ) > 0.5 ) ]],
+                                    color=color50,
+                                    linewidth= 0.75,
+                                    linestyle= ':'))
+   
    p1 = ax.plot( scaffolds['xData'], scaffolds['values'], color='#1f77b4' )
    p2 = ax.plot( contigs['xData'], contigs['values'], color='#aec7e8' )
    for loc, spine in ax.spines.iteritems():
@@ -108,18 +131,20 @@ def drawData( scaffolds, contigs, ax, options ):
          spine.set_color('none') # don't draw spine               
       else:
          raise ValueError('unknown spine location: %s' % loc )
-   ax.set_xlim( 0, 1.0 )
+
+   if options.log:
+      ax.set_yscale('log')
+      plt.ylabel('log Size')
+      ax.yaxis.set_minor_locator( LogLocator( base=10, subs = range(1,10) ) )
+   else:
+      plt.ylabel('Size')
+
    ax.set_xticks( [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ] )
    # turn off ticks where there is no spine
    ax.xaxis.set_ticks_position('bottom')
    ax.yaxis.set_ticks_position('left')
    plt.xlabel('Cumulative length proportional to Haplotype 2')
    
-   if options.log:
-      ax.set_yscale('log')
-      plt.ylabel('log Size')
-   else:
-      plt.ylabel('Size')
    leg = plt.legend([p1, p2], ['Scaffolds', 'Contigs'])
    leg._drawFrame=False
 
