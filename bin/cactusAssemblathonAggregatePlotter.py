@@ -329,8 +329,8 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
       data.colors = [ "#9467bd", "#c5b0d5", "#17becf", 
                       "#9edae5", "#ff7f0e", "#ffbb78" ]
    elif options.mode == 'hapPaths':
-      data.colors = [ '#fd8913', '#dd791f',
-                      '#fff200', '#cbdb2a' ]
+      data.colors = [ '#dd791f', '#fd8913', 
+                      '#cbdb2a', '#fff200' ]
    elif options.mode == 'blocks':
       data.colors = [ '#a89e89', '#6e5d3a', 
                       '#f2aad2', '#ba759e' ]
@@ -365,15 +365,19 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
       
       # create the 50 line
       if not options.SMM:
+         if options.mode =='hapPaths':
+            color50 = ( 0.3, 0.3, 0.3 )
+         else:
+            color50 = 'w'
          axMain.add_line( lines.Line2D( xdata=[ xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ],
                                                 xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ]],
                                         ydata=[ 0, 0.5],
-                                        color='w',
+                                        color=color50,
                                         linewidth= 0.5))
          axMain.add_line( lines.Line2D( xdata=[ 1,
                                                 xData[ sum( numpy.array( yData[ 'hapA1/hapA2/assembly' ] ) > 0.5 ) ]],
                                         ydata=[ 0.5, 0.5],
-                                        color='w',
+                                        color=color50,
                                         linewidth= 0.5))
                                      
    else:
