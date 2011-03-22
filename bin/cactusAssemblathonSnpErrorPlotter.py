@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-cacutsAssemblerSnpErrorPlotter.py
+cactusSubErrorPlotter.py
 10 March 2011
 dent earl, dearl(a) soe ucsc edu
 
