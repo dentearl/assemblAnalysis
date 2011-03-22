@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-fastaContigHeaderMapper.py 
+fastaHeaderMapper.py 
 14 Feb 2011
 dent earl, dearl (a) soe ucsc edu
 
 Simple script to both create mappings between a fasta
-file's unique contig IDs that are verbose and unqiue
-contig IDs that are short. This is mainly a way to get
+file's unique header IDs that are verbose and unqiue
+header IDs that are short. This is mainly a way to get
 around RepeatMasker's header line length limit of 50 chars.
 
 Input and output are via stdin/stdout.
@@ -33,7 +33,11 @@ def initOptions( parser ):
     parser.add_option( '--prefix', dest='prefix',
                        type='string',
                        help='When using --createMap one can specify a header prefix that will '
-                       'result in headers like: >prefix.contig000001')
+                       'result in headers like: >prefix.LABEL000001')
+    parser.add_option( '--label', dest='label',
+                       type='string', default='contig',
+                       help='When using --createMap one can specify a header label that will '
+                       'result in headers like: >PREFIX.label000001')
     parser.add_option( '--map', dest='map',
                        type='string',
                        help='Specify the map file that contains the mapping between IDs.')
@@ -69,9 +73,9 @@ def createMap( options ):
             continue
         if line[0] == '>':
             if line in faMap:
-                sys.stderr.write( 'Error, duplicate contig header found: %s.\n' % line )
+                sys.stderr.write( 'Error, duplicate header found: %s.\n' % line )
                 sys.exit( 1 )
-            faMap[ line ] = '>%scontig%06d' % ( prefix, num )
+            faMap[ line ] = '>%s%s%06d' % ( prefix, options.label, num )
             num += 1
             
     FILE = open( options.createMap, 'w' )
@@ -94,7 +98,7 @@ def translate( faMap, options ):
             if line in faMap:
                 print faMap[ line ]
             else:
-                sys.stderr.write( 'Error, unable to find contig header "%s" in map file "%s"\n' % 
+                sys.stderr.write( 'Error, unable to find header "%s" in map file "%s"\n' % 
                                   ( line, options.map) )
                 sys.exit( 1 )
         else:

@@ -4,7 +4,7 @@ export SHELLOPTS=pipefail
 # 26 Jan 2011
 ##############################
 # EDIT THESE:
-PROJECT_DIR:=/hive/users/dearl/assemblathon/prod
+PROJECT_DIR:=/hive/users/dearl/assemblathon/scaffoldRun
 BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 ##############################
 # It is assumed that all assemblies will be in fasta format, gzipped
@@ -30,6 +30,15 @@ BIN_DIR:=/hive/users/dearl/assemblathon/code/trunk/bin
 #   rsync
 #   removeEmptyContigs.py
 #
+#
+# HOW TO RUN!
+# 1. You need to have this makefile.
+# 2. Make sure you have a link to the MElibrary
+# 3. make downloadSubmissions
+# 4. make updateSubmissions
+# 5. make repMask -j12 # 12 is just a suggestion
+# 6. come back in a day or so.
+#
 ##############################
 # DO NOT EDIT BELOW THIS LINE
 .SECONDARY: # leave this blank to force make to keep intermediate files
@@ -44,7 +53,8 @@ ASSEMBLIES_DIR:=${PROJECT_DIR}/assemblies
 REPMASK_DIR:=${PROJECT_DIR}/repeatMasking
 TRF_DIR:=${PROJECT_DIR}/tandemRepeatFinder
 MELIB:=${PROJECT_DIR}/MELibrary/MELib.fa
-ASSEMBLIES:=$(patsubst %.fa.gz,%,$(notdir $(wildcard ${RAW_DIR}/*contigs.fa.gz)))
+ASSEMBLIES:=$(patsubst %.fa.gz,%,$(notdir $(wildcard ${RAW_DIR}/*scaffolds.fa.gz)))
+#ASSEMBLIES:=$(patsubst %.fa.gz,%,$(notdir $(wildcard ${RAW_DIR}/*contigs.fa.gz)))
 HAPLOTYPES:=$(patsubst %.trf.repmask.2bit,%,$(notdir $(wildcard ${HAPS_DIR}/*.trf.repmask.2bit)))
 UNIQ:=$(strip $(shell date '+%s' | perl -ple 's/^\d{6}//;')) # last 4 digits of time.
 REPEATMASKER:=/scratch/data/RepeatMasker/RepeatMasker
@@ -63,20 +73,22 @@ downloadSubmissions:
 
 updateSubmissions: downloadSubmissions 
 	mkdir -p ${RAW_DIR}
-	rsync -av ${SUBMISSION_DIR}/*contigs.fa.gz ${RAW_DIR}
+	rsync -av ${SUBMISSION_DIR}/*scaffolds.fa.gz ${RAW_DIR}
+#	rsync -av ${SUBMISSION_DIR}/*contigs.fa.gz ${RAW_DIR}
 
 # verify the fasta has unique ids
 # use only the first 40 characters on the header line as
 # RepeatMasker freaks out if you have 50 characters or more.
 # We reserve 9 characters for future use.
 ${RAW_DIR}/%.map: ${RAW_DIR}/%.fa.gz
-	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --prefix $(patsubst %_contigs,%,${*F}) --createMap $@.tmp
+	zcat $< | ${BIN_DIR}/fastaHeaderMapper.py --prefix $(patsubst %_scaffolds,%,${*F}) --label scaffold --createMap $@.tmp
+#	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --prefix $(patsubst %_contigs,%,${*F}) --createMap $@.tmp
 	mv $@.tmp $@
 
 # extract files, remove everything in the header line after the unique int id
 ${ASSEMBLIES_DIR}/%.fa: ${RAW_DIR}/%.fa.gz ${RAW_DIR}/%.map
 	mkdir -p $(dir $@)
-	zcat $< | ${BIN_DIR}/fastaContigHeaderMapper.py --map ${RAW_DIR}/${*F}.map --goForward > $@.${tmpExt}3 # change headers to contain only unique IDs
+	zcat $< | ${BIN_DIR}/fastaHeaderMapper.py --map ${RAW_DIR}/${*F}.map --goForward --label scaffold > $@.${tmpExt}3 # change headers to contain only unique IDs
 	${BIN_DIR}/removeEmptyContigs.py < $@.${tmpExt}3 > $@.${tmpExt}2  # remove the empty contigs from the sequence file
 #	faFilter -minSize=100 $@.${tmpExt}2 $@.${tmpExt}1 # throw away contigs < 100
 #	perl -ple 'if(! m/^>/){ s/[^ACGTacgt]/N/g;};' < $@.${tmpExt}2 > $@.${tmpExt} # mask out IUPACs
