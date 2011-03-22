@@ -12,7 +12,6 @@ around RepeatMasker's header line length limit of 50 chars.
 Input and output are via stdin/stdout.
 
 """
-
 import cPickle
 import os
 from optparse import OptionParser
@@ -20,11 +19,6 @@ import signal # deal with broken pipes
 import sys
 
 signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
-
-def usage():
-    print 'USAGE: '+sys.argv[0]+' --map myMap.map --goForward [--goBackward] < inputFile.fa > outputFile.fa'
-    print __doc__
-    sys.exit( 2 )
 
 def initOptions( parser ):
     parser.add_option( '--createMap', dest='createMap',
@@ -114,7 +108,7 @@ def main():
         return
     faMap = readMap( options )
     if options.goBackward:
-        faMap = dict((v,k) for k, v in faMap.iteritems())
+        faMap = dict( (v,k) for k, v in faMap.iteritems() )
     translate( faMap, options )
 
 if __name__ == '__main__':
