@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-sizesToN50.py
+sizesToN50Plot.py
 9 March 2011
 dent earl, dearl(a)soe ucsc edu
 
