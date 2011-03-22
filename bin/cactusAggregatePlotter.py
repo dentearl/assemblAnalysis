@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-cactusAssemblathonAggregatePlotter.py
+cactusAggregatePlotter.py
 22 February 2011
 dent earl, dearl(a)soe ucsc edu
 

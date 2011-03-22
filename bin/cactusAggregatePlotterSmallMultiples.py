@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-cactusAssemblathonAggregatePlotterSmallMultiples.py
+cactusAggregatePlotterSmallMultiples.py
 9 March 2011
 dent earl, dearl@soe.ucsc.edu
 
@@ -18,7 +18,7 @@ hapA1/!hapA2/!assembly	761105	761105	763235	791242	1085617	1575676	1575676	15756
 !hapA1/!hapA2/assembly	1001654	1001338	923700	823749	508292	437	0	0
 """
 from libMafGffPlot import Data
-import cactusAssemblathonAggregatePlotter as cacPlot
+import cactusAggregatePlotter as cacPlot
 
 import glob
 import matplotlib.backends.backend_pdf as pltBack
