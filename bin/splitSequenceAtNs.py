@@ -35,9 +35,11 @@ def processStream( options ):
       if line == '':
          continue
       if line[0] == '>':
+         if header != '' and register != 0:
+            sys.stdout.write('\n')
          header = line
          splitCount = 1
-         print '%s.%s%03d' % ( header, options.label, splitCount )
+         sys.stdout.write('%s.%s%03d\n' % ( header, options.label, splitCount ))
          register = 0
          nCount = 0
          continue
