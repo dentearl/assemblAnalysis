@@ -12,7 +12,7 @@ signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 def initOptions( parser ):
     parser.add_option( '--names', dest='names',
                        action='store_true', default=False,
-                       help='Prints out sequence names in addition to their lengths [default False].' )
+                       help='Prints out sequence names in addition to their lengths [default %default].' )
 
 def checkOptions( options ):
     pass

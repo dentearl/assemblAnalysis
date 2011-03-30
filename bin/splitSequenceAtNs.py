@@ -16,10 +16,10 @@ def initOptions( parser ):
                       help='Stretches of n or more will be split into two sequences.' )
    parser.add_option( '-l', '--lineLength', dest='lineLength',
                       type='int', default=50,
-                      help='Changes the length of the output lines.' )
+                      help='Changes the length of the output lines. [default %default]' )
    parser.add_option( '--label', dest='label',
                        type='string', default='contig',
-                       help='Will result in headers like: >PREFIX.label001')
+                       help='Will result in headers like: >PREFIX.label001 [default %default]')
 
 def checkOptions( options, parser ):
    if options.n == None:
