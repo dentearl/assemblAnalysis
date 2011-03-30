@@ -10,7 +10,7 @@ from optparse import OptionParser
 def initOptions( parser ):
     parser.add_option( '--noNames', dest='noNames',
                        action='store_true', default=False,
-                       help='Only prints out sizes, no names.' )
+                       help='Only prints out lengths, no names.' )
 
 def checkOptions( options ):
     pass
