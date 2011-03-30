@@ -6,6 +6,8 @@ per line.
 import sys
 import os
 from optparse import OptionParser
+import signal # deal with broken pipes
+signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
 def initOptions( parser ):
     parser.add_option( '--names', dest='names',
@@ -17,7 +19,7 @@ def checkOptions( options ):
 
 def reportSeq( s, l, options ):
     if l > 0:
-        if not options.names:
+        if options.names:
             print '%s, [ %d ]' % ( s, l )
         else:
             print '%d' % l
@@ -29,7 +31,7 @@ def main():
     checkOptions( options )
     curSeq = ''
     curLen = 0
-    if not options.names:
+    if options.names:
         print 'Name, [ length ]'
     for line in sys.stdin:
         line = line.strip()
