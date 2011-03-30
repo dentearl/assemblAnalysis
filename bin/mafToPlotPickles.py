@@ -28,11 +28,6 @@ import os
 import sys
 import re
 
-def usage():
-   print 'USAGE: '+sys.argv[0]+' --help'
-#    print __doc__
-   sys.exit( 2 )
-
 def initOptions( parser ):
    parser.add_option( '-a', '--referenceGenome', dest='ref',
                       type='string',
@@ -46,6 +41,8 @@ def initOptions( parser ):
    parser.add_option( '--outDir', dest='outDir',
                       type='string',
                       help='Establishes where the pickles will be written.' )
+   parser.add_option( '--name', dest='name',
+                      help='changes prefix name from refGenome.chrN.pickle to name.chrN.pickle' )
    parser.add_option( '-n', '--numBins', dest='numBins', default=8*300,
                       type='int',
                       help='Number of bins to partion the the x axis into.' )
@@ -103,8 +100,12 @@ def packData( options, data, prot='py23Bin' ):
    protocols = { 'ASCII' : 0,
                  'pre23Bin' : 1,
                  'py23Bin'  : 2 }
+   if options.name:
+      prefix = options.name
+   else:
+      prefix = options.ref + '.' + options.other
    for c in data.chroms:
-      f = open( os.path.join( options.outDir, options.ref + '.' + options.other +
+      f = open( os.path.join( options.outDir, prefix +
                               '.maf.' + c + '.pickle' ), 'wb' )
       cPickle.dump( data.mafWigDict[ c ], f, protocol=protocols[ prot ] )
       f.close()
@@ -179,7 +180,6 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
          sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
                            'greating than the length of the hpl list (%d))\n' % ( jLine.order, 
                                                                                   len( hplList ) ))
-
    data.mafBlocksByChrom[ mb.refChr ].append( mb )
 
 def extractBlockPairs( mafLineList, hplList, options, data ):
