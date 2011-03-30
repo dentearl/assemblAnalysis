@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
-sizesToN50Plot.py
+lengthsToN50Plot.py
 9 March 2011
 dent earl, dearl(a)soe ucsc edu
 
-This script takes two files which consit of sizes, one per line,
+This script takes two files which consit of lengths, one per line,
 and a genome length, it produces a figure showing the cumulative
 plot of the N statistic for both files.
 
@@ -135,10 +135,10 @@ def drawData( scaffolds, contigs, ax, options ):
 
    if options.log:
       ax.set_yscale('log')
-      plt.ylabel('log Size')
+      plt.ylabel('log Length')
       ax.yaxis.set_minor_locator( LogLocator( base=10, subs = range(1,10) ) )
    else:
-      plt.ylabel('Size')
+      plt.ylabel('Length')
 
    ax.set_xticks( [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ] )
    ax.xaxis.set_ticklabels( [ 0, '', '', '', '', 0.5, '', '', '', '', 1.0 ] )
