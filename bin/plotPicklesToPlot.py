@@ -33,15 +33,6 @@ def initOptions( parser ):
    parser.add_option( '-a', '--referenceGenome', dest='ref',
                       type='string',
                       help='Establishes the genome in the maf that will be used as the reference.' )
-   parser.add_option( '--out', dest='out', default='myPlot',
-                      type='string',
-                      help='output pdf where figure will be created. No extension.' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output.')
    parser.add_option( '--chrLengths', dest='chrLengths',
                       type='string',
                       help='comma separated list (no spaces) of chromosome lengths.' )
@@ -49,13 +40,22 @@ def initOptions( parser ):
                       type='string',
                       help='comma separated list (no spaces) of chromosome names, as you want them '
                       'to appear in l-r order in the figure.' )
+   parser.add_option( '--out', dest='out', default='myPlot',
+                      type='string',
+                      help='output pdf where figure will be created. No extension. default=%default' )
+   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
+                      type='string',
+                      help='output format [pdf|png|all|eps]. default=%default' )
+   parser.add_option( '--dpi', dest='dpi', default=300,
+                      type='int',
+                      help='Dots per inch of the output, if --outFormat is all or png. default=%default')
    parser.add_option( '--chrLabels', dest='chrLabels', default='',
                       type='string',
                       help='comma separated list (no spaces) of chromosome labels, as the will appear '
                       'in the plot.')
    parser.add_option( '--gridLinesMajor', dest='gridLinesMajor', default=0,
                       type='int',
-                      help='Place thick grid lines on the plot every X many bases.' )
+                      help='Place thick grid lines on the plot every X many bases. default=%default' )
    parser.add_option( '--forceOrder', dest='forceOrder', 
                       help='Specify either the complete ordering of the assemblies or '
                       'a partial ordering. In the case of a partial ordering, the remaining '
@@ -63,44 +63,44 @@ def initOptions( parser ):
    parser.add_option( '--fill', dest='fill', default=False,
                       action='store_true',
                       help='Turns on the fill color for the coverage wiggles. Useful for viewing '
-                      'highly variable coverage alignments.')
+                      'highly variable coverage alignments. default=%default')
    parser.add_option( '--stackFillBlocks', dest='stackFillBlocks', default=False,
                       action='store_true',
                       help='Turns on the fill color for the block wiggles. Shows different coverage '
-                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
+                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--stackFillHapPaths', dest='stackFillHapPaths', default=False,
                       action='store_true',
                       help='Turns on the fill color for the hap path wiggles. Shows different coverage '
-                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
+                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--stackFillContigs', dest='stackFillContigs', default=False,
                       action='store_true',
                       help='Turns on the fill color for the contig wiggles. Shows different coverage '
-                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
+                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--stackFillScaffPaths', dest='stackFillScaffPaths', default=False,
                       action='store_true',
                       help='Turns on the fill color for the scaffold-path wiggles. Shows different coverage '
-                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7.')
+                      'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on the wiggle track that shows relative density of block edges. ' )
+                      help='Turns on the wiggle track that shows relative density of block edges. default=%default' )
    parser.add_option( '--hapPathEdgeDensity', dest='hapPathEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on the wiggle track that shows relative density of haplotype path edges. ' )
+                      help='Turns on the wiggle track that shows relative density of haplotype path edges. default=%default' )
    parser.add_option( '--hapPathErrorDensity', dest='hapPathErrorDensity', default=False,
                       action='store_true',
                       help=( 'Turns on the wiggle track that shows relative density of haplotype '
-                             'path segment adjacency errors. ' ))
+                             'path segment adjacency errors. default=%default' ))
    parser.add_option( '--relative', dest='relative', default=False,
                       action='store_true',
-                      help='Plots errors as relative to the genome max. Otherwise is to global genomes max.' )
+                      help='Plots errors as relative to the genome max. Otherwise is to global genomes max. default=%default' )
    parser.add_option( '--transform', dest='transform', default=False,
                       action='store_true',
                       help=('Transform the block and haplotype errors by y^(1/4) to '
-                            'reduce spikes from extreme values.' ))
+                            'reduce spikes from extreme values. default=%default' ))
    parser.add_option( '--zerosToNan', dest='zerosToNan', default=False,
                       action='store_true',
                       help=( 'Transform the errors that are 0 to NaNs, so they are not plotted.'
-                             'Creates discontinuous plots.' ))
+                             'Creates discontinuous plots. default=%default' ))
    parser.add_option( '--edgeErrorCeiling', dest='edgeErrorCeiling',
                       type='int',
                       help=( 'Changes the edge and error scales to go from 0 to --edgeErrorCeiling '
@@ -116,10 +116,10 @@ def initOptions( parser ):
                              ' --annotationOrder.'))
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
-                      help='Debug option, turns on the plotting of all axes frame boxes.' )
+                      help='Debug option, turns on the plotting of all axes frame boxes. default=%default' )
    parser.add_option( '--printCoverageNumbers', dest='printCoverageNumbers', default=False,
                       action='store_true',
-                      help='Print the coverage values to the left of the assembly ID.' )
+                      help='Print the coverage values to the left of the assembly ID. default=%default' )
    
 
 def checkOptions( options, parser, data ):
@@ -833,8 +833,14 @@ def transformData( options, data ):
       transformBlockEdgeDensities( options, data )
 
 def main():
+   usage = ( 'usage: %prog [options]\n\n'
+             '%prog takes in a reference genome name ( --referenceGenome ),\n'
+             'optionally a directory where annotation wig pickles are stored ( --annotDir [optional] ),\n'
+             'a directory where maf wig pickles are stored ( --mafDir ), a paired set of chromosome names\n'
+             '( --chrNames comma separated ) and chromosome lengths ( --chrLengths comma separated ) and \n'
+             'then various other options specifed below to draw a figure.')
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )

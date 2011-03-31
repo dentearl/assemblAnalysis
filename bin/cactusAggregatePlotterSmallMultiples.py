@@ -37,12 +37,15 @@ def initOptions( parser ):
    parser.add_option( '--dir', dest='dir',
                       type='string',
                       help='Directory of Aggregate files to be read.' )
+   parser.add_option( '--mode', dest='mode',
+                      type='string', default='',
+                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--crazyMax', dest='crazyMax',
                       type='int',
                       help='Sets the height of the crazy bar plot axis.' )
    parser.add_option( '--out', dest='out', default='myAggPlot',
                       type='string',
-                      help='output pdf where figure will be created. No extension.' )
+                      help='output pdf where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps]' )
@@ -50,15 +53,12 @@ def initOptions( parser ):
                       type='string',
                       help=('Order (left-right, top-bottom) of plots, comma '
                             'separated. Names must match file prefixes in the --dir.' ))
-   parser.add_option( '--mode', dest='mode',
-                      type='string', default='',
-                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
-                      help='Dots per inch of the output.')
+                      help='Dots per inch of the output. default=%default')
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
-                      help='Debug option, turns on the printing of frames around axes.' )
+                      help='Debug option, turns on the printing of frames around axes. default=%default' )
 
 def checkOptions( options, parser ):
    if options.dir == None:
@@ -234,8 +234,11 @@ def writeImage( options, data ):
       data.fig.savefig( options.out + '.eps', format='eps' )   
 
 def main():
+   usage = ( '%prog --dir=path/to/dir --mode=[scaffPaths|contigs|hapPaths|blocks|contamination] [options]\n\n'
+             '%prog takes an aggregate directory ( --dir ) and a mode \n'
+             '( --mode ) and then produces a pretty picture.' )
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

@@ -77,8 +77,11 @@ def loadPickles( args, options, data ):
       printData( unpackData( f, options, data ), options, data )
 
 def main():
+   usage = ( 'usage: %prog --key=KEY file1.maf.pickle file2.maf.pickle ...\n\n'
+             '%prog takes a valid key ( --key ) and one or more maf wiggle pickle(s)\n'
+             'and then pulls out all the counts stored in the numpy array for the key.' )
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( args, options, parser, data )

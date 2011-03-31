@@ -38,21 +38,20 @@ def initOptions( parser ):
    parser.add_option( '-b', '--comparisonGenome', dest='other',
                       type='string',
                       help='Establishes the genome in the maf that will be used as the comparison.' )
+   parser.add_option( '--chrNames', dest='chrNames',
+                      type='string',
+                      help='comma separated list (no spaces) of chromosome names.' )
+   parser.add_option( '--chrLengths', dest='chrLengths',
+                      type='string',
+                      help='comma separated list (no spaces) of chromosome lengths.' )
    parser.add_option( '--outDir', dest='outDir',
                       type='string',
                       help='Establishes where the pickles will be written.' )
    parser.add_option( '--name', dest='name',
-                      help='changes prefix name from refGenome.chrN.pickle to name.chrN.pickle' )
+                      help='changes prefix name from refGenome.chrN.pickle to NAME.chrN.pickle' )
    parser.add_option( '-n', '--numBins', dest='numBins', default=8*300,
                       type='int',
-                      help='Number of bins to partion the the x axis into.' )
-   parser.add_option( '--chrNames', dest='chrNames',
-                      type='string',
-                      help='comma separated list (no spaces) of chromosome names, as you want them '
-                      'to appear in l-r order in the figure.' )
-   parser.add_option( '--chrLengths', dest='chrLengths',
-                      type='string',
-                      help='comma separated list (no spaces) of chromosome lengths.' )
+                      help='Number of bins to partion the the x axis into. default=%default' )
 
 def checkOptions( options, parser, data ):
    if options.maf == None:
@@ -374,8 +373,15 @@ def verifyStacks( options, data ):
                   sys.exit( 1 )
 
 def main():
+   usage = ( 'usage: %prog --maf=file.maf --referenceGenome=A --comparisonGenome=B --chrNames=c0,c1,... --chrLengths=N1,N2,... --outDir=path/to/dir/\n\n'
+             '%prog takes in a maf filename ( --maf ), a reference genome name as\n'
+             'it appears in the maf ( --referenceGenome ), a genome name to compare against\n'
+             '( --comparisonGenome ), a paired list of chromosome names ( --chrNames comma\n'
+             'separated ) and chromosome lengths ( --chrLengths comma separated ) and a path\n'
+             'to a directory where the maf pickles will be written ( --outDir ), one pickle\n'
+             'per chromosome.')
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )

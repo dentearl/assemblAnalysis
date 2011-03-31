@@ -25,7 +25,12 @@ def reportSeq( s, l, options ):
             print '%d' % l
 
 def main():
-    parser = OptionParser()
+    usage = ( 'usage: %prog [--names]\n\n'
+              '%prog takes in a fasta file via STDIN and \n'
+              'then prints out the lengths of sequences contained in the \n'
+              'fasta, one length per line of STDOUT. If --names is \n'
+              'specified, sequence names are printed next to their length.')
+    parser = OptionParser( usage=usage )
     initOptions( parser )
     ( options, args ) = parser.parse_args()
     checkOptions( options )

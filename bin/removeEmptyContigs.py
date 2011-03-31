@@ -19,7 +19,6 @@ ACGTACGTACGTACGTACGTACGT
 ACGTACGTACGTACGTACGTACGT
 ...
 """
-
 import sys
 
 def main():

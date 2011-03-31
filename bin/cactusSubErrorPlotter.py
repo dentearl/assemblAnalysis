@@ -24,34 +24,35 @@ import re
 
 class Assembly:
    """ Assembly objects are generated from lines 
-   in the two snp summary files, lower and upper
+   in the two substitution summary files, lower 
+   and upper
    """
    def __init__( self ):
       self.ID    = ''
-      self.snpStatsLower = {}
-      self.snpStatsUpper = {}
+      self.subStatsLower = {}
+      self.subStatsUpper = {}
       self.allUp = -1
       self.allLo = -1
 
 def initOptions( parser ):
-   parser.add_option( '--snpStatsDir', dest='snpStatsDir',
+   parser.add_option( '--subStatsDir', dest='subStatsDir',
                       type='string',
-                      help=('Directory with snpStats. Names: A1.snpStats.upper.txt .'))
-   parser.add_option( '--out', dest='out', default='mySnpStatsPlot',
+                      help=('Directory with subStats. Names: A1.subStats.upper.txt .'))
+   parser.add_option( '--out', dest='out', default='mySubStatsPlot',
                       type='string',
-                      help='output pdf where figure will be created. No extension.' )
+                      help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps]' )
    parser.add_option( '--normalize', dest='normalize', default=False,
                       action='store_true', 
-                      help='Normalize errors by the "Correct (bits)" field.')
+                      help='Normalize errors by the "Correct (bits)" field. default=%default')
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
-                      help='Dots per inch of the output.')
+                      help='Dots per inch of the output. For PNG --outFormat option. default=%default')
 
 def checkOptions( options, parser ):
-   dirs = { 'snpStatsDir' : options.snpStatsDir }
+   dirs = { 'subStatsDir' : options.subStatsDir }
    for d in dirs:
       if not dirs[ d ]:
          parser.error('Error, specify --%s\n' % d )
@@ -65,11 +66,11 @@ def checkOptions( options, parser ):
    if options.dpi < 72:
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
-def readSnpStatsDir( assembliesDict, options ):
-   lowerStatsFiles = glob.glob( os.path.join( options.snpStatsDir, '*.snpStats.lower.txt') )
-   upperStatsFiles = glob.glob( os.path.join( options.snpStatsDir, '*.snpStats.upper.txt') )
+def readSubStatsDir( assembliesDict, options ):
+   lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.txt') )
+   upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.txt') )
    
-   namereg = '^([A-Z0-9]{2,3})\.snpStats.*'
+   namereg = '^([A-Z0-9]{2,3})\.subStats.*'
    namepat = re.compile( namereg  )
    for l in lowerStatsFiles:
       m = re.match( namepat, os.path.basename( l ))
@@ -83,7 +84,7 @@ def readSnpStatsDir( assembliesDict, options ):
       for line in f:
          line = line.strip()
          d = line.split('\t')
-         assembliesDict[ ID ].snpStatsLower[ d[0] ] = d[ 1 ]
+         assembliesDict[ ID ].subStatsLower[ d[0] ] = d[ 1 ]
       f.close()
    for u in upperStatsFiles:
       m = re.match( namepat, os.path.basename( u ))
@@ -98,7 +99,7 @@ def readSnpStatsDir( assembliesDict, options ):
       for line in f:
          line = line.strip()
          d = line.split('\t')
-         assembliesDict[ ID ].snpStatsUpper[ d[0] ] = d[ 1 ]
+         assembliesDict[ ID ].subStatsUpper[ d[0] ] = d[ 1 ]
       f.close()
    return assembliesDict
 
@@ -108,8 +109,8 @@ def sumErrors( assembliesDict, options ):
       assembliesDict[ a ].allLo = 0
       for e in [ 'Total-errors-in-homozygous', 'Total-errors-in-heterozygous', 
                  'Total-errors-in-one-haplotype-only' ]:
-         assembliesDict[ a ].allLo += float( assembliesDict[ a ].snpStatsLower[ e ] )
-         assembliesDict[ a ].allUp += float( assembliesDict[ a ].snpStatsUpper[ e ] )
+         assembliesDict[ a ].allLo += float( assembliesDict[ a ].subStatsLower[ e ] )
+         assembliesDict[ a ].allUp += float( assembliesDict[ a ].subStatsUpper[ e ] )
 
 def initImage( options, data ):
    pdf = None
@@ -226,10 +227,10 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
       for aName in sortOrder:
          i += 1
          a = assembliesDict[ aName ]
-         if yMax < float( a.snpStatsUpper[ axNames[ key ] ]):
-            yMax = float( a.snpStatsUpper[ axNames[ key ] ])
-         if yMin > float( a.snpStatsLower[ axNames[ key ] ]): 
-            yMin = float( a.snpStatsLower[ axNames[ key ] ])
+         if yMax < float( a.subStatsUpper[ axNames[ key ] ]):
+            yMax = float( a.subStatsUpper[ axNames[ key ] ])
+         if yMin > float( a.subStatsLower[ axNames[ key ] ]): 
+            yMin = float( a.subStatsLower[ axNames[ key ] ])
          if not options.normalize:
             yMin = logLower( yMin )
       for i in range( 1, len( assembliesDict ) ):
@@ -242,8 +243,8 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
          a = assembliesDict[ aName ]
          i += 1
          axDict[ key ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ a.snpStatsLower[ axNames[ key ]], 
-                                                         a.snpStatsUpper[ axNames[ key ]]],
+                                                 ydata=[ a.subStatsLower[ axNames[ key ]], 
+                                                         a.subStatsUpper[ axNames[ key ]]],
                                                  color='#1f77b4'))
       #if not options.normalize:
       axDict[ key ].set_yscale('log')
@@ -298,13 +299,16 @@ def normalizeData( assembliesDict, options ):
              'Total-errors-in-one-haplotype-only':'Total-correct-in-one-haplotype-only' }
    for a in assembliesDict:
       for key in names:
-         assembliesDict[ a ].snpStatsLower[ key ] = ( float(assembliesDict[ a ].snpStatsLower[ key ]) / 
-                                                      float(assembliesDict[ a ].snpStatsLower[ names[ key ] ]) )
-         assembliesDict[ a ].snpStatsUpper[ key ] = ( float(assembliesDict[ a ].snpStatsUpper[ key ]) / 
-                                                      float(assembliesDict[ a ].snpStatsUpper[ names[ key ] ]) )
+         assembliesDict[ a ].subStatsLower[ key ] = ( float(assembliesDict[ a ].subStatsLower[ key ]) / 
+                                                      float(assembliesDict[ a ].subStatsLower[ names[ key ] ]) )
+         assembliesDict[ a ].subStatsUpper[ key ] = ( float(assembliesDict[ a ].subStatsUpper[ key ]) / 
+                                                      float(assembliesDict[ a ].subStatsUpper[ names[ key ] ]) )
 def main():
+   usage = ( 'usage: %prog [options]\n\n'
+             '%prog takes in the location of the substitution stats directory ( --subStatsDir )\n'
+             'and creates a plot showing the upper and lower values for each assembly.')
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )
@@ -312,7 +316,7 @@ def main():
    axDict = establishAxes( fig, options, data )
    
    assembliesDict = {}
-   assembliesDict = readSnpStatsDir( assembliesDict, options )
+   assembliesDict = readSubStatsDir( assembliesDict, options )
    
    normalizeData( assembliesDict, options )
    

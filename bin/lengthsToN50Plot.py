@@ -32,25 +32,24 @@ def initOptions( parser ):
    parser.add_option( '--size', dest='size',
                       type='int',
                       help='Total size of the genome.' )
-   parser.add_option( '--out', dest='out', default='myAggPlot',
-                      type='string',
-                      help='output pdf where figure will be created. No extension.' )
    parser.add_option( '--title', dest='title',
                       type='string',
                       help='Title of the plot.' )
+   parser.add_option( '--out', dest='out', default='myAggPlot',
+                      type='string',
+                      help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
-                      help='output format [pdf|png|all|eps]' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output.')
+                      help='output format [pdf|png|all|eps]. default=%default' )
    parser.add_option( '--log', dest='log', default=False,
                       action='store_true',
-                      help='Puts y axis into log scale.')
+                      help='Puts y axis into log scale. default=%default')
    parser.add_option( '--n50Line', dest='n50Line', default=False,
                       action='store_true',
-                      help=('Adds straight lines from y axis and x axis to the curves.'))
-   
+                      help=('Adds straight lines from the y-axis to the curves. default=%default'))
+   parser.add_option( '--dpi', dest='dpi', default=300,
+                      type='int',
+                      help='Dots per inch of the output. default=%default')
    
 def checkOptions( options, parser ):
    if options.scaffoldsFile == None:
@@ -185,7 +184,11 @@ def processData( scaffs, contigs, options ):
    return ( pScaffs, pContigs )
 
 def main():
-   parser = OptionParser()
+   usage = ( 'usage: %prog --scaffoldsFile=sFile.txt --contigsFile=cFile.txt --size=N --title=TITLE\n\n'
+             '%prog takes in a scaffolds file ( --scaffoldsFile ), a contigs\n'
+             'file ( --contigs ), the size of the genome ( --size ) and a title ( --title )\n'
+             'and then produces an N50 style figure.')
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

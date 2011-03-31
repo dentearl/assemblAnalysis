@@ -13,13 +13,13 @@ signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 def initOptions( parser ):
    parser.add_option( '-n', '--splitAt', dest='n',
                       type='int',
-                      help='Stretches of n or more will be split into two sequences.' )
+                      help='Stretches of N or more will be split into two sequences.' )
    parser.add_option( '-l', '--lineLength', dest='lineLength',
                       type='int', default=50,
-                      help='Changes the length of the output lines. [default %default]' )
+                      help='Changes the length of the output lines. default=%default' )
    parser.add_option( '--label', dest='label',
                        type='string', default='contig',
-                       help='Will result in headers like: >PREFIX.label001 [default %default]')
+                       help='Will result in headers like: >prexif.LABEL001 . default=%default')
 
 def checkOptions( options, parser ):
    if options.n == None:
@@ -66,7 +66,11 @@ def processStream( options ):
       sys.stdout.write( '\n' )
 
 def main():
-   parser = OptionParser()
+   usage = ( 'usage: %prog --splitAt [options] < fasta.fa\n\n'
+             '%prog takes in via STDIN a fasta formated file and then splits\n'
+             'sequences into multiple sequences whenever a run of --splitAt many (or more)\n'
+             'N (or n) characters are encountered. Writes to STDOUT.')
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

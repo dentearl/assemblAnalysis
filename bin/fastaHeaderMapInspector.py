@@ -21,7 +21,9 @@ def initOptions( parser ):
                        help='Specify the map file that contains the mapping between IDs.')
     parser.add_option( '--id', '--key', dest='id',
                        type='string',
-                       help='Specify the mapped ID you want to look up, i.e. >Z1.scaffold000001')
+                       help=('Specify the mapped ID you want to look up, i.e. >Z1.scaffold000001. '
+                             'Must omit any extra extensions, e.g. >Z1.scaffold000001.contig0001 '
+                             'should be specified as >Z1.scaffold000001'))
 
 def checkOptions( parser, options ):
     if options.map == None:
@@ -40,7 +42,10 @@ def idLookup( faMap, options ):
    print faMap[ options.id ]
 
 def main():
-    parser = OptionParser()
+    usage = ( 'usage: %prog --id=HEADER --map=assembly.fa.map\n\n'
+              '%prog takes a map file ( --map=FILE ) and a mapped fasta header string\n'
+              '( --id=HEADER ) and then looks up the name of that sequence in the orignal fasta file.' )
+    parser = OptionParser( usage=usage )
     initOptions( parser )
     ( options, args ) = parser.parse_args()
     checkOptions( parser, options )

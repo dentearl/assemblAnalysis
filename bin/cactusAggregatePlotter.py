@@ -36,6 +36,9 @@ def initOptions( parser ):
    parser.add_option( '--file', dest='file',
                       type='string',
                       help='Aggregate file to read.' )
+   parser.add_option( '--mode', dest='mode',
+                      type='string', default='',
+                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
    parser.add_option( '--crazyMax', dest='crazyMax',
                       type='int',
                       help='Sets the height of the crazy bar plot axis.' )
@@ -47,20 +50,17 @@ def initOptions( parser ):
                       help='The x axis label placed at the bottom of the plot.' )
    parser.add_option( '--out', dest='out', default='myAggPlot',
                       type='string',
-                      help='output pdf where figure will be created. No extension.' )
+                      help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
-                      help='output format [pdf|png|all|eps]' )
-   parser.add_option( '--mode', dest='mode',
-                      type='string', default='',
-                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
+                      help='output format [pdf|png|all|eps] default=%default' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
-                      help='Dots per inch of the output.')
+                      help='Dots per inch of the output. default=%default')
    parser.add_option( '--smallMultipleMode', dest='SMM',
                       action='store_true', default=False,
                       help=('Turns off the printing of the legend and other '
-                            'details, turns on the printing of the --title as the ID.' ))
+                            'details, turns on the printing of the --title as the ID. default=%default' ))
 
 def checkOptions( options, parser ):
    if options.file == None:
@@ -501,8 +501,11 @@ def drawAxisLabels( fig, options, data ):
                                   transform=data.axDict['blowUp'].transAxes )
 
 def main():
+   usage = ( '%prog --file=file.txt --mode=[scaffPaths|contigs|hapPaths|blocks|contamination] [options]\n\n'
+             '%prog takes an aggregate text file ( --file ) and a mode \n'
+             '( --mode ) and then produces a pretty picture.' )
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

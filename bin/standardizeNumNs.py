@@ -32,10 +32,10 @@ signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 def initOptions( parser ):
    parser.add_option( '-n', '--expandAt', dest='n',
                       type='int',
-                      help='Stretches of n or more (>=) will be expanded to 25Ns.' )
+                      help='Stretches of N or more (>=) will be expanded to 25Ns.' )
    parser.add_option( '-l', '--lineLength', dest='lineLength',
                       type='int', default=50,
-                      help='Changes the length of the output lines.' )
+                      help='Changes the length of the output lines. default=%default' )
 
 def checkOptions( options, parser ):
    if options.n == None:
@@ -89,7 +89,12 @@ def processStream( options ):
       sys.stdout.write('\n')
 
 def main():
-   parser = OptionParser()
+   usage = ( 'usage: %prog --expandAt=N [options] < fasta.fa\n\n'
+             '%prog takes in a fasta formated file in STDIN and a number\n'
+             '( --expandAt ) and scans through the fasta looking for runs equal to or greater than \n'
+             '--expandAt N (or n) characters and alters the sequence to contain exactly 25 N\'s instead.\n'
+             'Runs of 26 N\'s or more are truncated to be 25. Output written to STDOUT.')
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

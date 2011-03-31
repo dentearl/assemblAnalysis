@@ -43,7 +43,10 @@ def processStream( options ):
       print count
 
 def main():
-   parser = OptionParser()
+   usage = ( 'usage: %prog [options] \n'
+             'Supply a character (ex: --char=N ) and then see the distribution\n'
+             'of repeats of that character in the STDIN file (fasta format).' )
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )

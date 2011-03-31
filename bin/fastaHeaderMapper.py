@@ -27,20 +27,20 @@ def initOptions( parser ):
     parser.add_option( '--prefix', dest='prefix',
                        type='string',
                        help='When using --createMap one can specify a header prefix that will '
-                       'result in headers like: >prefix.LABEL000001')
+                       'result in headers like: >PREFIX.label000001')
     parser.add_option( '--label', dest='label',
                        type='string', default='contig',
                        help='When using --createMap one can specify a header label that will '
-                       'result in headers like: >PREFIX.label000001')
+                       'result in headers like: >prefix.LABEL000001 . default=%default')
     parser.add_option( '--map', dest='map',
                        type='string',
                        help='Specify the map file that contains the mapping between IDs.')
     parser.add_option( '--goForward', dest='goForward',
                        action='store_true', default=False,
-                       help='Use the supplied map file to move from column 1 to column 2.')
+                       help='Use the supplied map file to move from column 1 to column 2. default=%default')
     parser.add_option( '--goBackward', dest='goBackward',
                        action='store_true', default=False,
-                       help='Use the supplied map file to move from column 2 to column 1.')
+                       help='Use the supplied map file to move from column 2 to column 1. default=%default')
 
 def checkOptions( parser, options ):
     if options.createMap != None:
@@ -99,7 +99,10 @@ def translate( faMap, options ):
             print line
 
 def main():
-    parser = OptionParser()
+    usage = ( 'usage: %prog [options]\n\n'
+              '%prog creates, reads and uses fasta sequence header mappings to\n'
+              'map lengthy sequence headers to shorter standardized headers.')
+    parser = OptionParser( usage=usage )
     initOptions( parser )
     ( options, args ) = parser.parse_args()
     checkOptions( parser, options )

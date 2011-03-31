@@ -34,23 +34,22 @@ def initOptions( parser ):
    parser.add_option( '--outDir', dest='outDir',
                       type='string',
                       help='Establishes where the pickles will be written.' )
+   parser.add_option( '--chrNames', dest='chrNames',
+                      type='string',
+                      help='comma separated list (no spaces) of chromosome names. ' )
+   parser.add_option( '--chrLengths', dest='chrLengths',
+                      type='string',
+                      help='comma separated list (no spaces) of chromosome lengths.' )
    parser.add_option( '--prefix', dest='prefix',
                       type='string',
                       help='Allows you to specify the prefix on the file names, '
                       'i.e., prefix.annots.chrX.pickle ')
    parser.add_option( '-n', '--numBins', dest='numBins', default=8*300,
                       type='int',
-                      help='Number of bins to partion the the x axis into.' )
-   parser.add_option( '--chrNames', dest='chrNames',
-                      type='string',
-                      help='comma separated list (no spaces) of chromosome names, as you want them '
-                      'to appear in l-r order in the figure.' )
-   parser.add_option( '--chrLengths', dest='chrLengths',
-                      type='string',
-                      help='comma separated list (no spaces) of chromosome lengths.' )
+                      help='Number of bins to partion the the x axis into. default=%default' )
    parser.add_option( '--verbose', dest='isVerbose', default=False,
                       action='store_true',
-                      help='Turns on verbose output.' )
+                      help='Turns on verbose output. default=%default' )
 
 def checkOptions( options, parser, data ):
    if options.gff == None:
@@ -177,8 +176,13 @@ def verbosePrint( s, options, data ):
       print s
 
 def main():
+   usage = ( 'usage: %prog --gff=file.gff --outDir=path/to/dir/ --chrLengths=N1,N2,... --chrNames=A,B,...\n\n'
+             '%prog takes in a gff file ( --gff ), an output directory ( --outDir ), and\n'
+             'pairs of chromosome names ( --chrNames comma separated ) and chromosome \n'
+             'lengths ( --chrLengths comma separated ) and returns one annotation wig\n'
+             'pickle per chromosome in the output directory.')
    data = Data()
-   parser = OptionParser()
+   parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
