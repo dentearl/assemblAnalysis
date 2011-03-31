@@ -18,27 +18,34 @@ def initOptions( parser ):
    parser.add_option( '--key', dest='key',
                       type='string',
                       help='Key to extract from supplied maf plot pickles.' )
-
+   parser.add_option( '--printAllowedKeys', dest='printAllowedKeys',               
+                      action='store_true', default=False,                          
+                      help=('Prints out the allowed keys for --sortOn and exits.'))
+   
 def checkOptions( args, options, parser, data ):
-   possibleKeys = { 'maf':1, 'maf1e2':1, 'maf1e3':1, 'maf1e4':1, 
-                    'maf1e5':1, 'maf1e6':1, 'maf1e7':1, 'blockEdgeCount':1,
-                    'mafHpl1e2':1, 'mafHpl1e3':1, 'mafHpl1e4':1, 
-                    'mafHpl1e5':1, 'mafHpl1e6':1, 'mafHpl1e7':1, 
-                    'mafCtg1e2':1, 'mafCtg1e3':1, 'mafCtg1e4':1, 
-                    'mafCtg1e5':1, 'mafCtg1e6':1, 'mafCtg1e7':1, 
-                    'mafSpl1e2':1, 'mafSpl1e3':1, 'mafSpl1e4':1, 
-                    'mafSpl1e5':1, 'mafSpl1e6':1, 'mafSpl1e7':1, 
-                    'mafHpEdgeCount':1, 'mafHpErrorCount':1,'mafHpScafGapCount':1,
-                    'CDSCount':1, 'UTRCount':1,
-                    'NXECount':1, 'NGECount':1, 'islandCount':1, 'tandemCount':1, 
-                    'repeatCount':1, 'CDSMax':1, 'UTRMax':1, 'NXEMax':1, 'NGEMax':1,
-                    'islandMax':1, 'tandemMax':1, 'repeatMax':1, 'xAxis':1, 
-                    'columnsInBlocks':1
-                    }
+   allowedKeys = set( [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
+                        'maf1e5', 'maf1e6', 'maf1e7', 'blockEdgeCount',
+                        'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
+                        'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7', 
+                        'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4', 
+                        'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7', 
+                        'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
+                        'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7', 
+                        'mafHpEdgeCount', 'mafHpErrorCount','mafHpScafGapCount',
+                        'CDSCount', 'UTRCount',
+                        'NXECount', 'NGECount', 'islandCount', 'tandemCount', 
+                        'repeatCount', 'CDSMax', 'UTRMax', 'NXEMax', 'NGEMax',
+                        'islandMax', 'tandemMax', 'repeatMax', 'xAxis', 
+                        'columnsInBlocks'
+                        ])
+   if options.printAllowedKeys:
+      for k in allowedKeys:
+         print k
+      sys.exit( 0 )
    if options.key == '':
       parser.error('Error, please specify --key\n')
-   if options.key not in possibleKeys:
-      parser.error('Error, please specify --key from one of %s\n' % possibleKeys.keys() )
+   if options.key not in allowedKeys:
+      parser.error('Error, please specify --key from one of the %s\n' % allowedKeys )
    if len( args ) < 1:
       parser.error('Error, please specify a list of pickles to inspect.\n' )
    for f in args:

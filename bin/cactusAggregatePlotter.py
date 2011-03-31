@@ -128,7 +128,7 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axMain.set_ylim( 0.0, 1.0 )
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
       if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
          axCrazy.set_ylim( 0.0, 1.02 )
          axCrazy.set_xscale('log')
@@ -164,7 +164,7 @@ def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft = 0.11
    options.axWidth = 0.85
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
+   if options.mode in ( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
       if options.mode == 'hapPaths' or options.mode == 'scaffPaths':
          axDict[ 'crazy' ] = None
          axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
@@ -196,7 +196,7 @@ def establishAxes( fig, options, data ):
 def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticks( data.xData )
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
-   if options.mode in {'blocks':1, 'contigs':1, 'hapPaths':1, 'scaffPaths':1 }:
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
       if not options.SMM:
          if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
             axCrazy.set_yticks( [0, 1 ] )
@@ -343,7 +343,7 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
    elif options.mode == 'scaffPaths':
       data.colors = [ '#6FB586', '#F2DC9D', 
                       '#1C4169', '#72929D' ]
-   if options.mode in { 'contigs':1, 'hapPaths':1, 'blocks': 1, 'scaffPaths':1 }:
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
       for n in options.topBotOrder:
          i += 1
          axMain.fill_between( x=xData,
