@@ -19,7 +19,6 @@ hapA1/!hapA2/!assembly	805664	805664	806240	881474	1460826	1476034	1476034	14760
 
 """
 from libMafGffPlot import Data
-
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
 import matplotlib.patches as patches
@@ -56,7 +55,7 @@ def initOptions( parser ):
                       help='output format [pdf|png|all|eps] default=%default' )
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
-                      help='Dots per inch of the output. default=%default')
+                      help='Dots per inch of the output. default=%default' )
    parser.add_option( '--smallMultipleMode', dest='SMM',
                       action='store_true', default=False,
                       help=('Turns off the printing of the legend and other '
@@ -65,8 +64,8 @@ def initOptions( parser ):
 def checkOptions( options, parser ):
    if options.file == None:
       parser.error( 'Error, specify --file.\n' )
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
+   if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
+        options.out.endswith('.eps') ):
       options.out = options.out[:-4]
    if not os.path.exists( options.file ):
       parser.error( 'Error, --file %s does not exist.\n' % options.file )
@@ -159,8 +158,6 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    #   axDict[ 'blowUp' ].yaxis.set_major_locator( pylab.NullLocator() )
 
 def establishAxes( fig, options, data ):
-   """ 
-   """
    axDict = {}
    options.axLeft = 0.11
    options.axWidth = 0.85
