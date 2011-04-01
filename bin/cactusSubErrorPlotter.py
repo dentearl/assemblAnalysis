@@ -4,7 +4,7 @@ cactusSubErrorPlotter.py
 10 March 2011
 dent earl, dearl(a) soe ucsc edu
 
-
+# DEPRECATED, REPLACED BY createSubStatsMegaPlot.py in the latex project
 
 """
 from libMafGffPlot import Data
@@ -325,6 +325,7 @@ def main():
 
    drawData( assembliesDict, sortOrder, axDict, options, data )
    
+   sys.stderr.write('THIS SCRIPT IS DEPRECATED, REPLACED BY createSubStatsMegaPlot.py in the latex project\n')
    
    writeImage( fig, pdf, options, data )
    
