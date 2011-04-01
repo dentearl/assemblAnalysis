@@ -47,12 +47,12 @@ def checkOptions( args, options, parser, data ):
    if options.key not in allowedKeys:
       parser.error('Error, please specify --key from one of the %s\n' % allowedKeys )
    if len( args ) < 1:
-      parser.error('Error, please specify a list of pickles to inspect.\n' )
+      parser.error('Error, please specify at least one pickle to inspect as a positional argument.\n' )
    for f in args:
       if not os.path.exists( f ):
          parser.error('Error, file "%s" does not exist.\n' % f )
-      if f[-7:] != '.pickle':
-         parser.error('Error, file "%s" does not end in ".pickle", aborting.\n' % f )
+      if not f.endswith('.pickle'):
+         parser.error('Error, file "%s" does not end in ".pickle".\n' % f )
 
 def printData( valuesDict, options, data ):
    if options.key not in valuesDict:
