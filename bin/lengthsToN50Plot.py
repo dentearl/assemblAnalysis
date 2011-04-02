@@ -35,7 +35,7 @@ def initOptions( parser ):
    parser.add_option( '--title', dest='title',
                       type='string',
                       help='Title of the plot.' )
-   parser.add_option( '--out', dest='out', default='myAggPlot',
+   parser.add_option( '--out', dest='out', default='myN50Plot',
                       type='string',
                       help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
