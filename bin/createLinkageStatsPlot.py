@@ -9,7 +9,6 @@ create a plot from a single linkage
 stats xml file.
 
 """
-import glob
 from libMafGffPlot import Data
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -20,7 +19,6 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, L
 import numpy
 from optparse import OptionParser
 import os
-import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -40,7 +38,7 @@ def initOptions( parser ):
                       help='Title placed at the top of the plot. default=%default' )
    parser.add_option( '--legendElements', dest='legendElements',
                       type='string', help=('Specify the legend text. Comma separated list.'))
-   parser.add_option( '--out', dest='out', default='myAggPlot',
+   parser.add_option( '--out', dest='out', default='myLinkageStatsPlot',
                       type='string',
                       help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
