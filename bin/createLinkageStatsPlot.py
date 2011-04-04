@@ -145,7 +145,8 @@ def drawLegend( options, data ):
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
    else:
-      pass
+      sys.stderr.write('Error, length of items in --legendElements not equal to number of linkage xml files.\n')
+      sys.exit( 1 )
    leg = plt.legend( data.pltList, pltListLabels, 'lower left' )
    leg._drawFrame=False
 
