@@ -52,6 +52,10 @@ def initOptions( parser ):
    parser.add_option( '-n', '--numBins', dest='numBins', default=8*300,
                       type='int',
                       help='Number of bins to partion the the x axis into. default=%default' )
+   parser.add_option( '--verify', dest='verify', default=False,
+                      action='store_true',
+                      help=('Enables extra checks to verify the data structure is accurate. '
+                            'Not necessary unless the output plots look odd. default=%default' ))
 
 def checkOptions( options, parser, data ):
    if options.maf == None:
@@ -140,8 +144,6 @@ def extractMafLine( line, order, pat, options, data ):
                            'Line below:\n%s\n' % ( options.maf, ml.chr, ml.totalLength,
                                                    data.chrLengthsByChrom[ ml.chr ], line ))
          sys.exit( 1 )
-   if ml.strand == -1:
-      ml.start = ml.totalLength - ml.start + 1
    ml.sequence = m.group( 7 )
    for b in ml.sequence:
       if b == '-':
@@ -153,21 +155,34 @@ def extractMafLine( line, order, pat, options, data ):
 def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
    """for a pair of maf line objects, create a mafBlock and store all relevant
    information.
+   We change the start position from being 0 based to being 1 based here.
+   Recall that the .start is always the lower position on the positive strand,
+   and the .end is always the higher position on the positive strand
    """
    mb = MafBlock()
    if iLine.genome != options.ref:
       iLine, jLine = jLine, iLine
    mb.refGenome  = iLine.genome
    mb.refChr     = iLine.chr
-   mb.refStart   = iLine.start + 1
-   mb.refEnd     = iLine.start + iLine.strand * iLine.length
    mb.refStrand  = iLine.strand
+   if mb.refStrand == 1:
+      mb.refStart  = iLine.start + 1
+      mb.refEnd    = iLine.start + iLine.length
+   else:
+      mb.refStart  = iLine.totalLength - iLine.start - iLine.length + 1
+      mb.refEnd    = iLine.totalLength - iLine.start
+      mb.refStrand = 1
    mb.refTotalLength = iLine.totalLength
    mb.pairGenome = jLine.genome
    mb.pairChr    = jLine.chr
-   mb.pairStart  = jLine.start + 1
-   mb.pairEnd    = jLine.start - 1 + jLine.strand * jLine.length
    mb.pairStrand = jLine.strand
+   if mb.pairStrand == 1:
+      mb.pairStart = jLine.start + 1
+      mb.pairEnd   = jLine.start + jLine.length
+   else:
+      mb.pairStart = jLine.totalLength - jLine.start - jLine.length + 1
+      mb.pairEnd   = jLine.totalLength - jLine.start
+      mb.pairStrand= 1
    mb.pairTotalLength = jLine.totalLength
    if len( hplList ) > 0:
       if jLine.order < len( hplList ):
@@ -177,8 +192,19 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
          mb.spl        = hplList[ jLine.order ][ 'spl' ]
       else:
          sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
-                           'greating than the length of the hpl list (%d))\n' % ( jLine.order, 
-                                                                                  len( hplList ) ))
+                           'greating than the length of the hpl list (%d))\n' % ( jLine.order, len( hplList ) ))
+   if mb.refEnd > mb.refTotalLength:
+      sys.stderr.write( 'Error, creating mafBlock but reference end is greater than total length! %d > %d %s\n' 
+                        % ( mb.refEnd, mb.refTotalLength, mb.refChr ))
+   if mb.refStart > mb.refTotalLength:
+      sys.stderr.write( 'Error, creating mafBlock but reference start is greater than total length! %d > %d %s\n' 
+                        % ( mb.refStart, mb.refTotalLength, mb.refChr ))
+   if mb.pairEnd > mb.pairTotalLength:
+      sys.stderr.write( 'Error, creating mafBlock but pair end is greater than total length! %d > %d %s\n' 
+                        % ( mb.pairEnd, mb.pairTotalLength, mb.pairChr ))
+   if mb.pairStart > mb.pairTotalLength:
+      sys.stderr.write( 'Error, creating mafBlock but pair start is greater than total length! %d > %d %s\n' 
+                        % ( mb.pairStart, mb.pairTotalLength, mb.pairChr ))
    data.mafBlocksByChrom[ mb.refChr ].append( mb )
 
 def extractBlockPairs( mafLineList, hplList, options, data ):
@@ -211,20 +237,19 @@ def readMaf( options, data ):
    five  = ''
    three = ''
    for line in mf:
-      if line[ 0 ] == '#':
-         if line[ :4 ] == '#HPL':
-            d = line.split(' ')
-            # example line: "#HPL=12049 5=1 3=1 SPL=123412 S5=0 S3=12"
-            # there will be one hpl line per options.other line
-            # in blocks that contain the options.ref
-            hpl    = int( d[0][5:] ) # comment at start of this field
-            hFive  = int( d[1][2] )
-            hThree = int( d[2][2] )
-            spl    = int( d[3][4:] ) # no comment at start of this field
-            hplList.append( { 'hpl': hpl, 'hFive': hFive, 
-                              'hThree': hThree, 'spl': spl } )
+      if line.startswith('#HPL'):
+         d = line.split(' ')
+         # example line: "#HPL=12049 5=1 3=1 SPL=123412 S5=0 S3=12"
+         # there will be one hpl line per options.other line
+         # in blocks that contain the options.ref
+         hpl    = int( d[0][5:] ) # comment at start of this field
+         hFive  = int( d[1][2] )
+         hThree = int( d[2][2] )
+         spl    = int( d[3][4:] ) # no comment at start of this field
+         hplList.append( { 'hpl': hpl, 'hFive': hFive, 
+                           'hThree': hThree, 'spl': spl } )
          continue
-      if line[ 0 ] == 's':
+      if line.startswith('s'):
          line = line.strip()
          ( ml, order ) = extractMafLine( line, order, pat, options, data )
          if ml == None:
@@ -310,10 +335,10 @@ def trimDups( options, data ):
    look for any mafBlocks that overlap on the reference.
    if we find overlaps, either trim them back or remove 
    them.
-   When looking for coverage as we are here, having more
+   When looking for coverage, as we are here, having more
    than one base in the assembly map to a base in the 
    reference shouldn't get you a higher score. Otherwise
-   you could just have the same maf block in your .maf 10
+   you could just have the same maf block in your maf 10
    times and you'd get a higher score than just having it
    in once.
    """
@@ -350,27 +375,48 @@ def recordCoverage( options, data ):
 def verifyStacks( options, data ):
    """ For both blocks and paths, the stacked data structure must be a proper stack.
    That is, there must be a monotonically decreasing count in the categories.
-   Logically this should be impossible, but I want to be able to point to this test 
+   Logically this should be impossible to fail, but I want to be able to point to this test 
    whenever we see a weird spike on the plot and say 'this is due to a visual artifact
    of the plotting library we're using.'
    """
-   tests = { 'blocks': [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
+   tests = { 'blocks' : [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
                          'maf1e5', 'maf1e6', 'maf1e7' ],
-             'paths' : [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4',
-                         'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ] }
+             'paths'  : [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4',
+                         'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ],
+             'contigs': [ 'maf', 'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
+                          'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7' ],
+             'scaffolds':[ 'maf', 'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4',
+                           'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7' ] }
    for c in data.chrNames:
       for i in range( 0, len( data.mafWigDict[ c ][ 'xAxis' ] )):
          for t in tests:
             for j in range( 0, len( tests[ t ] ) - 1):
                if ( data.mafWigDict[ c ][ tests[ t ][ j ] ][ i ] < 
                     data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][ i ] ):
-                  sys.stderr.write('Error, validation failed on file:%s '
+                  sys.stderr.write('Error, stack validation failed on file:%s '
                                    'chr:%s %s (%d) > %s (%d)!\n' % ( options.maf, c,
                                                                      tests[ t ][ j + 1],
                                                                      data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][i],
                                                                      tests[ t ][ j ],
                                                                      data.mafWigDict[ c ][ tests[ t ][ j ] ][i] ))
                   sys.exit( 1 )
+
+def verifyElements( options, data ):
+   """ The largest value in any of the arrays should never be greater than 1.0.
+   """
+   for c in data.chrNames:
+      for t in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
+                 'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2', 
+                 'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
+                 'mafHpl1e6', 'mafHpl1e7', 'mafCtg1e2', 
+                 'mafCtg1e3', 'mafCtg1e4', 'mafCtg1e5', 
+                 'mafCtg1e6', 'mafCtg1e7', 'mafSpl1e2', 
+                 'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
+                 'mafSpl1e6', 'mafSpl1e7' ]:
+         if sum( data.mafWigDict[ c ][ t ] > 1.0 ) > 0:
+            sys.stderr.write('Error, element validation failed on file:%s '
+                             'chr:%s type:%s contains values '
+                             'greater than 1.0\n' % ( options.maf, c, t ))
 
 def main():
    usage = ( 'usage: %prog --maf=file.maf --referenceGenome=A --comparisonGenome=B --chrNames=c0,c1,... --chrLengths=N1,N2,... --outDir=path/to/dir/\n\n'
@@ -388,13 +434,16 @@ def main():
 
    readMaf( options, data )
    switchToPositiveStrandCoordinates( options, data )
+   
    for c in data.chroms:
       data.mafBlocksByChrom[ c ].sort( key = lambda x: x.refStart, reverse=False )
    trimDups( options, data )
    convertDataToWiggle( options, data )
    recordCoverage( options, data )
    
-   verifyStacks( options, data )
+   if options.verify:
+      verifyStacks( options, data )
+      verifyElements( options, data )
    packData( options, data )
 
 if __name__ == '__main__':

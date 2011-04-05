@@ -128,6 +128,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     from libMafGffPlot import GffRecord
     from libMafGffPlot import MafBlock
     from libMafGffPlot import newMafWigDict
+    import math
     import numpy
     import sys
     if objList == None or len( objList ) < 1:
@@ -140,11 +141,12 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                  data[ t + 'Count' ] = numpy.zeros( shape = ( numBins ))
                  data[ t + 'Max' ]   = 0
         # populate xAxis
-        for i in range( 0, numBins ):
-            data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
+        data['xAxis'] = ( numpy.arange( 0, numBins ) / ( numBins - 1.0 )) * float( featLen )
+        #for i in range( 0, numBins ):
+        #    data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
 
         annotTypes = set([ 'CDS', 'UTR', 'NXE', 'NGE', 
-                           'island', 'tandem', 'repeat' ] )
+                           'island', 'tandem', 'repeat' ])
         for a in objList:
             if a.type not in annotTypes:
                 continue
@@ -154,11 +156,12 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                                   'with bounds [%d - %d] which are beyond featLen (%d)\n' %
                                   ( filename, a.chr, a.start, a.end, featLen ))
                 sys.exit( 1 )
-            for i in range( a.start, a.end + 1 ):
-                pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) )))
-                data[ a.type + 'Count' ][ pos ] += 1
-                if data[ a.type + 'Max' ] < data[ a.type + 'Count' ][ pos ]:
-                   data[ a.type + 'Max' ] = data[ a.type + 'Count' ][ pos ]
+            pos = ((numpy.arange(a.start, a.end + 1) / (featLen + 1.0) ) / float( numBins )).astype('int')
+            #for i in range( a.start, a.end + 1 ):
+            #    pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) )))
+            data[ a.type + 'Count' ][ pos ] += 1
+            if data[ a.type + 'Max' ] < data[ a.type + 'Count' ][ pos ]:
+                data[ a.type + 'Max' ] = data[ a.type + 'Count' ][ pos ]
         return data
     elif isinstance( objList[0], MafBlock ):
         """ the Maf return is a dictionary with the following keys
@@ -190,20 +193,30 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         
         """
         data = newMafWigDict( numBins )
-        maxPossibleCount = float( featLen ) / float( numBins )
+        maxPossibleCount = math.ceil( float( featLen ) / float( numBins ))
         # populate xAxis
-        for i in range( 0, numBins ):
-            data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
+        data['xAxis'] = ( numpy.arange( 0, numBins ) / ( numBins - 1.0 )) * float( featLen )
+        #for i in range( 0, numBins ):
+        #    data['xAxis'][ i ] = (float( i ) / ( numBins - 1.0 )) * float( featLen )
         for mb in objList:
             # do block edges
             for r in [ mb.refStart, mb.refEnd ]:
-                pos = int(( float( r ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+                if r > featLen:
+                    sys.stderr.write('Error, a position is greater than the feature length, %d > %d.\n' % (r, featLen))
+                    sys.exit( 1 )
+                pos = math.ceil(( float( r - 1 ) / ( featLen + 1.0 )) * float( numBins - 1 ))
+                if pos < 0:
+                    sys.stderr.write('Error, a position, %d, is less than 0\n' % pos )
+                elif pos > numBins:
+                    sys.stderr.write('Error, a position, %d, is greater than numBins %d, [%d-%d]\n' % (pos, numBins, mb.refStart, mb.refEnd))
+                elif pos >= len( data['blockEdgeCount'] ):
+                    sys.stderr.write('Error, a position, %d, is greater than or equal to len(data[\'blockEdgeCount\']) %d [%d-%d]\n' % (pos, len(data['blockEdgeCount']), mb.refStart, mb.refEnd))
                 data['blockEdgeCount'][ pos ] += 1.0
                 if data['blockEdgeCount'][ pos ] > data[ 'blockEdgeMax' ]:
                     data[ 'blockEdgeMax' ] = data['blockEdgeCount'][ pos ]
             # do haplotype path edges and errors
-            posSt  = int(( float( mb.refStart  ) / (( featLen + 1.0 ) / float( numBins ) ) ))
-            posEnd = int(( float( mb.refEnd    ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+            posSt  = math.floor(( float( mb.refStart - 1 ) / featLen ) * float( numBins ) )
+            posEnd = math.floor(( float( mb.refEnd   - 1 ) / featLen ) * float( numBins ) )
             # five prime
             if mb.hplStart == 0:
                 # edge
@@ -237,31 +250,43 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 if data['mafHpScafGapCount'][ posEnd ] > data[ 'mafHpScafGapMax' ]:
                     data[ 'mafHpScafGapMax' ] = data['mafHpScafGapCount'][ posEnd ]
             # do all of the different maf block flavors
-            for i in range( mb.refStart, mb.refEnd + 1 ):
-                pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
-                data['maf'][ pos ] += 1
-                length = mb.refEnd - mb.refStart
-                for i in range( 2, 8 ):
-                    if length >= 10 ** i:
-                        data[ 'maf1e%d' % i ][ pos ] += 1
-                    if mb.spl >= 10 ** i:
-                        data[ 'mafSpl1e%d' % i ][ pos ] += 1
-                    if mb.pairTotalLength >= 10 ** i:
-                        data[ 'mafCtg1e%d' % i ][ pos ] += 1
-                    if mb.hpl >= 10 ** i:
-                        data[ 'mafHpl1e%d' % i ][ pos ] += 1
-                    
+            #for i in range( mb.refStart, mb.refEnd + 1 ):
+                #pos = int(( float( i ) / (( featLen + 1.0 ) / float( numBins ) ) ))
+            pos = (((numpy.arange(mb.refStart, mb.refEnd) - 1) / featLen ) * float( numBins )).astype('int')
+            data['maf'][ pos ] += 1
+            length = mb.refEnd - mb.refStart
+            for i in range( 2, 8 ):
+                if length >= 10 ** i:
+                    data[ 'maf1e%d' % i ][ pos ] += 1
+                if mb.spl >= 10 ** i:
+                    data[ 'mafSpl1e%d' % i ][ pos ] += 1
+                if mb.pairTotalLength >= 10 ** i:
+                    data[ 'mafCtg1e%d' % i ][ pos ] += 1
+                if mb.hpl >= 10 ** i:
+                    data[ 'mafHpl1e%d' % i ][ pos ] += 1
+        # normalize all categories
         for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
                    'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2',
                    'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
                    'mafHpl1e6', 'mafHpl1e7',
                    'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
                    'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7', 
-                   'mafSpl1e2',
-                   'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
-                   'mafSpl1e6', 'mafSpl1e7' ]:
-            for i in range( 0, numBins ):
-                data[ r ][ i ] /= float( maxPossibleCount )
+                   'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
+                   'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7' ]:
+            if sum( data[ r ] > maxPossibleCount ) > 0:
+                sys.stderr.write('libMafGffPlot.py: Error, category %s has elements '
+                                 'greater than max %d (featLen/numBins = %d/%d)\n' % ( r, maxPossibleCount, featLen, numBins ))
+                i = -1
+                for d in data[ r ]:
+                    i += 1
+                    if d > maxPossibleCount:
+                        start = math.floor( i * ( float( featLen ) / numBins ))
+                        end   = math.floor( (i + 1) * ( float( featLen ) / numBins ))
+                        sys.stderr.write('   i=%d [%d,%d] count %d\n' % ( i, start, end, d ))
+
+            data[ r ] /= float( maxPossibleCount )
         return data
+    # closing the elif isinstance() checks
     else:
         return None
+
