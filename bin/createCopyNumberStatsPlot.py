@@ -220,7 +220,7 @@ def establishGlobalMinMax( cDict, options, data ):
          options.globalCopyMax = max( [ c[1] ] + cDict[ c ].assemblyColumnCounts.keys() )
 
 def main():
-   usage = ( 'usage: %prog [options] file1.xml file2.xml\n\n'
+   usage = ( 'usage: %prog [options] file1.xml\n\n'
              '%prog takes in a copy number statistics file\n'
              'and creates an image file.' )
    data = Data()
