@@ -12,7 +12,10 @@ from libMafGffPlot import Data
 import numpy
 from optparse import OptionParser
 import os
+import signal # deal with broken pipes
 import sys
+
+signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
 def initOptions( parser ):
    parser.add_option( '--key', dest='key',
@@ -20,7 +23,11 @@ def initOptions( parser ):
                       help='Key to extract from supplied maf plot pickles.' )
    parser.add_option( '--printAllowedKeys', dest='printAllowedKeys',               
                       action='store_true', default=False,                          
-                      help=('Prints out the allowed keys for --sortOn and exits.'))
+                      help=('Prints out the allowed keys for --sortOn and exits. default=%default'))
+   parser.add_option( '--verify', dest='verify',               
+                      action='store_true', default=False,                          
+                      help=('Enables extra checks to verify the data structure is accurate. '
+                            'Not necessary unless the output plots look odd. default=%default' ))
    
 def checkOptions( args, options, parser, data ):
    allowedKeys = set( [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
@@ -55,9 +62,7 @@ def checkOptions( args, options, parser, data ):
          parser.error('Error, file "%s" does not end in ".pickle".\n' % f )
 
 def printData( valuesDict, options, data ):
-   if options.key not in valuesDict:
-      sys.stderr.write( 'Error, key %s not in this dictionary.\n' % options.key )
-      sys.exit( 1 )
+   checkKey( options.key, valuesDict )
    if ( isinstance( valuesDict[ options.key ], float ) or
         isinstance( valuesDict[ options.key ], int )):
       print valuesDict[ options.key ]
@@ -79,9 +84,31 @@ def unpackData( filename, options, data ):
    f.close()
    return d
 
+def checkKey( key, dictionary ):
+   if key not in dictionary:
+      sys.stderr.write( 'Error, key %s not in this dictionary.\n' % key )
+      sys.exit( 1 )
+
+def verify( valuesDict, options, data ):
+   checkKey( options.key, valuesDict )
+   if ( isinstance( valuesDict[ options.key ], float ) or
+        isinstance( valuesDict[ options.key ], int )):
+      pass
+   elif isinstance( valuesDict[ options.key ], numpy.ndarray ):
+      if sum( valuesDict[ options.key ] > 1.0 ) > 0:
+         sys.stderr.write('Error, elements greater than 1.0 detected.\n')
+   else:
+      sys.stderr.write( 'Error, unexpected object type '
+                        'for valuesDict[ %s ]: %s\n' % ( options.key, 
+                                                         valuesDict[ options.key ].__class__ ))
+      sys.exit( 1 )
+
 def loadPickles( args, options, data ):
    for f in args:
-      printData( unpackData( f, options, data ), options, data )
+      valuesDict = unpackData( f, options, data )
+      if options.verify:
+         verify( valuesDict, options, data )
+      printData( valuesDict, options, data )
 
 def main():
    usage = ( 'usage: %prog --key=KEY file1.maf.pickle file2.maf.pickle ...\n\n'
@@ -92,7 +119,9 @@ def main():
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( args, options, parser, data )
+   
    loadPickles( args, options, data )
+   
 
 if __name__ == '__main__':
    main()
