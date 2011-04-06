@@ -22,6 +22,7 @@ from libMafGffPlot import MafBlock
 from libMafGffPlot import MafLine
 from libMafGffPlot import newMafWigDict
 from libMafGffPlot import objListToBinnedWiggle
+from libMafGffPlot import objListUtility_xAxis
 import numpy
 from optparse import OptionParser
 import os
@@ -87,7 +88,7 @@ def checkOptions( options, parser, data ):
    if len( data.chrLengths ) != len( data.chrNames ):
       parser.error('Error, number of elemnts in --chrLengths not equal to '
                    'number of elements in --chrNames.\n')
-   for i in range( 0, len( data.chrLengths )):
+   for i in xrange( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
    data.genomeLength = 0
@@ -212,10 +213,10 @@ def extractBlockPairs( mafLineList, hplList, options, data ):
    the discovered blocks.
    Elements of blockList are MafLine() objects.
    """
-   for i in range( 0, len( mafLineList )):
+   for i in xrange( 0, len( mafLineList )):
       if mafLineList[ i ].genome not in data.genomesDict:
          continue
-      for j in range( i + 1, len( mafLineList )):
+      for j in xrange( i + 1, len( mafLineList )):
          if mafLineList[ j ].genome not in data.genomesDict:
             continue
          if mafLineList[ i ].genome == mafLineList[ j ].genome:
@@ -302,9 +303,7 @@ def convertDataToWiggle( options, data ):
       d = mafDataOrNone( data.mafBlocksByChrom, c )
       if d == None:
          mafWigDict[ c ] = newMafWigDict( thisChrNumBins )
-         for i in range( 0, thisChrNumBins ):
-            mafWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
-                                           float( data.chrLengthsByChrom[ c ] ) )
+         mafWigDict[ c ] ['xAxis'] = objListUtility_xAxis( thisChrNumBins, data.chrLengthsByChrom[c] )
       else:
          mafWigDict[ c ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], 
                                                   thisChrNumBins, options.maf )
@@ -349,10 +348,12 @@ def trimDups( options, data ):
          data.mafBlocksByChrom[ c ] = replacement
          continue
       for m in data.mafBlocksByChrom[ c ]:
-         if m.refStart < prevBlock.refEnd:
+         if m.refStart <= prevBlock.refEnd:
             if m.refEnd > prevBlock.refEnd:
+               # only add in the new, distinct, bases
                m.refStart = prevBlock.refEnd + 1
             else:
+               # this block is totally covered by the previous block
                continue
          replacement.append( m )
          prevBlock = m
@@ -388,18 +389,15 @@ def verifyStacks( options, data ):
              'scaffolds':[ 'maf', 'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4',
                            'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7' ] }
    for c in data.chrNames:
-      for i in range( 0, len( data.mafWigDict[ c ][ 'xAxis' ] )):
-         for t in tests:
-            for j in range( 0, len( tests[ t ] ) - 1):
-               if ( data.mafWigDict[ c ][ tests[ t ][ j ] ][ i ] < 
-                    data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][ i ] ):
-                  sys.stderr.write('Error, stack validation failed on file:%s '
-                                   'chr:%s %s (%d) > %s (%d)!\n' % ( options.maf, c,
-                                                                     tests[ t ][ j + 1],
-                                                                     data.mafWigDict[ c ][ tests[ t ][ j + 1 ] ][i],
-                                                                     tests[ t ][ j ],
-                                                                     data.mafWigDict[ c ][ tests[ t ][ j ] ][i] ))
-                  sys.exit( 1 )
+      for t in tests:
+         for i in xrange( 0, len( tests[t] ) - 1):
+            if sum( data.mafWigDict[ c ][ tests[t][ i ]] < 
+                    data.mafWigDict[ c ][ tests[t][ i + 1]] ):
+               sys.stderr.write('Error, stack validation failed on file:%s '
+                                'chr:%s %s %s > %s !\n' 
+                                % ( options.maf, c, tests[ t ][ i + 1 ], tests[ t ][ i ] ))
+               sys.exit( 1 )
+   sys.stderr.write('Verify monotonically decreasing property for all categories: OK.\n')
 
 def verifyElements( options, data ):
    """ The largest value in any of the arrays should never be greater than 1.0.
@@ -417,6 +415,30 @@ def verifyElements( options, data ):
             sys.stderr.write('Error, element validation failed on file:%s '
                              'chr:%s type:%s contains values '
                              'greater than 1.0\n' % ( options.maf, c, t ))
+            sys.exit( 1 )
+   sys.stderr.write('Verify Elements <= 1.0: OK\n')
+
+def verifyDistinct( options, data ):
+   """ There should be no duplicate bases in any of the maf blocks.
+   They should have all been trimed out by trimDups().
+   """
+   tot = 0
+   for c in data.chrNames:
+      s = set()
+      d = mafDataOrNone( data.mafBlocksByChrom, c )
+      if d == None:
+         continue
+      for mb in d:
+         for i in xrange( mb.refStart, mb.refEnd + 1):
+            if i in s:
+               sys.stderr.write('Error, duplicate base found! %s %d [%d-%d], %s [%d-%d]\n'
+                                % (mb.refChr, i, mb.refStart, mb.refEnd, 
+                                   mb.pairChr, mb.pairStart, mb.pairEnd ))
+               sys.exit( 1 )
+            else:
+               s.add( i )
+      tot += len( s )
+   sys.stderr.write( 'Verify all bases sent to be binned are distinct: Found %s distinct bases in the alignment to the reference genome, no duplicates.\n' % tot)
 
 def main():
    usage = ( 'usage: %prog --maf=file.maf --referenceGenome=A --comparisonGenome=B --chrNames=c0,c1,... --chrLengths=N1,N2,... --outDir=path/to/dir/\n\n'
@@ -438,12 +460,16 @@ def main():
    for c in data.chroms:
       data.mafBlocksByChrom[ c ].sort( key = lambda x: x.refStart, reverse=False )
    trimDups( options, data )
+   if options.verify:
+      verifyDistinct( options, data )
+   
    convertDataToWiggle( options, data )
    recordCoverage( options, data )
    
    if options.verify:
       verifyStacks( options, data )
       verifyElements( options, data )
+      
    packData( options, data )
 
 if __name__ == '__main__':
