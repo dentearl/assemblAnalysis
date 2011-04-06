@@ -37,7 +37,7 @@ def initOptions( parser ):
                       help='Aggregate file to read.' )
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
-                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
+                      help='Plotting mode [scaffPaths|contigs|scaffolds|hapPaths|blocks|contamination].' )
    parser.add_option( '--crazyMax', dest='crazyMax',
                       type='int',
                       help='Sets the height of the crazy bar plot axis.' )
@@ -72,12 +72,10 @@ def checkOptions( options, parser ):
    options.file = os.path.abspath( options.file )
    if options.dpi < 72:
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
-   if ( options.mode != 'contigs' and options.mode != 'contamination' and
-        options.mode != 'blocks' and options.mode != 'hapPaths' and 
-        options.mode != 'scaffPaths' ):
+   modes = set(['contigs', 'contamination', 'blocks', 'hapPaths', 'scaffPaths', 'scaffolds'])
+   if options.mode not in modes:
       parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
-   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
-        options.mode == 'scaffPaths' ):
+   if options.mode in set([ 'blocks', 'hapPaths', 'contigs', 'scaffPaths', 'scaffolds']):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    elif options.mode == 'contamination':
@@ -127,7 +125,7 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axMain.set_ylim( 0.0, 1.0 )
    #if options.SMM:
    #   axDict[ 'main' ].yaxis.set_major_locator( pylab.NullLocator() )
-   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths','scaffolds' ]):
       if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
          axCrazy.set_ylim( 0.0, 1.02 )
          axCrazy.set_xscale('log')
@@ -161,7 +159,7 @@ def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft = 0.11
    options.axWidth = 0.85
-   if options.mode in ( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
+   if options.mode in ( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths', 'scaffolds' ]):
       if options.mode == 'hapPaths' or options.mode == 'scaffPaths':
          axDict[ 'crazy' ] = None
          axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.07,
@@ -193,7 +191,7 @@ def establishAxes( fig, options, data ):
 def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
    #data.axDict['main'].set_xticks( data.xData )
    #data.axDict['main'].set_xticklabels( prettyList( data.valuesDict['columnLength'] ))
-   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths', 'scaffolds' ]):
       if not options.SMM:
          if options.mode != 'hapPaths' and options.mode != 'scaffPaths':
             axCrazy.set_yticks( [0, 1 ] )
@@ -332,15 +330,18 @@ def drawData( axMain, axCrazy, axBlowUp, xData, yData, options, data ):
       data.colors = [ "#9467bd", "#c5b0d5", "#17becf", 
                       "#9edae5", "#ff7f0e", "#ffbb78" ]
    elif options.mode == 'hapPaths':
-      data.colors = [ '#dd791f', '#fd8913', 
+      data.colors = [ '#dd791f', '#fd8913',
                       '#cbdb2a', '#fff200' ]
    elif options.mode == 'blocks':
-      data.colors = [ '#a89e89', '#6e5d3a', 
+      data.colors = [ '#a89e89', '#6e5d3a',
                       '#f2aad2', '#ba759e' ]
    elif options.mode == 'scaffPaths':
-      data.colors = [ '#6FB586', '#F2DC9D', 
+      data.colors = [ '#6FB586', '#F2DC9D',
                       '#1C4169', '#72929D' ]
-   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths' ]):
+   elif options.mode == 'scaffolds':
+      data.colors = [ '#542D54', '#EDCB23',
+                      '#636991', '#ADB8FF' ]
+   if options.mode in set( [ 'blocks', 'contigs', 'hapPaths', 'scaffPaths', 'scaffolds' ]):
       for n in options.topBotOrder:
          i += 1
          axMain.fill_between( x=xData,
