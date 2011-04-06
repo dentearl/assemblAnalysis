@@ -23,6 +23,7 @@ from optparse import OptionParser
 import os
 import sys
 import xml.etree.ElementTree as ET
+import xml.parsers.expat as expat # exception handling
 
 class CopyNumberStat:
    def __init__( self ):
@@ -225,7 +226,10 @@ def readFiles( options ):
    for u in ups:
       c = CopyNumberStat()
       c.name = os.path.basename( u ).split('.')[0]
-      xmlTree = ET.parse( u )
+      try:
+         xmlTree = ET.parse( u )
+      except expat.ExpatError: # empty xml file
+         continue
       root=xmlTree.getroot()
       elm = root.find( 'excessCopyNumberCounts' )
       c.excUpper  = float( elm.attrib['totalProportionOfColumns'] )
@@ -237,7 +241,10 @@ def readFiles( options ):
       name = os.path.basename( l ).split('.')[0]
       if name not in stats:
          continue
-      xmlTree = ET.parse( l )
+      try:
+         xmlTree = ET.parse( l )
+      except expat.ExpatError: # empty xml file
+         continue
       root=xmlTree.getroot()
       elm = root.find( 'excessCopyNumberCounts' )
       stats[name].excLower  = float( elm.attrib['totalProportionOfColumns'] )
@@ -265,8 +272,6 @@ def main():
 
    stats = readFiles( options )
    sortedOrder = sorted( stats.values(), key=lambda x: x.sumLower, reverse=False )
-
-   #establishGlobalMinMax( storedCategories, options, data )
 
    axDict = establishAxes( fig, options, data )
    
