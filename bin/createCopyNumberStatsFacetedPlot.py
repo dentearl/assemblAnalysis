@@ -5,8 +5,8 @@ createCopyNumberStatsFacetedPlot.py
 dent earl dearl (a) soe ucsc edu
 
 used in the assemblathon report project to
-create a plot of excess, deficient and total copy number bases
-from a single copy number stats xml file.
+create a plot of excess, deficient and total copy bases
+from a single copy stats xml file.
 
 """
 import createCopyNumberStatsPlot as ccnsp
@@ -39,7 +39,7 @@ def initOptions( parser ):
                       type='string',
                       help=('Location of all upper (_0.xml) and lower (_1000.xml) files.'))
    parser.add_option( '--title', dest='title',
-                      type='string', default='Copy Number Statistics',
+                      type='string', default='Copy Statistics',
                       help='Title placed at the top of the plot. default=%default' )
    parser.add_option( '--out', dest='out', default='myCopyNumberStatsPlot',
                       type='string',
@@ -47,6 +47,10 @@ def initOptions( parser ):
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps] default=%default' )
+   parser.add_option( '--log', dest='log', default=False, action='store_true',
+                      help='Turns on log scale y axes. default=%default')
+   parser.add_option( '--markers', dest='markers', default=False, action='store_true',
+                      help='Turns on filled markers for lower values, open markers for uppers. default=%default')
    parser.add_option( '--dpi', dest='dpi', default=300,
                       type='int',
                       help='Dots per inch of the output. default=%default' )
@@ -92,7 +96,7 @@ def writeImage( fig, pdf, options, data ):
 def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft   = 0.09
-   options.axRight  = 0.98
+   options.axRight  = 0.97
    options.axWidth    = options.axRight - options.axLeft 
    options.axBottom = 0.05
    options.axTop    = 0.98
@@ -109,7 +113,7 @@ def establishAxes( fig, options, data ):
       #plt.box( on=False )
    for ax in axDict:
       for loc, spine in axDict[ ax ].spines.iteritems():
-         if loc in ['left','bottom']:
+         if loc in ['left','bottom', 'right']:
             spine.set_position(('outward',10)) # outward by 10 points
          elif loc in ['right','top']:
             spine.set_color('none') # don't draw spine               
@@ -117,7 +121,7 @@ def establishAxes( fig, options, data ):
             raise ValueError('unknown spine location: %s' % loc )
       # turn off ticks where there is no spine
       axDict[ ax ].xaxis.set_ticks_position('bottom')
-      axDict[ ax ].yaxis.set_ticks_position('left')
+      axDict[ ax ].yaxis.set_ticks_position('both')
    data.axDict = axDict
    return ( axDict )
 
@@ -130,90 +134,73 @@ def drawAxisLabels( axDict, cDict, options, data ):
 def setAxisLimits( axDict, options, data ):
    pass
 
+def value( s, v ):
+   """ returns the correct attribute of s by v=string
+   """
+   if v == 'sumUpper':
+      return s.sumUpper
+   elif v == 'sumLower':
+      return s.sumLower
+   elif v == 'excUpper':
+      return s.excUpper
+   elif v == 'excLower':
+      return s.excLower
+   elif v == 'defUpper':
+      return s.defUpper
+   elif v == 'defLower':
+      return s.defLower
+   else:
+      sys.stderr.write('Unrecognized value: %s\n' % v)
+      sys.exit( 1 )
+
 def drawData( axDict, sList, options, data ):
-   xNames = []
-   yMax = 0
-   yMin = sys.maxint
-   lGray = ( 0.9, 0.9, 0.9 )
+   lGray = ( 0.8, 0.8, 0.8 )
    
-   axDict[ 'sum' ].set_yscale('log')
-   for s in sList:
-      if yMax < float( s.sumUpper ):
-         yMax = float( s.sumUpper )
-      if yMin > float( s.sumLower ): 
-         yMin = float( s.sumLower )
-   for i in xrange( 1, len( sList ) ):
-      if not i % 10:
-         axDict[ 'sum' ].add_line( lines.Line2D( xdata=[ i, i ],
+   for ax in [ 'sum', 'exc', 'def' ]:
+      xNames = []
+      yMax = 0
+      yMin = sys.maxint
+      if options.log:
+         axDict[ ax ].set_yscale('log')
+      for s in sList:
+         if yMax < float( value(s, '%sUpper'%ax) ):
+            yMax = float( value(s, '%sUpper'%ax) )
+         if yMin > float( value(s, '%sLower'%ax) ): 
+            yMin = float( value(s, '%sLower'%ax) )
+      for i in xrange( 1, len( sList ) ):
+         if not i % 10:
+            axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
                                                  ydata=[ yMin, yMax ],
                                                  color=lGray))
-   i=0
-   for s in sList:
-      i += 1
-      axDict[ 'sum' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                              ydata=[ s.sumLower, s.sumUpper ],
+      i=0
+      for s in sList:
+         i += 1
+         if options.markers:
+            axDict[ ax ].add_line( lines.Line2D( xdata=[ i ],
+                                                 ydata=[ value(s, '%sLower'%ax) ],
+                                                 marker='o',
+                                                 markerfacecolor='#1f77b4',
+                                                 markeredgecolor='#1f77b4',
+                                                 markersize=4.0))
+            axDict[ ax ].add_line( lines.Line2D( xdata=[ i ],
+                                                 ydata=[ value(s, '%sUpper'%ax) ],
+                                                 markeredgecolor='#1f77b4',
+                                                 marker='o',
+                                                 markerfacecolor='none',
+                                                 markersize=4.0))
+         axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
+                                              ydata=[ value(s, '%sLower'%ax), value(s, '%sUpper'%ax) ],
                                               color='#1f77b4'))
-      xNames.append( s.name )
-   axDict[ 'sum' ].set_xticks( range( 1, len(xNames) + 1 ))
-   axDict[ 'sum' ].set_xticklabels( xNames )
-   for tick in axDict[ 'sum' ].xaxis.get_major_ticks():
-      tick.label1.set_fontsize( 6 )
-   for label in axDict[ 'sum' ].xaxis.get_ticklabels():
-      label.set_rotation( 90 )
-   axDict[ 'sum' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
-   #plt.ylabel( 'log proportion ' )
-   
-   axDict[ 'exc' ].set_yscale('log')
-   for s in sList:
-      if yMax < float( s.excUpper ):
-         yMax = float( s.excUpper )
-      if yMin > float( s.excLower ): 
-         yMin = float( s.excLower )
-   for i in xrange( 1, len( sList ) ):
-      if not i % 10:
-         axDict[ 'exc' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ yMin, yMax ],
-                                                 color=lGray))
-   i=0
-   for s in sList:
-      i += 1
-      axDict[ 'exc' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                              ydata=[ s.excLower, s.excUpper ],
-                                              color='#1f77b4'))
-   axDict[ 'exc' ].set_xticks( range( 1, len(xNames) + 1 ))
-   axDict[ 'exc' ].set_xticklabels( xNames )
-   for tick in axDict[ 'exc' ].xaxis.get_major_ticks():
-      tick.label1.set_fontsize( 6 )
-   for label in axDict[ 'exc' ].xaxis.get_ticklabels():
-      label.set_rotation( 90 )
-   axDict[ 'exc' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
-   #plt.ylabel( 'log proportion ' )
-   
-   axDict[ 'def' ].set_yscale('log')
-   for s in sList:
-      if yMax < float( s.defUpper ):
-         yMax = float( s.defUpper )
-      if yMin > float( s.defLower ): 
-         yMin = float( s.defLower )
-   for i in xrange( 1, len( sList ) ):
-      if not i % 10:
-         axDict[ 'def' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ yMin, yMax ],
-                                                 color=lGray))
-   i=0
-   for s in sList:
-      i += 1
-      axDict[ 'def' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                              ydata=[ s.defLower, s.defUpper ],
-                                              color='#1f77b4'))
-   axDict[ 'def' ].set_xticks( range( 1, len(xNames) + 1 ))
-   axDict[ 'def' ].set_xticklabels( xNames )
-   for tick in axDict[ 'def' ].xaxis.get_major_ticks():
-      tick.label1.set_fontsize( 6 )
-   for label in axDict[ 'def' ].xaxis.get_ticklabels():
-      label.set_rotation( 90 )
-   axDict[ 'def' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
-   #plt.ylabel( 'log proportion ' )
+         xNames.append( s.name )
+      axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
+      axDict[ ax ].set_xticklabels( xNames )
+      axDict[ ax ].set_xlim( 0, len( xNames ) + 1 )
+      for tick in axDict[ ax ].xaxis.get_major_ticks():
+         tick.label1.set_fontsize( 6 )
+      for label in axDict[ ax ].xaxis.get_ticklabels():
+         label.set_rotation( 90 )
+      axDict[ ax ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
+      #plt.ylabel( 'log proportion ' )
    
    axDict[ 'sum' ].text( x=0.01, y=0.98, s = 'Sum of Proportional Copy Errors',
                   fontsize = 12, horizontalalignment='left',
@@ -267,7 +254,7 @@ def readFiles( options ):
 
 def main():
    usage = ( 'usage: %prog [options] --dir=path/to/dir/\n\n'
-             '%prog takes in a copy number statistics file\n'
+             '%prog takes in a copy statistics file\n'
              'and creates an image file.' )
    data = Data()
    parser = OptionParser( usage=usage )
