@@ -124,9 +124,8 @@ def readFiles( options ):
 
 def setAxisLimits( ax, xData, options, data ):
    ax.set_xscale('log')
-   ax.set_ylim( -0.001, 1.001 )
+   ax.set_ylim( 0.2, 1.001 )
    #ax.set_xlim( 1, xData[ -1 ] )
-
 
 def establishTicks( ax, xData, options, data ):
    # turn off ticks
