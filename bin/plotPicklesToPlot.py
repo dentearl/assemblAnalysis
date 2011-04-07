@@ -283,7 +283,7 @@ def loadMafs( options, data ):
    
    # discover which size categories are absent from all datasets... used in legend plotting
    labs = [ '1e2', '1e3', '1e4',
-         '1e5', '1e6', '1e7' ]
+            '1e5', '1e6', '1e7' ]
    data.lengthThresholdPresent = {}
    for c in data.chrNames:
       for n in data.mafWigDict[ c ]:
@@ -797,6 +797,8 @@ def normalizeAnnotations( options, data ):
             sys.stderr.write('Warning, annotation "%s" in chr %s has no data\n' %( t, c ))
 
 def normalizeCoverages( options, data ):
+   """ the numpy arrays come in the range [0,1], we remap them here to [0, 0.98]
+   """
    for c in data.chrNames:
       for n in data.orderedMafs:
          for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
@@ -806,7 +808,7 @@ def normalizeCoverages( options, data ):
                     'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4', 
                     'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7',
                     'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
-                    'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7',] :
+                    'mafSpl1e5', 'mafSpl1e6', 'mafSpl1e7' ] :
             data.mafWigDict[ c ][ n ][ r ] *= data.axCeilings[ n ] * 0.98
 
 def transformErrorDensities( options, data ):
