@@ -23,6 +23,7 @@ from libMafGffPlot import MafLine
 from libMafGffPlot import newMafWigDict
 from libMafGffPlot import objListToBinnedWiggle
 from libMafGffPlot import objListUtility_xAxis
+import math
 import numpy
 from optparse import OptionParser
 import os
@@ -298,12 +299,14 @@ def convertDataToWiggle( options, data ):
    """
    mafWigDict = {}
    for c in data.chrNames:
-      thisChrNumBins = int( ( float( data.chrLengthsByChrom[ c ] ) / data.genomeLength ) * options.numBins )
+      thisChrNumBins = int( math.floor( ( float( data.chrLengthsByChrom[ c ] ) / 
+                                          data.genomeLength ) * 
+                                        options.numBins ))
       mafWigDict[ c ] = {}
       d = mafDataOrNone( data.mafBlocksByChrom, c )
       if d == None:
          mafWigDict[ c ] = newMafWigDict( thisChrNumBins )
-         mafWigDict[ c ] ['xAxis'] = objListUtility_xAxis( thisChrNumBins, data.chrLengthsByChrom[c] )
+         mafWigDict[ c ] ['xAxis'] = objListUtility_xAxis( data.chrLengthsByChrom[c], thisChrNumBins )
       else:
          mafWigDict[ c ] = objListToBinnedWiggle( d, data.chrLengthsByChrom[ c ], 
                                                   thisChrNumBins, options.maf )
@@ -438,7 +441,45 @@ def verifyDistinct( options, data ):
             else:
                s.add( i )
       tot += len( s )
-   sys.stderr.write( 'Verify all bases sent to be binned are distinct: Found %s distinct bases in the alignment to the reference genome, no duplicates.\n' % tot)
+   sys.stderr.write( 'Verify all bases sent to be binned are distinct: Found %s distinct bases in the alignment to the reference genome, no duplicates, OK.\n' % tot)
+
+def verifyLengths( options, data ):
+   """ The lengths of the arrays should all be the same.
+   """
+   types = [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
+             'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2', 
+             'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
+             'mafHpl1e6', 'mafHpl1e7', 'mafCtg1e2', 
+             'mafCtg1e3', 'mafCtg1e4', 'mafCtg1e5', 
+             'mafCtg1e6', 'mafCtg1e7', 'mafSpl1e2', 
+             'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
+             'mafSpl1e6', 'mafSpl1e7', 'xAxis',
+             'mafHpEdgeCount', 'mafHpErrorCount', 
+             'mafHpScafGapCount', 'blockEdgeCount' ]
+   if ( len( data.chrNames ) ) != len( data.mafWigDict ): 
+      sys.stderr.write('Error, the expected length of the data wig '
+                       'dictionary is %d (i.e. number of chromosomes), but actual is %d\n' 
+                       % ( len( data.chrNames ), len( data.mafWigDict )))
+      sys.exit( 1 )
+   for c in data.chrNames:
+      if ( len( types ) + 5 ) != len( data.mafWigDict[c] ): # extra 5 are from the *Max records
+         sys.stderr.write('Error, the expected length of the data wig '
+                          'dictionary for %s is %d, but actual is %d\n' 
+                          % ( c, len( types ) + 5, len( data.mafWigDict[c] )))
+         sys.stderr.write( '%s\n' % str( data.mafWigDict[ c ].keys() ))
+         sys.exit( 1 )
+   sys.stderr.write('Verify number of records in data structure = %d, OK.\n' % (len(types) + 4))
+   for c in data.chrNames:
+      for i in xrange(0, len( types ) - 1):
+         if len( data.mafWigDict[c][ types[i] ] ) != len( data.mafWigDict[c][ types[i+1] ]):
+            sys.stderr.write('Error, the lengths of all vectors must the '
+                             'same for a given chromosome. %s, %s (%d) != %s (%d)\n' 
+                             % ( c, types[i], len(data.mafWigDict[c][types[i]]), 
+                                 types[i+1], len(data.mafWigDict[c][types[i+1]]) ))
+            sys.exit( 1 )
+      sys.stderr.write('Verify length of records in data structure for chr %s are all %d, OK.\n' 
+                       % ( c, len(data.mafWigDict[c][ types[0] ])))
+   sys.stderr.write('Verify lengths of arrays inside data structure, OK.\n')
 
 def main():
    usage = ( 'usage: %prog --maf=file.maf --referenceGenome=A --comparisonGenome=B --chrNames=c0,c1,... --chrLengths=N1,N2,... --outDir=path/to/dir/\n\n'
@@ -469,6 +510,7 @@ def main():
    if options.verify:
       verifyStacks( options, data )
       verifyElements( options, data )
+      verifyLengths( options, data )
       
    packData( options, data )
 

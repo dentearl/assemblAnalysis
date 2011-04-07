@@ -84,40 +84,41 @@ class GffRecord:
 
 def newMafWigDict( numBins ):
     import numpy
-    return { 'maf'    : numpy.zeros( shape = ( numBins )),
-             'maf1e2' : numpy.zeros( shape = ( numBins )),
-             'maf1e3' : numpy.zeros( shape = ( numBins )),
-             'maf1e4' : numpy.zeros( shape = ( numBins )),
-             'maf1e5' : numpy.zeros( shape = ( numBins )),
-             'maf1e6' : numpy.zeros( shape = ( numBins )),
-             'maf1e7' : numpy.zeros( shape = ( numBins )),
-             'xAxis'  : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e2' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e3' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e4' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e2' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e3' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e4' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e5' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e6' : numpy.zeros( shape = ( numBins )),
-             'mafCtg1e7' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e2' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e3' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e4' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e5' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e6' : numpy.zeros( shape = ( numBins )),
-             'mafSpl1e7' : numpy.zeros( shape = ( numBins )),
-             'mafHpEdgeCount'  : numpy.zeros( shape = ( numBins )),
-             'mafHpEdgeMax'    : 0,
-             'mafHpErrorCount' : numpy.zeros( shape = ( numBins )),
-             'mafHpErrorMax'   : 0,
-             'mafHpScafGapCount' : numpy.zeros( shape = ( numBins )),
+    return { 'maf'       : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e2'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e3'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e4'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e5'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e6'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'maf1e7'    : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'xAxis'     : -1,
+             'mafHpl1e2' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpl1e3' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpl1e4' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpl1e5' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpl1e6' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpl1e7' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e2' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e3' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e4' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e5' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e6' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafCtg1e7' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e2' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e3' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e4' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e5' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e6' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafSpl1e7' : numpy.zeros( shape = ( numBins ), dtype=numpy.float32 ),
+             'mafHpEdgeCount'    : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'mafHpEdgeMax'      : 0,
+             'mafHpErrorCount'   : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'mafHpErrorMax'     : 0,
+             'mafHpScafGapCount' : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
              'mafHpScafGapMax'   : 0,
-             'blockEdgeCount'  : numpy.zeros( shape = ( numBins )),
-             'blockEdgeMax'   : 0 }
+             'blockEdgeCount'    : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'blockEdgeMax'      : 0,
+             'columnsInBlocks'   : 0 }
 
 def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     """ obj can be either a GffRecord object or a MafBlock object.
@@ -136,15 +137,14 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     if isinstance( objList[0], GffRecord ):
         """ the Gff return is a single numpy vector of numBins length
         """
-        data = { 'xAxis'    : numpy.zeros( shape = ( numBins ))}
-        for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
-                 data[ t + 'Count' ] = numpy.zeros( shape = ( numBins ))
-                 data[ t + 'Max' ]   = 0
         # populate xAxis
-        data['xAxis'] = objListUtility_xAxis( numBins, featLen )
-
+        data['xAxis'] = objListUtility_xAxis( featLen, numBins )
         annotTypes = set([ 'CDS', 'UTR', 'NXE', 'NGE', 
                            'island', 'tandem', 'repeat' ])
+        for t in annotTypes:
+                 data[ t + 'Count' ] = numpy.zeros( shape = ( numBins ))
+                 data[ t + 'Max' ]   = 0
+        
         for a in objList:
             if a.type not in annotTypes:
                 continue
@@ -156,9 +156,16 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 sys.exit( 1 )
             # index position in a 'numBins' length array.
             pos = objListUtility_rangeToPos( a.start, a.end, featLen, numBins )
-            data[ a.type + 'Count' ][ pos ] += 1
-            if data[ a.type + 'Max' ] < data[ a.type + 'Count' ][ pos ]:
-                data[ a.type + 'Max' ] = data[ a.type + 'Count' ][ pos ]
+            
+            # tough to follow index hack to get around the fact that numpy will not use
+            # += 1 for a list of indices that contain repeats.
+            plo, phi = pos.min(), pos.max()
+            pbins = numpy.bincount( pos - plo )
+            data[ a.type + 'Count' ][ plo:phi + 1 ] += pbins
+
+            for p in pos:
+                if data[ a.type + 'Max' ] < data[ a.type + 'Count' ][ p ]:
+                    data[ a.type + 'Max' ] = data[ a.type + 'Count' ][ p ]
         return data
     elif isinstance( objList[0], MafBlock ):
         """ the Maf return is a dictionary with the following keys
@@ -195,7 +202,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         data = newMafWigDict( numBins )
         
         # populate xAxis
-        data['xAxis'] = objListUtility_xAxis( numBins, featLen )
+        data['xAxis'] = objListUtility_xAxis( featLen, numBins )
         for mb in objList:
             # do block edges
             objListUtility_addBlockEdges( data, mb, featLen, numBins )
@@ -277,16 +284,15 @@ def objListUtility_normalizeCategories( data, featLen, numBins ):
             sys.stderr.write('libMafGffPlot.py: Error in normalization step, category \'%s\' has elements '
                              'greater than max %d (featLen/numBins = %d/%d)\n' 
                              % ( r, maxPossibleCount, featLen, numBins ))
-
-        # verify data 2
-        i = -1
-        for d in data[ r ]:
-            i += 1
-            if d > maxPossibleCount:
-                start = math.floor( i * ( float( featLen ) / numBins ))
-                end   = math.floor( (i + 1) * ( float( featLen ) / numBins ))
-                sys.stderr.write('   i=%d [%d,%d] count %d\n' % ( i, start, end, d ))
-                sys.exit( 1 )
+            # verify data 2
+            i = -1
+            for d in data[ r ]:
+                i += 1
+                if d > maxPossibleCount:
+                    start = math.floor( i * ( float( featLen ) / numBins ))
+                    end   = math.floor( (i + 1) * ( float( featLen ) / numBins ))
+                    sys.stderr.write('   i=%d [%d,%d] count %d\n' % ( i, start, end, d ))
+                    sys.exit( 1 )
 
         # normalize
         data[ r ] /= float( maxPossibleCount )
@@ -300,52 +306,61 @@ def objListUtility_addBlockEdges( data, mb, featLen, numBins ):
     import sys
     for r in [ mb.refStart, mb.refEnd ]:
         if r > featLen:
-            sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position is greater than the feature length, %d > %d.\n' 
+            sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position is '
+                             'greater than the feature length, %d > %d.\n' 
                              % (r, featLen))
             sys.exit( 1 )
 
-        pos = objListUtility_indexToPos( r, featLen, numBins )
-        if pos < 0:
-            sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position, %d, is less than 0\n' % pos )
-        elif pos >= len( data['blockEdgeCount'] ):
+        p = objListUtility_indexToPos( r, featLen, numBins )
+        if p < 0:
+            sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position, %d, is less than 0\n' % p )
+        elif p >= len( data['blockEdgeCount'] ):
             sys.stderr.write('Error, a position, %d, is greater than or '
-                             'equal to len(data[\'blockEdgeCount\']) %d [%d-%d]\n' % (pos, len(data['blockEdgeCount']), mb.refStart, mb.refEnd))
-        
-        data['blockEdgeCount'][ pos ] += 1.0
-        if data['blockEdgeCount'][ pos ] > data[ 'blockEdgeMax' ]:
-            data[ 'blockEdgeMax' ] = data['blockEdgeCount'][ pos ]
+                             'equal to len(data[\'blockEdgeCount\']) %d [%d-%d]\n' 
+                             % (p, len(data['blockEdgeCount']), mb.refStart, mb.refEnd))
+        data['blockEdgeCount'][ p ] += 1.0
+        if data['blockEdgeCount'][ p ] > data[ 'blockEdgeMax' ]:
+            data[ 'blockEdgeMax' ] = data['blockEdgeCount'][ p ]
 
 def objListUtility_mafBlockCounts( data, mb, featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
     libMafGffPlot.objListToBinnedWiggle()
+    This is by far the most costly routine in the objList creation process
     """ 
     from libMafGffPlot import objListUtility_rangeToPos
     import numpy
-    pos = objListUtility_rangeToPos( mb.refStart, mb.refEnd, featLen, numBins )
-    data['maf'][ pos ] += 1
     length = mb.refEnd - ( mb.refStart + 1 )
+    
+    # tough to follow index hack to get around the fact that numpy will not use
+    # += 1 for a list of indices that contain repeats.
+    pos = objListUtility_rangeToPos( mb.refStart, mb.refEnd, featLen, numBins )
+    plo, phi = pos.min(), pos.max()
+    pbins = numpy.bincount( pos - plo )
+    data['maf'][ plo:phi + 1 ] += pbins
     for i in xrange( 2, 8 ):
         if length >= 10 ** i:
-            data[ 'maf1e%d' % i ][ pos ] += 1
+            data[ 'maf1e%d' % i ][ plo:phi+1 ] += pbins
         if mb.spl >= 10 ** i:
-            data[ 'mafSpl1e%d' % i ][ pos ] += 1
+            data[ 'mafSpl1e%d' % i ][ plo:phi+1 ] += pbins
         if mb.pairTotalLength >= 10 ** i:
-            data[ 'mafCtg1e%d' % i ][ pos ] += 1
+            data[ 'mafCtg1e%d' % i ][ plo:phi+1 ] += pbins
         if mb.hpl >= 10 ** i:
-            data[ 'mafHpl1e%d' % i ][ pos ] += 1
+            data[ 'mafHpl1e%d' % i ][ plo:phi+1 ] += pbins
 
 def objListUtility_xAxis( featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
     libMafGffPlot.objListToBinnedWiggle()
     """ 
     import numpy
-    return (( numpy.arange( 0, numBins ) / ( numBins - 1.0 )) * float( featLen ))
+    xaxis = numpy.linspace( start=0, stop=featLen, num=numBins )
+    return xaxis
 
 def objListUtility_indexToPos( p, featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
     libMafGffPlot.objListToBinnedWiggle()
     Takes in a single index position in a [1, featLen] range and then provides the
-    appropriate position in an array of length numBins
+    appropriate position in an array of length numBins. Maps an integer to the space
+    [0, numBins].
     """ 
     import math
     import numpy
@@ -362,11 +377,22 @@ def objListUtility_rangeToPos( p1, p2, featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
     libMafGffPlot.objListToBinnedWiggle()
     Takes in two positions, p1 and p2, that are in the range [1, featLen] and 
-    returns a numpy array containing indices in the range [0, numBins]
+    returns a numpy array containing indices in the range [0, numBins]. Maps
+    the integers p1..p2 to the space [0, numBins].
+    NOTE: the array we return can contain repeated indices. If it does and you
+    store the result in pos to access another array , a, you cannot
+    simply use a[ pos ] += 1 and get what you expect. Instead, use:
+
+    plo, phi = pos.min(), pos.max()
+    pbins = numpy.bincount( pos - plo )
+    a[ plo:phi+1 ] += pbins
+    
+    This will be slightly faster than walking through each value in pos and 
+    incrementing.
     """ 
     import numpy
     # convert [1, featLen ] to [0, featLen - 1]
-    z  = numpy.arange( p1, p2 + 1.0 ) - 1.0
+    z  = numpy.arange( start=p1, stop=p2 + 1.0, step=1, dtype=numpy.int ) - 1.0
     # scale elements in array to [0, 1)
     z /= featLen
     # map elements in array to [0, numBins)
