@@ -195,18 +195,23 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
       else:
          sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
                            'greating than the length of the hpl list (%d))\n' % ( jLine.order, len( hplList ) ))
+         sys.exit(1)
    if mb.refEnd > mb.refTotalLength:
       sys.stderr.write( 'Error, creating mafBlock but reference end is greater than total length! %d > %d %s\n' 
                         % ( mb.refEnd, mb.refTotalLength, mb.refChr ))
+      sys.exit(1)
    if mb.refStart > mb.refTotalLength:
       sys.stderr.write( 'Error, creating mafBlock but reference start is greater than total length! %d > %d %s\n' 
                         % ( mb.refStart, mb.refTotalLength, mb.refChr ))
+      sys.exit(1)
    if mb.pairEnd > mb.pairTotalLength:
       sys.stderr.write( 'Error, creating mafBlock but pair end is greater than total length! %d > %d %s\n' 
                         % ( mb.pairEnd, mb.pairTotalLength, mb.pairChr ))
+      sys.exit(1)
    if mb.pairStart > mb.pairTotalLength:
       sys.stderr.write( 'Error, creating mafBlock but pair start is greater than total length! %d > %d %s\n' 
                         % ( mb.pairStart, mb.pairTotalLength, mb.pairChr ))
+      sys.exit(1)
    data.mafBlocksByChrom[ mb.refChr ].append( mb )
 
 def extractBlockPairs( mafLineList, hplList, options, data ):

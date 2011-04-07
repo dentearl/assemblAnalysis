@@ -337,6 +337,7 @@ def objListUtility_mafBlockCounts( data, mb, featLen, numBins ):
     plo, phi = pos.min(), pos.max()
     pbins = numpy.bincount( pos - plo )
     data['maf'][ plo:phi + 1 ] += pbins
+    
     for i in xrange( 2, 8 ):
         if length >= 10 ** i:
             data[ 'maf1e%d' % i ][ plo:phi+1 ] += pbins
