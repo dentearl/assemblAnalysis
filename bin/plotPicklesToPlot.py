@@ -7,6 +7,7 @@ dent earl, dearl@soe.ucsc.edu
 """
 import cPickle
 import glob
+import libAssemblySubset as las
 from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
 from libMafGffPlot import GffRecord
@@ -260,6 +261,9 @@ def loadMafs( options, data ):
             sys.stderr.write('Error, unable to find genome name in filename %s using regex %s\n' % f, patStr )
             sys.exit( 1 )
          name = m.group(1)
+         if options.subsetFile:
+            if name not in options.assemblySubset:
+               continue
          if name not in data.mafNamesDict:
             data.mafNamesDict[ name ] = 0 # this serves the duel purpose of storing 
                                           # all seen names and the count of bases aligned
@@ -844,8 +848,10 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   las.initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
+   las.checkOptions( options, parser )
    loadAnnots( options, data )
    loadMafs( options, data )
 

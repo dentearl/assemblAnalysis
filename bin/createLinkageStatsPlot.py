@@ -9,6 +9,7 @@ create a plot from a single linkage
 stats xml file.
 
 """
+import libAssemblySubset as las
 from libMafGffPlot import Data
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -41,6 +42,10 @@ def initOptions( parser ):
    parser.add_option( '--out', dest='out', default='myLinkageStatsPlot',
                       type='string',
                       help='filename where figure will be created. No extension. default=%default' )
+   parser.add_option( '--outputRanks', dest='outputRanks', default=False,
+                      action='store_true',
+                      help=('Turns off plotting and just prints out the ranks '
+                            'of the inputs (ranked at the 0.5 value). default=%default' ))
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps] default=%default' )
@@ -58,6 +63,8 @@ def checkOptions( args, options, parser ):
       if not f.endswith('.xml'):
          parser.error('Error, file "%s" does not end in ".xml".\n' % f )
       options.files.append( os.path.abspath( f ) )
+   if options.outputRanks:
+      return
    if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
         options.out.endswith('.eps') ):
       options.out = options.out[:-4]
@@ -102,7 +109,13 @@ def readFiles( options ):
    # these lists have one item per input file
    statsList = []
    xData = []
+   options.names = []
    for f in options.files:
+      name = os.path.basename( f ).split('.')[ 0 ]
+      if options.subsetFile:
+         if name not in options.assemblySubset:
+            continue
+      options.names.append( name )
       xmlTree = ET.parse( f )
       root=xmlTree.getroot()
       fileBucketList = []
@@ -124,7 +137,7 @@ def readFiles( options ):
 
 def setAxisLimits( ax, xData, options, data ):
    ax.set_xscale('log')
-   ax.set_ylim( 0.2, 1.001 )
+   ax.set_ylim( 0.5, 1.001 )
    #ax.set_xlim( 1, xData[ -1 ] )
 
 def establishTicks( ax, xData, options, data ):
@@ -138,14 +151,15 @@ def drawLegend( options, data ):
    if len( options.files ) < 2:
       return
    if options.legendElements == None:
-      pltListLabels = []
-      for f in options.files:
-         pltListLabels.append( os.path.basename( f ) )
+      pltListLabels = options.names
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
    else:
       sys.stderr.write('Error, length of items in --legendElements not equal to number of linkage xml files.\n')
       sys.exit( 1 )
+   # data.axDict['main'].add_patch( patches.Rectangle( xy= ( 0.03, 0.0 ), width=0.05, 
+   #                                                    height=0.5, color='r',
+   #                                                    transform=data.axDict['main'].transAxes ))
    leg = plt.legend( data.pltList, pltListLabels, 'lower left' )
    leg._drawFrame=False
 
@@ -163,16 +177,17 @@ def drawData( ax, xData, sList, options, data ):
    styles = { 0:'-', 1:'--' }
    data.pltList = [] # used for legends
    # grey 0.50 horizontal line:
-   ax.add_line( lines.Line2D( xdata=[1, xData[0][-1]],
-                              ydata=[0.5, 0.5],
-                              linewidth=0.25,
-                              color=(0.8, 0.8, 0.8)
-                              ))
+   # ax.add_line( lines.Line2D( xdata=[1, xData[0][-1]],
+   #                            ydata=[0.5, 0.5],
+   #                            linewidth=0.25,
+   #                            color=(0.8, 0.8, 0.8)
+   #                            ))
    for i in range( 0, len( sList )):
       yData = []
       for b in sList[ i ]:
-         yData.append( float( b.correct ) / b.samples )
-      p = ax.plot( xData[ i ], yData, 
+         if ( float(b.correct ) / b.samples ) >= 0.5:
+            yData.append( float( b.correct ) / b.samples )
+      p = ax.plot( xData[ i ][ :len(yData) ], yData, 
                    color=colors[ i % len( colors ) ], 
                    linestyle=styles[ i >= len( colors )] )
       data.pltList.append( p )
@@ -184,6 +199,29 @@ def drawData( ax, xData, sList, options, data ):
       else:
          raise ValueError('unknown spine location: %s' % loc )
 
+def rankFiles( options, data ):
+   ranks = []
+   if options.legendElements == None:
+      names = []
+      for f in options.files:
+         names.append( os.path.basename( f ) )
+   elif len( options.legendElements ) == len( options.files ):
+      names = options.legendElements
+   j = -1
+   for sList in data.statsList:
+      j += 1
+      fifty = 1.0
+      i = -1
+      for b in sList:
+         i += 1
+         if ( float(b.correct ) / b.samples ) >= 0.5:
+            fifty = b.end
+      ranks.append( (names[ j ], fifty) )
+   
+   ranks = sorted( ranks, key=lambda x: x[1], reverse=True )
+   for (n, v) in ranks:
+      print '%s\t%d' % ( n, v )
+
 def main():
    usage = ( 'usage: %prog [options] file1.xml file2.xml\n\n'
              '%prog takes in linkage path statistics file(s)\n'
@@ -191,15 +229,22 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   las.initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( args, options, parser )
-   ( fig, pdf ) = initImage( options, data )
-   axDict = establishAxes( fig, options, data )
+   las.checkOptions( options, parser )
+   if not options.outputRanks:
+      ( fig, pdf ) = initImage( options, data )
+      axDict = establishAxes( fig, options, data )
    
    ( data.statsList, data.xData ) = readFiles( options )
    for i in range(0, len( data.statsList )):
       data.statsList[i] = sorted( data.statsList[i], key=lambda x: x.mid, reverse=False )
    
+   if options.outputRanks:
+      rankFiles( options, data )
+      sys.exit(0)
+      
    drawData( axDict['main'], data.xData, data.statsList, options, data )
    drawLegend( options, data )
    drawAxisLabels( fig, options, data )

@@ -11,6 +11,7 @@ from a single copy stats xml file.
 """
 import createCopyNumberStatsPlot as ccnsp
 import glob
+import libAssemblySubset as las
 from libMafGffPlot import Data
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -23,7 +24,7 @@ from optparse import OptionParser
 import os
 import sys
 import xml.etree.ElementTree as ET
-import xml.parsers.expat as expat # exception handling
+import xml.parsers.expat as expat # exception handling for empty xml
 
 class CopyNumberStat:
    def __init__( self ):
@@ -50,6 +51,8 @@ def initOptions( parser ):
                       help='output format [pdf|png|all|eps] default=%default' )
    parser.add_option( '--log', dest='log', default=False, action='store_true',
                       help='Turns on log scale y axes. default=%default')
+   parser.add_option( '--outputRanks', dest='outputRanks', default=False, action='store_true',
+                      help='Prints out rankings in tab delimited format. default=%default')
    parser.add_option( '--markers', dest='markers', default=False, action='store_true',
                       help='Turns on filled markers for lower values, open markers for uppers. default=%default')
    parser.add_option( '--dpi', dest='dpi', default=300,
@@ -99,10 +102,10 @@ def establishAxes( fig, options, data ):
    options.axLeft   = 0.09
    options.axRight  = 0.97
    options.axWidth    = options.axRight - options.axLeft 
-   options.axBottom = 0.05
+   options.axBottom = 0.06
    options.axTop    = 0.98
    options.axHeight = options.axTop - options.axBottom
-   margin = 0.05
+   margin = 0.06
    facetHeight = ( options.axHeight - 2.0 * margin) / 3.0
    yPos = 0.0
    for ax in [ 'def', 'exc', 'sum' ]:
@@ -178,43 +181,50 @@ def drawData( axDict, sList, options, data ):
          i += 1
          if options.markers:
             axDict[ ax ].add_line( lines.Line2D( xdata=[ i ],
-                                                 ydata=[ value(s, '%sLower'%ax) ],
+                                                 ydata=[ value(s, '%sLower' % ax) ],
                                                  marker='o',
                                                  markerfacecolor='#1f77b4',
                                                  markeredgecolor='#1f77b4',
                                                  markersize=4.0))
             axDict[ ax ].add_line( lines.Line2D( xdata=[ i ],
-                                                 ydata=[ value(s, '%sUpper'%ax) ],
+                                                 ydata=[ value(s, '%sUpper' % ax) ],
                                                  markeredgecolor='#1f77b4',
                                                  marker='o',
                                                  markerfacecolor='none',
                                                  markersize=4.0))
          axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
-                                              ydata=[ value(s, '%sLower'%ax), value(s, '%sUpper'%ax) ],
-                                              color='#1f77b4'))
+                                              ydata=[ value(s, '%sLower' % ax), value(s, '%sUpper' % ax) ],
+                                              color='#1f77b4', linewidth=3.0, solid_capstyle='round'))
          xNames.append( s.name )
-      axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
-      axDict[ ax ].set_xticklabels( xNames )
       axDict[ ax ].set_xlim( 0, len( xNames ) + 1 )
-      for tick in axDict[ ax ].xaxis.get_major_ticks():
-         tick.label1.set_fontsize( 6 )
-      for label in axDict[ ax ].xaxis.get_ticklabels():
-         label.set_rotation( 90 )
+      if ax != 'exc':
+         axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
+         axDict[ ax ].set_xticklabels( xNames )
+         for tick in axDict[ ax ].xaxis.get_major_ticks():
+            if options.subsetFile:
+               tick.label1.set_fontsize( 12 )
+            else:
+               tick.label1.set_fontsize( 6 )
+         #for label in axDict[ ax ].xaxis.get_ticklabels():
+         #   label.set_rotation( 90 )
+      else:
+         axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
+         axDict[ ax ].set_xticklabels( [] )
       axDict[ ax ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
       #plt.ylabel( 'log proportion ' )
    
    axDict[ 'sum' ].text( x=0.01, y=0.98, s = 'Sum of Proportional Copy Errors',
-                  fontsize = 12, horizontalalignment='left',
+                  fontsize = 13, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['sum'].transAxes )
    axDict[ 'exc' ].text( x=0.01, y=0.98, s = 'Proportional Excess Copy Errors',
-                  fontsize = 12, horizontalalignment='left',
+                  fontsize = 13, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['exc'].transAxes )
    axDict[ 'def' ].text( x=0.01, y=0.98, s = 'Proportional Deficient Copy Errors',
-                  fontsize = 12, horizontalalignment='left',
+                  fontsize = 13, horizontalalignment='left',
                   verticalalignment = 'top', family='Helvetica',
                   color=( 0.3, 0.3, 0.3 ),
                   transform=axDict['def'].transAxes )
@@ -226,6 +236,9 @@ def readFiles( options ):
    for u in ups:
       c = CopyNumberStat()
       c.name = os.path.basename( u ).split('.')[0]
+      if options.subsetFile:
+         if c.name not in options.assemblySubset:
+            continue
       try:
          xmlTree = ET.parse( u )
       except expat.ExpatError: # empty xml file
@@ -259,6 +272,17 @@ def readFiles( options ):
       
    return validStats
 
+def rankings( sortedOrder, options, data ):
+   print ('#Assembly\tSum Errors Lower\tSum Errors Upper\t'
+          'Excess Errors Lower\tExcess Errors Upper\t'
+          'Deficient Errors Lower\tDeficient Errors Upper')
+   for s in sortedOrder:
+      sys.stdout.write('%s' % s.name )
+      for v in [ s.sumLower, s.sumUpper, s.excLower, s.excUpper,
+                 s.defLower, s.defUpper, ]:
+         sys.stdout.write('\t%s' % v )
+      sys.stdout.write('\n')
+
 def main():
    usage = ( 'usage: %prog [options] --dir=path/to/dir/\n\n'
              '%prog takes in a copy statistics file\n'
@@ -266,15 +290,21 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   las.initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( args, options, parser )
-   ( fig, pdf ) = initImage( options, data )
+   las.checkOptions( options, parser )
+   if not options.outputRanks:
+      ( fig, pdf ) = initImage( options, data )
 
    stats = readFiles( options )
    sortedOrder = sorted( stats.values(), key=lambda x: x.sumLower, reverse=False )
+   
+   if options.outputRanks:
+      rankings( sortedOrder, options, data )
+      return
 
    axDict = establishAxes( fig, options, data )
-   
    drawData( axDict, sortedOrder, options, data )
    drawLegend( options, data )
    drawAxisLabels( axDict, stats, options, data )
