@@ -4,6 +4,9 @@
 from optparse import OptionParser
 import os
 import sys
+import signal # deal with broken pipes
+
+signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
 class Team:
    def __init__(self):
