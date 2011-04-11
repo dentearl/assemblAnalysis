@@ -103,9 +103,9 @@ def establishAxes( fig, options, data ):
    options.axRight  = 0.97
    options.axWidth    = options.axRight - options.axLeft 
    options.axBottom = 0.06
-   options.axTop    = 0.98
+   options.axTop    = 0.95
    options.axHeight = options.axTop - options.axBottom
-   margin = 0.06
+   margin = 0.07
    facetHeight = ( options.axHeight - 2.0 * margin) / 3.0
    yPos = 0.0
    for ax in [ 'def', 'exc', 'sum' ]:
@@ -194,7 +194,7 @@ def drawData( axDict, sList, options, data ):
                                                  markersize=4.0))
          axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
                                               ydata=[ value(s, '%sLower' % ax), value(s, '%sUpper' % ax) ],
-                                              color='#1f77b4', linewidth=3.0, solid_capstyle='round'))
+                                              color='#1f77b4', linewidth=4.0, solid_capstyle='round'))
          xNames.append( s.name )
       axDict[ ax ].set_xlim( 0, len( xNames ) + 1 )
       if ax != 'exc':
@@ -213,21 +213,24 @@ def drawData( axDict, sList, options, data ):
       axDict[ ax ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
       #plt.ylabel( 'log proportion ' )
    
-   axDict[ 'sum' ].text( x=0.01, y=0.98, s = 'Sum of Proportional Copy Errors',
-                  fontsize = 13, horizontalalignment='left',
-                  verticalalignment = 'top', family='Helvetica',
-                  color=( 0.3, 0.3, 0.3 ),
-                  transform=axDict['sum'].transAxes )
-   axDict[ 'exc' ].text( x=0.01, y=0.98, s = 'Proportional Excess Copy Errors',
-                  fontsize = 13, horizontalalignment='left',
-                  verticalalignment = 'top', family='Helvetica',
-                  color=( 0.3, 0.3, 0.3 ),
-                  transform=axDict['exc'].transAxes )
-   axDict[ 'def' ].text( x=0.01, y=0.98, s = 'Proportional Deficient Copy Errors',
-                  fontsize = 13, horizontalalignment='left',
-                  verticalalignment = 'top', family='Helvetica',
-                  color=( 0.3, 0.3, 0.3 ),
-                  transform=axDict['def'].transAxes )
+   axDict['sum'].set_title('Sum of Proportional Copy Errors')
+   axDict['exc'].set_title('Proportional Excess Copy Errors')
+   axDict['def'].set_title('Proportional Deficient Copy Errors')
+   # axDict[ 'sum' ].text( x=0.01, y=0.98, s = 'Sum of Proportional Copy Errors',
+   #                fontsize = 13, horizontalalignment='left',
+   #                verticalalignment = 'top', family='Helvetica',
+   #                color=( 0.3, 0.3, 0.3 ),
+   #                transform=axDict['sum'].transAxes )
+   # axDict[ 'exc' ].text( x=0.01, y=0.98, s = 'Proportional Excess Copy Errors',
+   #                fontsize = 13, horizontalalignment='left',
+   #                verticalalignment = 'top', family='Helvetica',
+   #                color=( 0.3, 0.3, 0.3 ),
+   #                transform=axDict['exc'].transAxes )
+   # axDict[ 'def' ].text( x=0.01, y=0.98, s = 'Proportional Deficient Copy Errors',
+   #                fontsize = 13, horizontalalignment='left',
+   #                verticalalignment = 'top', family='Helvetica',
+   #                color=( 0.3, 0.3, 0.3 ),
+   #                transform=axDict['def'].transAxes )
 
 def readFiles( options ):
    ups = glob.glob( os.path.join( options.dir, '*_0.xml'))
