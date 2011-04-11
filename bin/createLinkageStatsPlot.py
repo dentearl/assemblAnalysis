@@ -100,7 +100,7 @@ def establishAxes( fig, options, data ):
    options.axLeft = 0.12
    options.axWidth = 0.83
    axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.1,
-                                      options.axWidth , 0.8 ] )
+                                      options.axWidth , 0.85 ] )
    #plt.box( on=False )
    data.axDict = axDict
    return ( axDict )
@@ -189,7 +189,8 @@ def drawData( ax, xData, sList, options, data ):
             yData.append( float( b.correct ) / b.samples )
       p = ax.plot( xData[ i ][ :len(yData) ], yData, 
                    color=colors[ i % len( colors ) ], 
-                   linestyle=styles[ i >= len( colors )] )
+                   linestyle=styles[ i >= len( colors )],
+                   linewidth=2.0)
       data.pltList.append( p )
    for loc, spine in ax.spines.iteritems():
       if loc in ['left','bottom']:
