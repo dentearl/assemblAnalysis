@@ -45,12 +45,25 @@ def readFiles( args, options ):
          assemblies[ d[0] ].append( rank )
    return assemblies
 
+def printHeader( options ):
+   sys.stdout.write( '#Assembly\tOverall' )
+   for f in options.fileNames:
+      if os.path.basename( f ).endswith('.tab'):
+         name = os.path.basename( f )[:-4]
+      else:
+         name = os.path.basename( f )
+      sys.stdout.write('\t%s' % name )
+   sys.stdout.write('\n')
+
 def reportRank( assemblies, options ):
+   printHeader( options )
    if options.overall:
       ranked = sorted( assemblies, key=lambda x: sum( assemblies[x] ) )
-      print options.fileNames
       for r in ranked:
-         print r, sum(assemblies[r]), assemblies[r]
+         print '%s\t%d' % ( r, sum(assemblies[r]) )
+         for z in assemblies[r]:
+            sys.stdout.write('\t%d' % z )
+         sys.stdout.write('\n')
    else:
       teams = {}
       for a in assemblies:
@@ -67,8 +80,10 @@ def reportRank( assemblies, options ):
          print ''
          ranked = sorted( teams[ t ], key=lambda x: sum( x.ranks ))
          for r in ranked:
-            print r.name, sum( r.ranks ), r.ranks
-      
+            sys.stdout.write( '%s\t%d' % ( r.name, sum( r.ranks ) ))
+            for z in r.ranks:
+               sys.stdout.write('\t%d' % z )
+            sys.stdout.write('\n')
 
 def main():
    usage = ( 'usage: %prog [options] rankingFile1.tab rankingFile2.tab rankingFile3.tab\n\n'
