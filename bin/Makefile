@@ -4,8 +4,8 @@ export SHELLOPTS=pipefail
 # 11 April 2011
 ##############################
 binDir:=/hive/users/dearl/assemblathon/code/trunk/bin
-resultsDir:=/hive/users/dearl/assemblathon/scaffoldRun/plotting/publication
-projectDir:=/hive/users/dearl/assemblathon/scaffoldRun/plotting
+projectDir:=.
+resultsDir:=${projectDir}/publication
 fltpage:=/hive/users/dearl/assemblathon/latexSupplemental/trunk/fltpage.sty # YOU MUST SPECIFY THIS FOR TEX TABLES
 chrNames:= chr0,chr1,chr2
 hap1ChrLengths:= 76252953,18509915,17699484
@@ -28,8 +28,11 @@ bacAWPDir:=${projectDir}/picklesAnnotsBac/
 rankingsDir:=${resultsDir}/rankings
 rankingsFiles:=${rankingsDir}/N50_CPN50.tab ${rankingsDir}/N50_NA50.tab ${rankingsDir}/N50_SPN50.tab ${rankingsDir}/copyNumberErrors.tab ${rankingsDir}/coverageTotal.tab ${rankingsDir}/linkageRanks.tab ${rankingsDir}/structuralContigPathErrors.tab ${rankingsDir}/substitutionErrors.tab 
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+hap2CommonCoverageArgsNoSubset:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50
 ##############################
 
 .SECONDARY: # leave this blank to force make to keep intermediate files
@@ -116,45 +119,88 @@ covSFPBac: $(foreach p,cactusBac cactusBacFill cactusBacBED cactusBacStackFillBl
 ${coverageSFDir}/cactusHap1.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1Tmp.pdf
+		--out $(subst .pdf,Tmp.pdf,$@)
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1Tmp.$$p ${coverageSFDir}/cactusHap1.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@)
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1Tmp.$$p ${coverageSFDir}/all_cactusHap1.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1Fill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1FillTmp.pdf --fill
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1FillTmp.$$p ${coverageSFDir}/cactusHap1Fill.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1Fill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1FillTmp.$$p ${coverageSFDir}/all_cactusHap1Fill.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1BEDTmp.pdf --edgeErrorCeiling 300
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1BEDTmp.$$p ${coverageSFDir}/cactusHap1BED.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1BEDTmp.$$p ${coverageSFDir}/all_cactusHap1BED.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1StackFillBlocksTmp.pdf --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1StackFillBlocksTmp.$$p ${coverageSFDir}/cactusHap1StackFillBlocks.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*)  ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1StackFillBlocksTmp.$$p ${coverageSFDir}/all_cactusHap1StackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1CPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1CPTmp.$$p ${coverageSFDir}/cactusHap1CP.$$p ; \
 	done
+${coverageSFDir}/all_cactusHap1CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*)  ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
+		--edgeErrorCeiling 30
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1CPTmp.$$p ${coverageSFDir}/all_cactusHap1CP.$$p ; \
+	done
 ${coverageSFDir}/cactusHap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1StackFillContigPathsTmp.pdf --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1StackFillContigPathsTmp.$$p ${coverageSFDir}/cactusHap1StackFillContigPaths.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*)  ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1StackFillContigPathsTmp.$$p ${coverageSFDir}/all_cactusHap1StackFillContigPaths.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
 	mkdir -p $(dir $@)
@@ -163,60 +209,121 @@ ${coverageSFDir}/cactusHap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py 
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		--out ${coverageSFDir}/cactusHap1StackFillContigsTmp.pdf --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1StackFillContigsTmp.$$p ${coverageSFDir}/cactusHap1StackFillContigs.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
+		--mafPickleDir ${hap1WPCDir} --chrNames ${chrNames} \
+		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1StackFillContigsTmp.$$p ${coverageSFDir}/all_cactusHap1StackFillContigs.$$p ; \
 	done
 ${coverageSFDir}/cactusHap1StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1StackFillScaffPathsTmp.pdf --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1StackFillScaffPathsTmp.$$p ${coverageSFDir}/cactusHap1StackFillScaffPaths.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap1StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap1StackFillScaffPathsTmp.$$p ${coverageSFDir}/all_cactusHap1StackFillScaffPaths.$$p ; \
 	done
 # haplotype 2
 ${coverageSFDir}/cactusHap2.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2Tmp.pdf 
+		--out $(subst .pdf,Tmp.pdf,$@) 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2Tmp.$$p ${coverageSFDir}/cactusHap2.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*)  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) 
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2Tmp.$$p ${coverageSFDir}/all_cactusHap2.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2Fill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2FillTmp.pdf --fill
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2FillTmp.$$p ${coverageSFDir}/cactusHap2Fill.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2Fill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2FillTmp.$$p ${coverageSFDir}/all_cactusHap2Fill.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2BEDTmp.pdf --edgeErrorCeiling 300
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2BEDTmp.$$p ${coverageSFDir}/cactusHap2BED.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2BEDTmp.$$p ${coverageSFDir}/all_cactusHap2BED.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2StackFillBlocksTmp.pdf --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2StackFillBlocksTmp.$$p ${coverageSFDir}/cactusHap2StackFillBlocks.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2StackFillBlocksTmp.$$p ${coverageSFDir}/all_cactusHap2StackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2CPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2CPTmp.$$p ${coverageSFDir}/cactusHap2CP.$$p ; \
 	done
+${coverageSFDir}/all_cactusHap2CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
+		--edgeErrorCeiling 30
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2CPTmp.$$p ${coverageSFDir}/all_cactusHap2CP.$$p ; \
+	done
 ${coverageSFDir}/cactusHap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2StackFillContigPathsTmp.pdf --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2StackFillContigPathsTmp.$$p ${coverageSFDir}/cactusHap2StackFillContigPaths.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2StackFillContigPathsTmp.$$p ${coverageSFDir}/all_cactusHap2StackFillContigPaths.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
 	mkdir -p $(dir $@)
@@ -225,60 +332,121 @@ ${coverageSFDir}/cactusHap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py 
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		--out ${coverageSFDir}/cactusHap2StackFillContigsTmp.pdf --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2StackFillContigsTmp.$$p ${coverageSFDir}/cactusHap2StackFillContigs.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
+		--mafPickleDir ${hap2WPCDir} --chrNames ${chrNames} \
+		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2StackFillContigsTmp.$$p ${coverageSFDir}/all_cactusHap2StackFillContigs.$$p ; \
 	done
 ${coverageSFDir}/cactusHap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2StackFillScaffPathsTmp.pdf --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2StackFillScaffPathsTmp.$$p ${coverageSFDir}/cactusHap2StackFillScaffPaths.$$p ; \
+	done
+${coverageSFDir}/all_cactusHap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusHap2StackFillScaffPathsTmp.$$p ${coverageSFDir}/all_cactusHap2StackFillScaffPaths.$$p ; \
 	done
 # bacterial
 ${coverageSFDir}/cactusBac.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacTmp.pdf 
+		--out $(subst .pdf,Tmp.pdf,$@) 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacTmp.$$p ${coverageSFDir}/cactusBac.$$p ; \
+	done
+${coverageSFDir}/all_cactusBac.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) 
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacTmp.$$p ${coverageSFDir}/all_cactusBac.$$p ; \
 	done
 ${coverageSFDir}/cactusBacFill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacFillTmp.pdf --fill
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacFillTmp.$$p ${coverageSFDir}/cactusBacFill.$$p ; \
+	done
+${coverageSFDir}/all_cactusBacFill.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --fill
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacFillTmp.$$p ${coverageSFDir}/all_cactusBacFill.$$p ; \
 	done
 ${coverageSFDir}/cactusBacBED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacBEDTmp.pdf --edgeErrorCeiling 300
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacBEDTmp.$$p ${coverageSFDir}/cactusBacBED.$$p ; \
+	done
+${coverageSFDir}/all_cactusBacBED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --edgeErrorCeiling 300
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacBEDTmp.$$p ${coverageSFDir}/all_cactusBacBED.$$p ; \
 	done
 ${coverageSFDir}/cactusBacStackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacStackFillBlocksTmp.pdf --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacStackFillBlocksTmp.$$p ${coverageSFDir}/cactusBacStackFillBlocks.$$p ; \
+	done
+${coverageSFDir}/all_cactusBacStackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacStackFillBlocksTmp.$$p ${coverageSFDir}/all_cactusBacStackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/cactusBacCP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacCPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacCPTmp.$$p ${coverageSFDir}/cactusBacCP.$$p ; \
 	done
+${coverageSFDir}/all_cactusBacCP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --contigPathErrorDensity --contigPathEdgeDensity \
+		--edgeErrorCeiling 30
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacCPTmp.$$p ${coverageSFDir}/all_cactusBacCP.$$p ; \
+	done
 ${coverageSFDir}/cactusBacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacStackFillContigPathsTmp.pdf --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacStackFillContigPathsTmp.$$p ${coverageSFDir}/cactusBacStackFillContigPaths.$$p ; \
+	done
+${coverageSFDir}/all_cactusBacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_cactusBacStackFillContigPathsTmp.$$p ${coverageSFDir}/all_cactusBacStackFillContigPaths.$$p ; \
 	done
 
 # n50 facetPlot
