@@ -61,8 +61,7 @@ def checkOptions( options, parser ):
          parser.error('Error, --%s %s is not a directory!\n' % (d, dirs[ d ]) )
    if options.outputRanks:
       return
-   allowedKeys = set(['contigNA50', 'scaffoldPathN50',
-                      'haplotypePathN50', 'blockN50'])
+   allowedKeys = set(['contigNA50', 'scaffoldPathN50', 'haplotypePathN50', 'blockN50'])
    if options.sortOn not in allowedKeys:
       parser.error('Error, --sortOn %s is not in the dict of allowed keys: %s' % 
                    ( options.sortOn, allowedKeys ))
@@ -86,8 +85,9 @@ def establishAxis( fig, options, data ):
    axDict = {}
    columns = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50','contigNA50' ] 
    # 'totalContigNumber', 'contigN50'
-   options.axLeft    = 0.12
-   options.axWidth   = 0.85
+   options.axLeft    = 0.09
+   options.axRight   = 0.98
+   options.axWidth   = options.axRight - options.axLeft
    options.axBottom  = 0.05
    options.axHeight  = 0.9
    options.axTop     = options.axBottom + options.axHeight
@@ -150,7 +150,7 @@ def drawData( assembliesList, maxesDict, axDict, options ):
             axDict[ ax ].set_xticks( [] )
          axDict[ ax ].set_yscale( 'log' )
          axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.6, 
-                                maxesDict[ ax ]* 1.6] )
+                                maxesDict[ ax ] * 1.6] )
          
       else:
          axDict[ax].set_xticks( range( 0, len( assembliesList ) ))
@@ -164,7 +164,7 @@ def drawData( assembliesList, maxesDict, axDict, options ):
          #      label.set_rotation( 90 )
          axDict[ax].xaxis.set_ticks_position('bottom')
          axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.9, 
-                                maxesDict[ ax ]* 1.05] )
+                                maxesDict[ ax ] * 1.05] )
       axDict[ax].set_xlim( [ -0.5, len( assembliesList )] )
       if options.sortOn == ax:
          axDict[ax].set_title( options.labelDict[ ax ] + ' (sorted)' )

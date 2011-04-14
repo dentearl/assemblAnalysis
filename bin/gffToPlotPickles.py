@@ -25,7 +25,6 @@ from optparse import OptionParser
 import os
 import re
 import sys
-import time
 
 def initOptions( parser ):
    parser.add_option( '--gff', dest='gff',
@@ -93,11 +92,9 @@ def packData( options, data, prot='py23Bin' ):
    protocols = { 'ASCII' : 0,
                  'pre23Bin' : 1,
                  'py23Bin'  : 2 }
-   for c in data.chrNames:
-      f = open( os.path.join( options.outDir, options.prefix + 'annots.' + c + 
-                              '.pickle' ), 'wb' )
-      cPickle.dump( data.annotWigDict[ c ], f, protocol = protocols[ prot ] )
-      f.close()
+   f = open( os.path.join( options.outDir, options.prefix + 'annots.pickle' ), 'wb' )
+   cPickle.dump( data.annotWigDict, f, protocol = protocols[ prot ] )
+   f.close()
 
 def readGff( options, data ):
    """ read the gff file, parse each line into
@@ -186,16 +183,10 @@ def main():
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser, data )
-   t0 = time.time()
    readGff( options, data )
-   verbosePrint( 'reading the GFF and creating object took %.1f seconds' % ( time.time() - t0 ), options, data )
-   t0 = time.time()
    for c in data.chrNames:
       data.gffRecordsByChrom[ c ].sort( key = lambda x: x.start, reverse=False )
-   verbosePrint( 'sorting took %.1f seconds' % ( time.time() - t0 ), options, data )
-   t0 = time.time()
    convertDataToWiggle( options, data )
-   verbosePrint( 'converting data to the wigpic format took %.1f seconds' % ( time.time() - t0 ), options, data)
    packData( options, data )
 
 if __name__ == '__main__':

@@ -21,6 +21,12 @@ def initOptions( parser ):
    parser.add_option( '--key', dest='key',
                       type='string',
                       help='Key to extract from supplied maf plot pickles.' )
+   parser.add_option( '--chr', dest='chr',
+                      type='string',
+                      help='Used to limit the output to just one or more chromosomes. Comma separated list.' )
+   parser.add_option( '--printChromosomes', dest='printChroms',
+                      default=False, action='store_true',
+                      help='Prints the chromosome keys in a given pickle. default=%default' )
    parser.add_option( '--printAllowedKeys', dest='printAllowedKeys',               
                       action='store_true', default=False,                          
                       help=('Prints out the allowed keys for --sortOn and exits. default=%default'))
@@ -60,20 +66,43 @@ def checkOptions( args, options, parser, data ):
          parser.error('Error, file "%s" does not exist.\n' % f )
       if not f.endswith('.pickle'):
          parser.error('Error, file "%s" does not end in ".pickle".\n' % f )
+   if options.printChroms:
+      for f in args:
+         d = unpackData( f, options, {} )
+         sys.stdout.write('%s\t' % f )
+         for c in d:
+            sys.stdout.write('\t%s' % c)
+         sys.stdout.write('\n')
+      sys.exit(0)
+   if options.chr != None:
+      options.chrSet = set( options.chr.split(',') )
+      for f in args:
+         d = unpackData( f, options, {} )
+         for c in options.chrSet:
+            if c not in d:
+               sys.stderr.write('Error, chromosome %s is not present in %s\n' % ( c, f ))
+   else:
+      options.chrSet = set()
+      for f in args:
+         d = unpackData( f, options, {} )
+         for c in d:
+            if c not in options.chrSet:
+               options.chrSet.add( c )
 
 def printData( valuesDict, options, data ):
-   checkKey( options.key, valuesDict )
-   if ( isinstance( valuesDict[ options.key ], float ) or
-        isinstance( valuesDict[ options.key ], int )):
-      print valuesDict[ options.key ]
-   elif isinstance( valuesDict[ options.key ], numpy.ndarray ):
-      for i in range( 0, len( valuesDict[ options.key ]) ):
-         print valuesDict[ options.key ][i]
-   else:
-      sys.stderr.write( 'Error, unexpected object type '
-                        'for valuesDict[ %s ]: %s\n' % ( options.key, 
-                                                         valuesDict[ options.key ].__class__ ))
-      sys.exit( 1 )
+   for c in options.chrSet:
+      checkKey( options.key, c, valuesDict )
+      if ( isinstance( valuesDict[c][ options.key ], float ) or
+           isinstance( valuesDict[c][ options.key ], int )):
+         print valuesDict[c][ options.key ]
+      elif isinstance( valuesDict[c][ options.key ], numpy.ndarray ):
+         for i in range( 0, len( valuesDict[c][ options.key ]) ):
+            print valuesDict[c][ options.key ][i]
+      else:
+         sys.stderr.write( 'Error, unexpected object type '
+                           'for valuesDict[ %s ][ %s ]: %s\n' % ( c, options.key, 
+                                                                  valuesDict[c][ options.key ].__class__ ))
+         sys.exit( 1 )
 
 def unpackData( filename, options, data ):
    if not os.path.exists( filename ):
@@ -84,23 +113,27 @@ def unpackData( filename, options, data ):
    f.close()
    return d
 
-def checkKey( key, dictionary ):
-   if key not in dictionary:
-      sys.stderr.write( 'Error, key %s not in this dictionary.\n' % key )
+def checkKey( key, chr, dictionary ):
+   if chr not in dictionary:
+      sys.stderr.write( 'Error, chromosome %s not in this dictionary.\n' % chr )
+      sys.exit( 1 )
+   if key not in dictionary[ chr ]:
+      sys.stderr.write( 'Error, key %s not in this dictionary for chr %s.\n' % ( key, chr ))
       sys.exit( 1 )
 
 def verify( valuesDict, options, data ):
-   checkKey( options.key, valuesDict )
-   if ( isinstance( valuesDict[ options.key ], float ) or
-        isinstance( valuesDict[ options.key ], int )):
-      pass
-   elif isinstance( valuesDict[ options.key ], numpy.ndarray ):
-      if sum( valuesDict[ options.key ] > 1.0 ) > 0:
-         sys.stderr.write('Error, elements greater than 1.0 detected.\n')
-   else:
-      sys.stderr.write( 'Error, unexpected object type '
-                        'for valuesDict[ %s ]: %s\n' % ( options.key, 
-                                                         valuesDict[ options.key ].__class__ ))
+   for c in valuesDict:
+      checkKey( options.key, c, valuesDict )
+      if ( isinstance( valuesDict[c][ options.key ], float ) or
+           isinstance( valuesDict[c][ options.key ], int )):
+         pass
+      elif isinstance( valuesDict[c][ options.key ], numpy.ndarray ):
+         if sum( valuesDict[c][ options.key ] > 1.0 ) > 0:
+            sys.stderr.write('Error, elements greater than 1.0 detected.\n')
+      else:
+         sys.stderr.write( 'Error, unexpected object type '
+                           'for valuesDict[ %s ][ %s ]: %s\n' % ( options.key, c,
+                                                                  valuesDict[c][ options.key ].__class__ ))
       sys.exit( 1 )
 
 def loadPickles( args, options, data ):

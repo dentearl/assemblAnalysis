@@ -22,13 +22,12 @@ from optparse import OptionParser
 import os
 import sys
 import re
-import time
 
 def initOptions( parser ):
-   parser.add_option( '--annotDir', dest='annotDir',
+   parser.add_option( '--annotPickleDir', dest='annotDir',
                       type='string',
                       help='Directory where annotation pickles will be read from.' )
-   parser.add_option( '--mafDir', dest='mafDir',
+   parser.add_option( '--mafPickleDir', dest='mafDir',
                       type='string',
                       help='Directory where maf pickles will be read from.' )
    parser.add_option( '-a', '--referenceGenome', dest='ref',
@@ -126,8 +125,8 @@ def initOptions( parser ):
 def checkOptions( options, parser, data ):
    if options.ref == None:
       parser.error( 'Error, specify --referenceGenome.\n' )
-   dirs = { 'annotDir' : options.annotDir,
-            'mafDir'   : options.mafDir }
+   dirs = { 'annotPickleDir' : options.annotDir,
+            'mafPickleDir'   : options.mafDir }
    for d in dirs:
       if dirs[ d ] == None:
          parser.error( 'Error, specify --%s.' % d)
@@ -221,63 +220,54 @@ def checkOptions( options, parser, data ):
    # then on the data type, i.e. CDS, or maf, or whatever
    
 def unpackData( filename, options, data ):
-   t0 = time.time()
    if not os.path.exists( filename ):
       sys.stderr.write( 'Error, %s does not exist.\n' % filename)
       sys.exit( 1 )
    f = open( filename, 'rb' )
    d = cPickle.load( f )
    f.close()
-   t1 = time.time()
    return d
 
 def loadAnnots( options, data ):
    data.annotWigDict = {}
-   for c in data.chrNames:
-      f = glob.glob( os.path.join( options.annotDir, '%s.annots.%s.pickle' % ( options.ref, c )))
-      if len( f ) == 1:
-         f = f[0]
-      else:
-         data.gffRecordsByChrom[ c ] = None
-         continue
-      if not os.path.exists( f ):
-         sys.stderr.write('Error, unable to locate annot file for chr %s' % c )
-         sys.exit( 1 )
-      data.annotWigDict[ c ] = unpackData( f, options, data )
+   f = os.path.join( options.annotDir, '%s.annots.pickle' % ( options.ref ))
+   data.annotWigDict = unpackData( f, options, data )
    
 def loadMafs( options, data ):
    # sort of like loadAnnots, but needs an added loop that pulls 
    # from a glob of all the mafs in the maf directory.
    data.mafWigDict = {}
    data.mafNamesDict = {}
-   patStr = '\S+\.(\S+)\.maf.*'
+   patStr = '\S+\.(\S+)\.maf.pickle'
    pat = re.compile( patStr )
-   for c in data.chrNames:
-      mafFiles = glob.glob( os.path.join( options.mafDir, '%s*maf.%s.pickle' % ( options.ref, c )))
-      data.mafWigDict[ c ] = {}
-      for f in mafFiles:
-         m = re.search( pat, f )
-         if m == None:
-            sys.stderr.write('Error, unable to find genome name in filename %s using regex %s\n' % f, patStr )
-            sys.exit( 1 )
-         name = m.group(1)
-         if options.subsetFile:
-            if name not in options.assemblySubset:
-               continue
-         if name not in data.mafNamesDict:
-            data.mafNamesDict[ name ] = 0 # this serves the duel purpose of storing 
-                                          # all seen names and the count of bases aligned
-         data.mafWigDict[ c ][ name ] = unpackData( f, options, data )
+   mafFiles = glob.glob( os.path.join( options.mafDir, '%s*maf.pickle' % ( options.ref )))
+   for f in mafFiles:
+      m = re.search( pat, f )
+      if m == None:
+         sys.stderr.write('Error, unable to find genome name in filename %s using regex %s\n' % f, patStr )
+         sys.exit( 1 )
+      name = m.group(1)
+      if options.subsetFile:
+         if name not in options.assemblySubset:
+            continue
+      if name not in data.mafNamesDict:
+         data.mafNamesDict[ name ] = 0 # this serves the duel purpose of storing 
+                                       # all seen names and the count of bases aligned
+      dataByChrom = unpackData( f, options, data )
+      for c in dataByChrom:
+         if c not in data.mafWigDict:
+            data.mafWigDict[ c ] = {}
+         data.mafWigDict[ c ][ name ] = dataByChrom[ c ] 
    for c in data.chrNames:
       for n in data.mafNamesDict:
          data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
    if not options.forceOrder:
       data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True )
    else:
-      spokenFor = {}
+      spokenFor = set()
       data.orderedMafs = options.forceOrder.split(',')
       for n in data.orderedMafs:
-         spokenFor[ n ] = True
+         spokenFor.add( n )
       sortNames = sorted( data.mafNamesDict, key=lambda key: key )
       for n in sortNames:
          if n not in spokenFor:
@@ -841,8 +831,8 @@ def transformData( options, data ):
 def main():
    usage = ( 'usage: %prog [options]\n\n'
              '%prog takes in a reference genome name ( --referenceGenome ),\n'
-             'optionally a directory where annotation wig pickles are stored ( --annotDir [optional] ),\n'
-             'a directory where maf wig pickles are stored ( --mafDir ), a paired set of chromosome names\n'
+             'optionally a directory where annotation wig pickles are stored ( --annotPickleDir [optional] ),\n'
+             'a directory where maf wig pickles are stored ( --mafPickleDir ), a paired set of chromosome names\n'
              '( --chrNames comma separated ) and chromosome lengths ( --chrLengths comma separated ) and \n'
              'then various other options specifed below to draw a figure.')
    data = Data()

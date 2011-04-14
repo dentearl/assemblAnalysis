@@ -46,6 +46,9 @@ def initOptions( parser ):
                       action='store_true',
                       help=('Turns off plotting and just prints out the ranks '
                             'of the inputs (ranked at the 0.5 value). default=%default' ))
+   parser.add_option( '--yCutOff', dest='yCutOff', default=0.5,
+                      type='float',
+                      help='Y-axis will be drawn between 1.0 and this value. default=%default' )
    parser.add_option( '--outFormat', dest='outFormat', default='pdf',
                       type='string',
                       help='output format [pdf|png|all|eps] default=%default' )
@@ -137,7 +140,7 @@ def readFiles( options ):
 
 def setAxisLimits( ax, xData, options, data ):
    ax.set_xscale('log')
-   ax.set_ylim( 0.5, 1.001 )
+   ax.set_ylim( options.yCutOff, 1.001 )
    #ax.set_xlim( 1, xData[ -1 ] )
 
 def establishTicks( ax, xData, options, data ):
@@ -185,7 +188,7 @@ def drawData( ax, xData, sList, options, data ):
    for i in range( 0, len( sList )):
       yData = []
       for b in sList[ i ]:
-         if ( float(b.correct ) / b.samples ) >= 0.5:
+         if ( float(b.correct ) / b.samples ) >= options.yCutOff:
             yData.append( float( b.correct ) / b.samples )
       p = ax.plot( xData[ i ][ :len(yData) ], yData, 
                    color=colors[ i % len( colors ) ], 
@@ -215,13 +218,14 @@ def rankFiles( options, data ):
       i = -1
       for b in sList:
          i += 1
-         if ( float(b.correct ) / b.samples ) >= 0.5:
+         if ( float(b.correct ) / b.samples ) >= options.yCutOff:
             fifty = b.end
       ranks.append( (names[ j ], fifty) )
    
    ranks = sorted( ranks, key=lambda x: x[1], reverse=True )
-   for (n, v) in ranks:
-      print '%s\t%d' % ( n, v )
+   print '#Assembly\tvalue at %f (--yCutOff)' % options.yCutOff
+   for ( n, v ) in ranks:
+      print '%s\t%d' % ( n.split('.')[0], v )
 
 def main():
    usage = ( 'usage: %prog [options] file1.xml file2.xml\n\n'

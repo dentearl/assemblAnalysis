@@ -109,11 +109,10 @@ def packData( options, data, prot='py23Bin' ):
       prefix = options.name
    else:
       prefix = options.ref + '.' + options.other
-   for c in data.chroms:
-      f = open( os.path.join( options.outDir, prefix +
-                              '.maf.' + c + '.pickle' ), 'wb' )
-      cPickle.dump( data.mafWigDict[ c ], f, protocol=protocols[ prot ] )
-      f.close()
+   f = open( os.path.join( options.outDir, prefix +
+                           '.maf.pickle' ), 'wb' )
+   cPickle.dump( data.mafWigDict, f, protocol=protocols[ prot ] )
+   f.close()
 
 def extractMafLine( line, order, pat, options, data ):
    """ parse a given line from a maf file into a 

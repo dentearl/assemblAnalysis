@@ -83,7 +83,14 @@ class GffRecord:
       self.group  = ''
 
 def newMafWigDict( numBins ):
+    """ Returns a new mafWigDict object. note that the xAxis starts 
+    with a dummy valuable. The xAxis must be filled in with objListUtility_xAxis().
+    """ 
     import numpy
+    import sys
+    if numBins < 1:
+        sys.stderr.write('Error, libMafGffPlot.py, numBins=%s is less than one\n' % str(numBins))
+        sys.exit( 1 )
     return { 'maf'       : numpy.zeros( shape = ( numBins )),
              'maf1e2'    : numpy.zeros( shape = ( numBins )),
              'maf1e3'    : numpy.zeros( shape = ( numBins )),
@@ -137,6 +144,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     if isinstance( objList[0], GffRecord ):
         """ the Gff return is a single numpy vector of numBins length
         """
+        data = {}
         # populate xAxis
         data['xAxis'] = objListUtility_xAxis( featLen, numBins )
         annotTypes = set([ 'CDS', 'UTR', 'NXE', 'NGE', 
