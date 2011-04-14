@@ -99,12 +99,12 @@ def newMafWigDict( numBins ):
              'maf1e6'    : numpy.zeros( shape = ( numBins )),
              'maf1e7'    : numpy.zeros( shape = ( numBins )),
              'xAxis'     : -1,
-             'mafHpl1e2' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e3' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e4' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e5' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e6' : numpy.zeros( shape = ( numBins )),
-             'mafHpl1e7' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e2' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e3' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e4' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e5' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e6' : numpy.zeros( shape = ( numBins )),
+             'mafCpl1e7' : numpy.zeros( shape = ( numBins )),
              'mafCtg1e2' : numpy.zeros( shape = ( numBins )),
              'mafCtg1e3' : numpy.zeros( shape = ( numBins )),
              'mafCtg1e4' : numpy.zeros( shape = ( numBins )),
@@ -117,12 +117,12 @@ def newMafWigDict( numBins ):
              'mafSpl1e5' : numpy.zeros( shape = ( numBins )),
              'mafSpl1e6' : numpy.zeros( shape = ( numBins )),
              'mafSpl1e7' : numpy.zeros( shape = ( numBins )),
-             'mafHpEdgeCount'    : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
-             'mafHpEdgeMax'      : 0,
-             'mafHpErrorCount'   : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
-             'mafHpErrorMax'     : 0,
-             'mafHpScafGapCount' : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
-             'mafHpScafGapMax'   : 0,
+             'mafCpEdgeCount'    : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'mafCpEdgeMax'      : 0,
+             'mafCpErrorCount'   : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'mafCpErrorMax'     : 0,
+             'mafCpScafGapCount' : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
+             'mafCpScafGapMax'   : 0,
              'blockEdgeCount'    : numpy.zeros( shape = ( numBins ), dtype=numpy.int ),
              'blockEdgeMax'      : 0,
              'columnsInBlocks'   : 0 }
@@ -186,16 +186,16 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         maf1e7            maf blocks 10,000,000 or greater
         xAxis             x Values
 
-        mafHpl1eX         maf haplotype paths of X or greater
+        mafCpl1eX         maf contig paths of X or greater
 
         mafCtg1eX         maf contigs of X or greater. taken from totalLength field of maf.
         
         mafSpl1eX         maf scaffold paths of X or greater
         
-        mafHpEdgeCounts   each haplotype path has two edges, a left and a right
-        mafHpEdgeMax      max count
-        mafHpErrorCounts  haplotype paths are made up of segments, segments may have errors at junctions.
-        mafHpErrorMax     max count
+        mafCpEdgeCounts   each contig path has two edges, a left and a right
+        mafCpEdgeMax      max count
+        mafCpErrorCounts  contig paths are made up of segments, segments may have errors at junctions.
+        mafCpErrorMax     max count
         mafSpEdgeCounts   Same as above, but for scaffold paths
         mafSpEdgeMax      
         mafSpErrorCounts  
@@ -204,7 +204,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
         blockEdgeMax      max count
         
         """
-        from libMafGffPlot import objListUtility_addHapPathEdgeErrors
+        from libMafGffPlot import objListUtility_addContigPathEdgeErrors
         from libMafGffPlot import objListUtility_addBlockEdges
         from libMafGffPlot import objListUtility_normalizeCategories
         data = newMafWigDict( numBins )
@@ -215,8 +215,8 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
             # do block edges
             objListUtility_addBlockEdges( data, mb, featLen, numBins )
             
-            # do haplotype path edges and errors
-            objListUtility_addHapPathEdgeErrors( data, mb, featLen, numBins )
+            # do contige path edges and errors
+            objListUtility_addContigPathEdgeErrors( data, mb, featLen, numBins )
             
             # do all of the different maf block flavors
             objListUtility_mafBlockCounts( data, mb, featLen, numBins )
@@ -229,7 +229,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
     else:
         return None
 
-def objListUtility_addHapPathEdgeErrors( data, mb, featLen, numBins ):
+def objListUtility_addContigPathEdgeErrors( data, mb, featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
     libMafGffPlot.objListToBinnedWiggle()
     """ 
@@ -240,35 +240,35 @@ def objListUtility_addHapPathEdgeErrors( data, mb, featLen, numBins ):
     # five prime
     if mb.hplStart == 0:
         # edge
-        data['mafHpEdgeCount'][ posSt ] += 1.0
-        if data['mafHpEdgeCount'][ posSt ] > data[ 'mafHpEdgeMax' ]:
-            data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posSt ]
+        data['mafCpEdgeCount'][ posSt ] += 1.0
+        if data['mafCpEdgeCount'][ posSt ] > data[ 'mafCpEdgeMax' ]:
+            data[ 'mafCpEdgeMax' ] = data['mafCpEdgeCount'][ posSt ]
     elif mb.hplStart == 2:
         # error
-        data['mafHpErrorCount'][ posSt ] += 1.0
-        if data['mafHpErrorCount'][ posSt ] > data[ 'mafHpErrorMax' ]:
-            data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posSt ]
+        data['mafCpErrorCount'][ posSt ] += 1.0
+        if data['mafCpErrorCount'][ posSt ] > data[ 'mafCpErrorMax' ]:
+            data[ 'mafCpErrorMax' ] = data['mafCpErrorCount'][ posSt ]
     elif mb.hplStart == 3:
         # scaffold gap
-        data['mafHpScafGapCount'][ posSt ] += 1.0
-        if data['mafHpScafGapCount'][ posSt ] > data[ 'mafHpScafGapMax' ]:
-            data[ 'mafHpScafGapMax' ] = data['mafHpScafGapCount'][ posSt ]
+        data['mafCpScafGapCount'][ posSt ] += 1.0
+        if data['mafCpScafGapCount'][ posSt ] > data[ 'mafCpScafGapMax' ]:
+            data[ 'mafCpScafGapMax' ] = data['mafCpScafGapCount'][ posSt ]
     # three prime
     if mb.hplEnd == 0:
         # edge
-        data['mafHpEdgeCount'][ posEnd ] += 1.0
-        if data['mafHpEdgeCount'][ posEnd ] > data[ 'mafHpEdgeMax' ]:
-            data[ 'mafHpEdgeMax' ] = data['mafHpEdgeCount'][ posEnd ]
+        data['mafCpEdgeCount'][ posEnd ] += 1.0
+        if data['mafCpEdgeCount'][ posEnd ] > data[ 'mafCpEdgeMax' ]:
+            data[ 'mafCpEdgeMax' ] = data['mafCpEdgeCount'][ posEnd ]
     elif mb.hplEnd == 2:
         # error
-        data['mafHpErrorCount'][ posEnd ] += 1.0
-        if data['mafHpErrorCount'][ posEnd ] > data[ 'mafHpErrorMax' ]:
-            data[ 'mafHpErrorMax' ] = data['mafHpErrorCount'][ posEnd ]
+        data['mafCpErrorCount'][ posEnd ] += 1.0
+        if data['mafCpErrorCount'][ posEnd ] > data[ 'mafCpErrorMax' ]:
+            data[ 'mafCpErrorMax' ] = data['mafCpErrorCount'][ posEnd ]
     elif mb.hplEnd == 3:
         # scaffold gap
-        data['mafHpScafGapCount'][ posEnd ] += 1.0
-        if data['mafHpScafGapCount'][ posEnd ] > data[ 'mafHpScafGapMax' ]:
-            data[ 'mafHpScafGapMax' ] = data['mafHpScafGapCount'][ posEnd ]
+        data['mafCpScafGapCount'][ posEnd ] += 1.0
+        if data['mafCpScafGapCount'][ posEnd ] > data[ 'mafCpScafGapMax' ]:
+            data[ 'mafCpScafGapMax' ] = data['mafCpScafGapCount'][ posEnd ]
 
 def objListUtility_normalizeCategories( data, featLen, numBins ):
     """ Utility function for the MafBlock instance version of 
@@ -279,9 +279,9 @@ def objListUtility_normalizeCategories( data, featLen, numBins ):
     maxPossibleCount = math.ceil( float( featLen ) / float( numBins ))
     
     for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
-               'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2',
-               'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
-               'mafHpl1e6', 'mafHpl1e7',
+               'maf1e5', 'maf1e6', 'maf1e7', 'mafCpl1e2',
+               'mafCpl1e3', 'mafCpl1e4', 'mafCpl1e5', 
+               'mafCpl1e6', 'mafCpl1e7',
                'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
                'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7', 
                'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
@@ -354,7 +354,7 @@ def objListUtility_mafBlockCounts( data, mb, featLen, numBins ):
         if mb.pairTotalLength >= 10 ** i:
             data[ 'mafCtg1e%d' % i ][ plo:phi+1 ] += pbins
         if mb.hpl >= 10 ** i:
-            data[ 'mafHpl1e%d' % i ][ plo:phi+1 ] += pbins
+            data[ 'mafCpl1e%d' % i ][ plo:phi+1 ] += pbins
 
 def objListUtility_xAxis( featLen, numBins ):
     """ Utility function for the MafBlock instance version of 

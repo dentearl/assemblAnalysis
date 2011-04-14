@@ -389,8 +389,8 @@ def verifyStacks( options, data ):
    """
    tests = { 'blocks' : [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
                          'maf1e5', 'maf1e6', 'maf1e7' ],
-             'paths'  : [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4',
-                         'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ],
+             'paths'  : [ 'maf', 'mafCpl1e2', 'mafCpl1e3', 'mafCpl1e4',
+                         'mafCpl1e5', 'mafCpl1e6', 'mafCpl1e7' ],
              'contigs': [ 'maf', 'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4',
                           'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7' ],
              'scaffolds':[ 'maf', 'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4',
@@ -411,9 +411,9 @@ def verifyElements( options, data ):
    """
    for c in data.chrNames:
       for t in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
-                 'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2', 
-                 'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
-                 'mafHpl1e6', 'mafHpl1e7', 'mafCtg1e2', 
+                 'maf1e5', 'maf1e6', 'maf1e7', 'mafCpl1e2', 
+                 'mafCpl1e3', 'mafCpl1e4', 'mafCpl1e5', 
+                 'mafCpl1e6', 'mafCpl1e7', 'mafCtg1e2', 
                  'mafCtg1e3', 'mafCtg1e4', 'mafCtg1e5', 
                  'mafCtg1e6', 'mafCtg1e7', 'mafSpl1e2', 
                  'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
@@ -451,15 +451,15 @@ def verifyLengths( options, data ):
    """ The lengths of the arrays should all be the same.
    """
    types = [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4',
-             'maf1e5', 'maf1e6', 'maf1e7', 'mafHpl1e2', 
-             'mafHpl1e3', 'mafHpl1e4', 'mafHpl1e5', 
-             'mafHpl1e6', 'mafHpl1e7', 'mafCtg1e2', 
+             'maf1e5', 'maf1e6', 'maf1e7', 'mafCpl1e2', 
+             'mafCpl1e3', 'mafCpl1e4', 'mafCpl1e5', 
+             'mafCpl1e6', 'mafCpl1e7', 'mafCtg1e2', 
              'mafCtg1e3', 'mafCtg1e4', 'mafCtg1e5', 
              'mafCtg1e6', 'mafCtg1e7', 'mafSpl1e2', 
              'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
              'mafSpl1e6', 'mafSpl1e7', 'xAxis',
-             'mafHpEdgeCount', 'mafHpErrorCount', 
-             'mafHpScafGapCount', 'blockEdgeCount' ]
+             'mafCpEdgeCount', 'mafCpErrorCount', 
+             'mafCpScafGapCount', 'blockEdgeCount' ]
    if ( len( data.chrNames ) ) != len( data.mafWigDict ): 
       sys.stderr.write('Error, the expected length of the data wig '
                        'dictionary is %d (i.e. number of chromosomes), but actual is %d\n' 

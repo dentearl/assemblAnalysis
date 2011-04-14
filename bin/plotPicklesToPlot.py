@@ -68,9 +68,9 @@ def initOptions( parser ):
                       action='store_true',
                       help='Turns on the fill color for the block wiggles. Shows different coverage '
                       'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
-   parser.add_option( '--stackFillHapPaths', dest='stackFillHapPaths', default=False,
+   parser.add_option( '--stackFillContigPaths', dest='stackFillContigPaths', default=False,
                       action='store_true',
-                      help='Turns on the fill color for the hap path wiggles. Shows different coverage '
+                      help='Turns on the fill color for the contig path wiggles. Shows different coverage '
                       'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--stackFillContigs', dest='stackFillContigs', default=False,
                       action='store_true',
@@ -83,19 +83,19 @@ def initOptions( parser ):
    parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
                       action='store_true',
                       help='Turns on the wiggle track that shows relative density of block edges. default=%default' )
-   parser.add_option( '--hapPathEdgeDensity', dest='hapPathEdgeDensity', default=False,
+   parser.add_option( '--contigPathEdgeDensity', dest='contigPathEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on the wiggle track that shows relative density of haplotype path edges. default=%default' )
-   parser.add_option( '--hapPathErrorDensity', dest='hapPathErrorDensity', default=False,
+                      help='Turns on the wiggle track that shows relative density of contig path edges. default=%default' )
+   parser.add_option( '--contigPathErrorDensity', dest='contigPathErrorDensity', default=False,
                       action='store_true',
-                      help=( 'Turns on the wiggle track that shows relative density of haplotype '
+                      help=( 'Turns on the wiggle track that shows relative density of contig '
                              'path segment adjacency errors. default=%default' ))
    parser.add_option( '--relative', dest='relative', default=False,
                       action='store_true',
                       help='Plots errors as relative to the genome max. Otherwise is to global genomes max. default=%default' )
    parser.add_option( '--transform', dest='transform', default=False,
                       action='store_true',
-                      help=('Transform the block and haplotype errors by y^(1/4) to '
+                      help=('Transform the block and contig errors by y^(1/4) to '
                             'reduce spikes from extreme values. default=%default' ))
    parser.add_option( '--zerosToNan', dest='zerosToNan', default=False,
                       action='store_true',
@@ -139,11 +139,11 @@ def checkOptions( options, parser, data ):
    for a in opts:
       if opts[ a ] == None:
          parser.error('Error, specify --%s.\n' % a )
-   combos = [ { 'name':'stackFillBlocks',     'value':options.stackFillBlocks }, 
-              { 'name':'stackFillHapPaths',   'value':options.stackFillHapPaths },
-              { 'name':'stackFillContigs',    'value':options.stackFillContigs }, 
-              { 'name':'stackFillScaffPaths', 'value':options.stackFillScaffPaths },
-              { 'name':'fill',                'value':options.fill } ]
+   combos = [ { 'name':'stackFillBlocks',        'value':options.stackFillBlocks }, 
+              { 'name':'stackFillContigPaths',   'value':options.stackFillContigPaths },
+              { 'name':'stackFillContigs',       'value':options.stackFillContigs }, 
+              { 'name':'stackFillScaffPaths',    'value':options.stackFillScaffPaths },
+              { 'name':'fill',                   'value':options.fill } ]
    for i in range(0, len(combos) - 1):
       for j in range(i+1, len(combos)):
          if combos[ i ]['value'] and combos[ j ][ 'value' ]:
@@ -286,7 +286,7 @@ def loadMafs( options, data ):
                continue
             if options.stackFillBlocks:
                key = 'maf' + l
-            elif options.stackFillHapPaths:
+            elif options.stackFillContigPaths:
                key = 'mafHpl' + l
             elif options.stackFillContigs:
                key = 'mafCtg' + l
@@ -316,7 +316,7 @@ def establishAxes( fig, options, data ):
    options.axWidth = 0.88
    options.axTop = 0.98
    options.chrMargin = 0.02
-   if ( not options.stackFillBlocks and not options.stackFillHapPaths 
+   if ( not options.stackFillBlocks and not options.stackFillContigPaths 
         and not options.stackFillContigs and not options.stackFillScaffPaths ):
       options.axBottom = 0.02
       options.axHeight = options.axTop - options.axBottom
@@ -341,7 +341,7 @@ def establishAxes( fig, options, data ):
    return ( axDict )
 
 def setAxisLimits( axDict, options, data ):
-   if ( options.stackFillBlocks or options.stackFillHapPaths or 
+   if ( options.stackFillBlocks or options.stackFillContigPaths or 
         options.stackFillContigs or options.stackFillScaffPaths ):
       data.footerAx.set_ylim( 0.0, 1.01 )
       data.footerAx.set_xlim( 0.0, 1.0 )
@@ -445,7 +445,7 @@ def labelAxes( fig, axDict, options, data ):
 
 def drawLegend( options, data ):
    # LEGEND
-   if ( options.stackFillBlocks or options.stackFillHapPaths or 
+   if ( options.stackFillBlocks or options.stackFillContigPaths or 
         options.stackFillContigs or options.stackFillScaffPaths ):
       data.footerAx.text( x=0.22, y = 0.75, horizontalalignment='right',
                           verticalalignment = 'center',
@@ -468,7 +468,7 @@ def drawLegend( options, data ):
                                                      color= col, edgecolor=None, linewidth=0.0 ))
          data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
                              verticalalignment='top', fontsize = 7 )
-   if not options.stackFillBlocks and not options.fill and not options.stackFillHapPaths:
+   if not options.stackFillBlocks and not options.fill and not options.stackFillContigPaths:
       pass
       # data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
       #                     verticalalignment = 'center',
@@ -582,7 +582,7 @@ def drawMafs( axDict, options, data ):
                                              y2=data.mafYPos[ j ],
                                              facecolor = data.stackFillColors[ k ],
                                              linewidth = 0.0 )
-         elif options.stackFillHapPaths:
+         elif options.stackFillContigPaths:
             k = -1
             for r in [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
                        'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ]:
@@ -621,21 +621,21 @@ def drawMafs( axDict, options, data ):
                                                     c = myRed, linewidth=0.3)) # , linestyle='None',
                                                     # marker='o', markerfacecolor=myRed, mec='None',
                                                     # markersize=0.3) )
-         # --hapPathEdgeDensity track
-         if options.hapPathEdgeDensity:
+         # --contigPathEdgeDensity track
+         if options.contigPathEdgeDensity:
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                     ydata = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'], 
                                                     c = myBlue, linewidth=0.3)) #linestyle='None', linewidth=0.0, 
                                                     # marker='.', markerfacecolor='b', markersize=1.0) )
-         # --hapPathErrorDensity track
-         if options.hapPathErrorDensity:
+         # --contigPathErrorDensity track
+         if options.contigPathErrorDensity:
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
                                                     ydata = data.mafWigDict[ c ][ n ]['mafHpErrorCount'], 
                                                     c = myRed, linewidth=0.3))# ,linestyle='None',
                                                     # marker='o', markerfacecolor=myRed, mec='None', 
                                                     # markersize=0.3) )
 
-         if (( not options.stackFillBlocks ) and ( not options.stackFillHapPaths ) and ( not options.fill )
+         if (( not options.stackFillBlocks ) and ( not options.stackFillContigPaths ) and ( not options.fill )
              and ( not options.stackFillContigs ) and ( not  options.stackFillScaffPaths )):
             # No Fills, basic wiggle
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 

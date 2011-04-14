@@ -39,7 +39,7 @@ def initOptions( parser ):
                       help='Directory of Aggregate files to be read.' )
    parser.add_option( '--mode', dest='mode',
                       type='string', default='',
-                      help='Plotting mode [scaffPaths|contigs|hapPaths|blocks|contamination].' )
+                      help='Plotting mode [scaffPaths|contigs|contigPaths|blocks|contamination].' )
    parser.add_option( '--crazyMax', dest='crazyMax',
                       type='int',
                       help='Sets the height of the crazy bar plot axis.' )
@@ -74,10 +74,10 @@ def checkOptions( options, parser ):
    if options.dpi < 72:
       parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
-        options.mode != 'blocks' and options.mode != 'hapPaths' and 
+        options.mode != 'blocks' and options.mode != 'contigPaths' and 
         options.mode != 'scaffPaths' ):
       parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
-   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
+   if ( options.mode == 'blocks' or options.mode == 'contigPaths' or options.mode == 'contigs' or
         options.mode == 'scaffPaths' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
@@ -87,7 +87,7 @@ def checkOptions( options, parser ):
       options.order = options.order.split(',')
    else:
       options.order = []
-   if ( options.mode == 'blocks' or options.mode == 'hapPaths' or options.mode == 'contigs' or
+   if ( options.mode == 'blocks' or options.mode == 'contigPaths' or options.mode == 'contigs' or
         options.mode == 'scaffPaths' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
@@ -146,7 +146,7 @@ def createAxes( left, top, width, height, options, data ):
    figWidth  = width * options.axWidth
    figHeight = height * options.axHeight
    figBottom = figTop - figHeight
-   if options.mode != 'hapPaths':
+   if options.mode != 'contigPaths':
       axMain  = data.fig.add_axes( [ figLeft, figBottom,
                                      figWidth, figHeight * 0.65 ] )
       axMain.yaxis.set_major_locator( pylab.NullLocator() )
@@ -234,7 +234,7 @@ def writeImage( options, data ):
       data.fig.savefig( options.out + '.eps', format='eps' )   
 
 def main():
-   usage = ( '%prog --dir=path/to/dir --mode=[scaffPaths|contigs|hapPaths|blocks|contamination] [options]\n\n'
+   usage = ( '%prog --dir=path/to/dir --mode=[scaffPaths|contigs|contigPaths|blocks|contamination] [options]\n\n'
              '%prog takes an aggregate directory ( --dir ) and a mode \n'
              '( --mode ) and then produces a pretty picture.' )
    data = Data()

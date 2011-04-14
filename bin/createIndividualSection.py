@@ -312,7 +312,7 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\end{figure}'
          print '\\clearpage'
       
-   if os.path.exists( os.path.join( options.imagesDir , a.ID+ '.hapPaths.eps') ):
+   if os.path.exists( os.path.join( options.imagesDir , a.ID+ '.contigPaths.eps') ):
       if options.placeHolders:
          print '\\begin{figure}[htc]'
          print '\\centering'
@@ -320,15 +320,15 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\hspace{1in}'
          print '\\vspace{6in}'
          print '\\end{minipage}}'
-         print '\\caption[%s haplotype path cumulative length plot.]{%s haplotype path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['hapPaths'] )
-         print '\\label{fig:%sHapPaths}' % a.ID
+         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['contigPaths'] )
+         print '\\label{fig:%sContigPaths}' % a.ID
          print '\\end{figure}'
       else:
          print '\\begin{figure}[htc]'
          print '\\centering'
-         print '\\epsfig{file=images/%s.hapPaths.eps, height=6in}' % a.ID
-         print '\\caption[%s haplotype path cumulative length plot.]{%s haplotype path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['hapPaths'] )
-         print '\\label{fig:%sHapPaths}' % a.ID
+         print '\\epsfig{file=images/%s.contigPaths.eps, height=6in}' % a.ID
+         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['contigPaths'] )
+         print '\\label{fig:%sContigPaths}' % a.ID
          print '\\end{figure}'
          print '\\clearpage'
 
@@ -478,7 +478,7 @@ def main():
    boilerPlate = ''
    captionsDict = { 'contigs':'The three facets, from bottom to top are the cumulative stacked proportion of alignment column category as a function of contig length, the cumulative number of errors relative to the largest number of errors in all assemblies, and a blow-up region of the first facet. Regions are colored according to alignment columns that are (1) present in both haplotype 1 and 2 but absent in the assembly, (2) present in either haplotype 1 or 2 but not both and absent in the assembly, (3) present in either haplotype 1 or 2 but not both and present in the assembly (4) present in both haplotype 1 and haplotype 2 and the assembly, and (5) which refers to the middle facet are columns absent in both haplotype 1, haplotype 2, the bacterial contamination and present in the assembly.',
                     'scaffolds':'The two facets, on the bottom is the cumulative stacked proportion of alignment column category as a function of scaffold path length, and on top is a blow-up region of the first facet. Regions are colored according to alignment columns that are (1) present in both haplotype 1 and 2 but absent in the assembly, (2) present in either haplotype 1 or 2 but not both and absent in the assembly, (3) present in either haplotype 1 or 2 but not both and present in the assembly and (4) present in both haplotype 1 and haplotype 2 and the assembly.',
-                    'hapPaths':'The two facets, on the bottom is the cumulative stacked proportion of alignment column category as a function of haplotype path length, and on top is a blow-up region of the first facet. Regions are colored according to alignment columns that are (1) present in both haplotype 1 and 2 but absent in the assembly, (2) present in either haplotype 1 or 2 but not both and absent in the assembly, (3) present in either haplotype 1 or 2 but not both and present in the assembly and (4) present in both haplotype 1 and haplotype 2 and the assembly.',
+                    'contigPaths':'The two facets, on the bottom is the cumulative stacked proportion of alignment column category as a function of contig path length, and on top is a blow-up region of the first facet. Regions are colored according to alignment columns that are (1) present in both haplotype 1 and 2 but absent in the assembly, (2) present in either haplotype 1 or 2 but not both and absent in the assembly, (3) present in either haplotype 1 or 2 but not both and present in the assembly and (4) present in both haplotype 1 and haplotype 2 and the assembly.',
                     'blocks':'The three facets, from bottom to top are the cumulative stacked proportion of alignment column category as a function of block length, the cumulative number of errors relative to the largest number of errors in all assemblies, and a blow-up region of the first facet. Regions are colored according to alignment columns that are (1) present in both haplotype 1 and 2 but absent in the assembly, (2) present in either haplotype 1 or 2 but not both and absent in the assembly, (3) present in either haplotype 1 or 2 but not both and present in the assembly (4) present in both haplotype 1 and haplotype 2 and the assembly, and (5) which refers to the middle facet are columns absent in both haplotype 1, haplotype 2, the bacterial contamination and present in the assembly.' }
    printLatex( teamsDict, assembliesList, captionsDict, options )
 

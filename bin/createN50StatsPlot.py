@@ -10,7 +10,7 @@ create the N50 stats table.
 output is latex
 
 """
-from createHapPathStatsTable import readDir
+from createContigPathStatsTable import readDir
 import createIndividualSection as cis
 import createN50StatsTable as cnfst
 import createSortedCoveragesPlot as cscp
@@ -36,9 +36,9 @@ class Data:
    pass
 
 def initOptions( parser ):
-   parser.add_option( '--hapPathStatsDir', dest='hapPathStatsDir',
+   parser.add_option( '--contigPathStatsDir', dest='contigPathStatsDir',
                       type='string',
-                      help=('Directory with hapPathStats. Names: A1.hapPathStats.xml .'))
+                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
    parser.add_option('--labels', dest='labels',
                      type='string', default=( 'Block N50,Contig Path N50,Scaffold Path N50,Contig NA50'),
                      help=('Lables of the facets, comma separated, from top '
@@ -51,7 +51,7 @@ def initOptions( parser ):
                                            'stream to STDOUT. default=%default'))
 
 def checkOptions( options, parser ):
-   dirs = { 'hapPathStatsDir'   : options.hapPathStatsDir }
+   dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
    for d in dirs:
       if not dirs[ d ]:
          parser.error('Error, specify --%s\n' % d )
@@ -180,9 +180,9 @@ def rankings( assembliesList, options ):
       sys.stdout.write('\n')
 
 def main():
-   usage = ( 'usage: %prog --hapPathStatsDir=path/to/dir/ [options]\n\n'
-             '%prog takes a directory of haplotype path stats xml files\n'
-             '( --hapPathStatsDir ) named as NAME.hapPathStats.xml and creates a plot.')
+   usage = ( 'usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
+             '%prog takes a directory of contig path stats xml files\n'
+             '( --contigPathStatsDir ) named as NAME.contigPathStats.xml and creates a plot.')
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )

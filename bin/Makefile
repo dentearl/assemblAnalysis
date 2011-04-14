@@ -26,7 +26,7 @@ bacWPSDir:=${projectDir}/picklesMafsScaffoldBac
 bacWPCDir:=${projectDir}/picklesMafsContigBac
 bacAWPDir:=${projectDir}/picklesAnnotsBac/
 rankingsDir:=${resultsDir}/rankings
-rankingsFiles:=${rankingsDir}/N50_CPN50.tab ${rankingsDir}/N50_NA50.tab ${rankingsDir}/N50_SPN50.tab ${rankingsDir}/copyNumberErrors.tab ${rankingsDir}/coverageTotal.tab ${rankingsDir}/linkageRanks.tab ${rankingsDir}/structuralHapPathErrors.tab ${rankingsDir}/substitutionErrors.tab 
+rankingsFiles:=${rankingsDir}/N50_CPN50.tab ${rankingsDir}/N50_NA50.tab ${rankingsDir}/N50_SPN50.tab ${rankingsDir}/copyNumberErrors.tab ${rankingsDir}/coverageTotal.tab ${rankingsDir}/linkageRanks.tab ${rankingsDir}/structuralContigPathErrors.tab ${rankingsDir}/substitutionErrors.tab 
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50 --subsetFile ${rankingsDir}/subsetTeamTopEntry
@@ -35,7 +35,7 @@ bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks copyNumberPlots linkagePlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/linkageStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/hapPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${rankingsDir}/subsetTeamTopEntry
+all: mafWigPicks annotationWigPicks copyNumberPlots linkagePlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/linkageStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${rankingsDir}/subsetTeamTopEntry
 	@echo Work Complete.
 
 clean:
@@ -144,7 +144,7 @@ ${coverageSFDir}/cactusHap1StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $
 ${coverageSFDir}/cactusHap1CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1CPTmp.pdf --hapPathErrorDensity --hapPathEdgeDensity \
+		--out ${coverageSFDir}/cactusHap1CPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1CPTmp.$$p ${coverageSFDir}/cactusHap1CP.$$p ; \
@@ -152,7 +152,7 @@ ${coverageSFDir}/cactusHap1CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${h
 ${coverageSFDir}/cactusHap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap1StackFillContigPathsTmp.pdf --stackFillHapPaths
+		--out ${coverageSFDir}/cactusHap1StackFillContigPathsTmp.pdf --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap1StackFillContigPathsTmp.$$p ${coverageSFDir}/cactusHap1StackFillContigPaths.$$p ; \
 	done
@@ -206,7 +206,7 @@ ${coverageSFDir}/cactusHap2StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $
 ${coverageSFDir}/cactusHap2CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2CPTmp.pdf --hapPathErrorDensity --hapPathEdgeDensity \
+		--out ${coverageSFDir}/cactusHap2CPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2CPTmp.$$p ${coverageSFDir}/cactusHap2CP.$$p ; \
@@ -214,7 +214,7 @@ ${coverageSFDir}/cactusHap2CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${h
 ${coverageSFDir}/cactusHap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusHap2StackFillContigPathsTmp.pdf --stackFillHapPaths
+		--out ${coverageSFDir}/cactusHap2StackFillContigPathsTmp.pdf --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusHap2StackFillContigPathsTmp.$$p ${coverageSFDir}/cactusHap2StackFillContigPaths.$$p ; \
 	done
@@ -268,7 +268,7 @@ ${coverageSFDir}/cactusBacStackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(
 ${coverageSFDir}/cactusBacCP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacCPTmp.pdf --hapPathErrorDensity --hapPathEdgeDensity \
+		--out ${coverageSFDir}/cactusBacCPTmp.pdf --contigPathErrorDensity --contigPathEdgeDensity \
 		--edgeErrorCeiling 30
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacCPTmp.$$p ${coverageSFDir}/cactusBacCP.$$p ; \
@@ -276,15 +276,15 @@ ${coverageSFDir}/cactusBacCP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${ba
 ${coverageSFDir}/cactusBacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out ${coverageSFDir}/cactusBacStackFillContigPathsTmp.pdf --stackFillHapPaths
+		--out ${coverageSFDir}/cactusBacStackFillContigPathsTmp.pdf --stackFillContigPaths
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/cactusBacStackFillContigPathsTmp.$$p ${coverageSFDir}/cactusBacStackFillContigPaths.$$p ; \
 	done
 
 # n50 facetPlot
-${resultsDir}/facets/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/hapPathStatsScaffolds/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/facets/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/contigPathStatsScaffolds/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createN50StatsPlot.py --hapPathStatsDir ${projectDir}/hapPathStatsScaffolds/ \
+	${binDir}/createN50StatsPlot.py --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ \
 		--out ${resultsDir}/facets/n50statsFacetsTmp.pdf --outFormat pdf \
 	--subsetFile ${rankingsDir}/subsetTeamTopEntry
 	mv ${resultsDir}/facets/n50statsFacetsTmp.pdf $@
@@ -389,15 +389,15 @@ ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${b
 	mv ${tablesDir}/coverageRankingTableTeamsTmp.pdf $@
 
 # Contig Path (haplotype path) / structural error table
-${tablesDir}/hapPathStatsTable.pdf: ${binDir}/createHapPathStatsTable.py ${binDir}/latexWrapper.py ${rankingsDir}/subsetTeamTopEntry $(wildcard ${projectDir}/hapPathStatsScaffolds/*) ${tablesDir}/fltpage.sty
+${tablesDir}/contigPathStatsTable.pdf: ${binDir}/createContigPathStatsTable.py ${binDir}/latexWrapper.py ${rankingsDir}/subsetTeamTopEntry $(wildcard ${projectDir}/contigPathStatsScaffolds/*) ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/createHapPathStatsTable.py --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		 --hapPathStatsDir ${projectDir}/hapPathStatsScaffolds/ | ${binDir}/latexWrapper.py > \
-		${tablesDir}/hapPathStatsTableTmp.tex
-	cd ${tablesDir} && latex hapPathStatsTableTmp.tex && latex hapPathStatsTableTmp.tex \
-		latex hapPathStatsTableTmp.tex && dvips -Ppdf hapPathStatsTableTmp.dvi && \
-		ps2pdf hapPathStatsTableTmp.ps
-	mv ${tablesDir}/hapPathStatsTableTmp.pdf $@
+	${binDir}/createContigPathStatsTable.py --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		 --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ | ${binDir}/latexWrapper.py > \
+		${tablesDir}/contigPathStatsTableTmp.tex
+	cd ${tablesDir} && latex contigPathStatsTableTmp.tex && latex contigPathStatsTableTmp.tex \
+		latex contigPathStatsTableTmp.tex && dvips -Ppdf contigPathStatsTableTmp.dvi && \
+		ps2pdf contigPathStatsTableTmp.ps
+	mv ${tablesDir}/contigPathStatsTableTmp.pdf $@
 
 # linkage rankings
 ${rankingsDir}/linkageRanks.tab: ${binDir}/createLinkageStatsPlot.py $(wildcard ${projectDir}/linkageStatsScaffolds/*)
@@ -406,9 +406,9 @@ ${rankingsDir}/linkageRanks.tab: ${binDir}/createLinkageStatsPlot.py $(wildcard 
 	mv $@.tmp $@
 
 # structural (contig path / haplotype path) errors rankings
-${rankingsDir}/structuralHapPathErrors.tab: ${binDir}/createHapPathStatsTable.py $(wildcard ${projectDir}/hapPathStatsCaffolds/*)
+${rankingsDir}/structuralContigPathErrors.tab: ${binDir}/createContigPathStatsTable.py $(wildcard ${projectDir}/contigPathStatsCaffolds/*)
 	mkdir -p $(dir $@)
-	${binDir}/createHapPathStatsTable.py --hapPathStatsDir ${projectDir}/hapPathStatsScaffolds/ --outputRanks > $@.tmp
+	${binDir}/createContigPathStatsTable.py --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ --outputRanks > $@.tmp
 	mv $@.tmp $@
 
 # base substitution errors rankings
@@ -426,7 +426,7 @@ ${rankingsDir}/copyNumberErrors.tab: ${binDir}/createCopyNumberStatsFacetedPlot.
 # all n50 stats
 ${rankingsDir}/N50All.txt: ${binDir}/createN50StatsPlot.py 
 	mkdir -p $(dir $@)
-	${binDir}/createN50StatsPlot.py --hapPathStatsDir ${projectDir}/hapPathStatsScaffolds/ --outputRanks --sortOn contigNA50 > $@.tmp
+	${binDir}/createN50StatsPlot.py --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ --outputRanks --sortOn contigNA50 > $@.tmp
 	mv $@.tmp $@
 
 # NA50 rankings

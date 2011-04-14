@@ -10,7 +10,7 @@ create the N50 stats table.
 output is latex
 
 """
-import createHapPathStatsTable as chpst
+import createContigPathStatsTable as chpst
 import createIndividualSection as cis
 import createN50StatsPlot as cnfsp
 import xml.etree.ElementTree as ET
@@ -85,9 +85,9 @@ def calculateMinError( assembliesList ):
    return eMin
 
 def main():
-   usage = ('usage: %prog --hapPathStatsDir=path/to/dir/ [options]\n\n'
-            '%prog takes the haplotype path stats directory\n'
-            '( --hapPathStatsDir ) with names as NAME.hapPathStats.xml and then\n'
+   usage = ('usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
+            '%prog takes the contig path stats directory\n'
+            '( --contigPathStatsDir ) with names as NAME.contigPathStats.xml and then\n'
             'writes to STDOUT a latex formatted table.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
@@ -101,7 +101,7 @@ def main():
    assembliesList = sorted( assembliesList, key=lambda x: x.valuesDict[ options.sortOn ], reverse=True )
    maxesDict = calculateMaxesDict( assembliesList )
    
-   caption = 'Columns are the total number of contigs in the assembly, N50, N50 relative to the number of columns in the alignment (NA50) as defined in the main text section \\ref{sect:NA50}, the scaffold path 50 (SPA50), haplotype path (HPA50), block path 50 (BA50), and the sum of the sum of the total number of errors present in the assembly (\\(\\sum\\) Errors).'
+   caption = 'Columns are the total number of contigs in the assembly, N50, N50 relative to the number of columns in the alignment (NA50) as defined in the main text section \\ref{sect:NA50}, the scaffold path 50 (SPA50), contig path (HPA50), block path 50 (BA50), and the sum of the sum of the total number of errors present in the assembly (\\(\\sum\\) Errors).'
    printTable( assembliesList, caption, maxesDict, options )
 
 if __name__ == '__main__':

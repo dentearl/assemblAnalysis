@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-createHapPathStatsTable.py
+createContigPathStatsTable.py
 11 March 2011
 dent earl dearl(a) soe ucsc edu
 
 used in the assemblathon report project to 
-create the haplotype path stats table.
+create the contig path stats table.
 
 output is latex
 
@@ -27,9 +27,9 @@ class Assembly:
       self.totalErrors = 0
 
 def initOptions( parser ):
-   parser.add_option( '--hapPathStatsDir', dest='hapPathStatsDir',
+   parser.add_option( '--contigPathStatsDir', dest='contigPathStatsDir',
                       type='string',
-                      help=('Directory with hapPathStats. Names: A1.hapPathStats.xml .'))
+                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
    parser.add_option( '--sortOn', dest='sortOn',
                       type='string', default='totalErrors',
                       help=('Column to sort the table on. default=%default'))
@@ -56,7 +56,7 @@ def checkOptions( args, options, parser ):
       for k in allowedKeys:
          print k
       sys.exit( 0 )
-   dirs = { 'hapPathStatsDir'   : options.hapPathStatsDir }
+   dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
    for d in dirs:
       if not dirs[ d ]:
          parser.error('Error, specify --%s\n' % d )
@@ -68,8 +68,8 @@ def checkOptions( args, options, parser ):
       parser.error( 'Error, --sortOn %s is not in dict of allowed keys:\n %s.' % ( options.sortOn, allowedKeys ))
 
 def readDir( options ):
-   aFiles = glob.glob( os.path.join( options.hapPathStatsDir, '*.hapPathStats.xml'))
-   namepat = re.compile( '^(\S{2,3})\.hapPathStats.xml' )
+   aFiles = glob.glob( os.path.join( options.contigPathStatsDir, '*.contigPathStats.xml'))
+   namepat = re.compile( '^(\S{2,3})\.contigPathStats.xml' )
    assembliesList = []
    for f in aFiles:
       name = re.match( namepat, os.path.basename( f )).group( 1 )
@@ -136,7 +136,7 @@ ID & Haplotype to haplotype, intra chromosomal & Haplotype to haplotype inter ch
          print '\\hline'
    print '''\\hline
 \\end{tabular}
-\\label{table:hapPathStats}
+\\label{table:contigPathStats}
 \\end{FPtable}\par
 \\normalsize
 \\vspace{0.3in}'''
@@ -185,9 +185,9 @@ def performSort( assembliesList, options ):
    return assembliesList
 
 def main():
-   usage = ( 'usage: %prog --hapPathStatsDir=path/to/dir/ [options]\n\n'
-             '%prog takes in the haplotype path statistics directory\n'
-             '( --hapPathStatsDir ) and prints to STDOUT a latex formatted table.' )
+   usage = ( 'usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
+             '%prog takes in the contig path statistics directory\n'
+             '( --contigPathStatsDir ) and prints to STDOUT a latex formatted table.' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
