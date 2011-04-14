@@ -10,7 +10,7 @@ create the N50 stats table.
 output is latex
 
 """
-import createContigPathStatsTable as chpst
+import createContigPathStatsTable as ccpst
 import createIndividualSection as cis
 import createN50StatsPlot as cnfsp
 import xml.etree.ElementTree as ET
@@ -19,12 +19,6 @@ from optparse import OptionParser
 import os
 import re
 import sys
-
-def initOptions( parser ):
-   pass
-
-def checkOptions( args, options, parser ):
-   pass
 
 def printTable( assembliesList, caption, maxes, options ):
    print '''
@@ -60,9 +54,9 @@ ID & \# Contigs & N50 & NA50 & SPA50 & HPA50 & BNA50 & \(\sum\) Errors\\\\
 
 def isMaxFormat( n, m ):
    if n == m:
-      return '\\textbf{ %s }' % chpst.prettyNumber( n )
+      return '\\textbf{ %s }' % ccpst.prettyNumber( n )
    else:
-      return '%s' % chpst.prettyNumber( n )
+      return '%s' % ccpst.prettyNumber( n )
 
 def calculateMaxesDict( assembliesList ):
    maxesDict = { 'totalContigNumber':0,
@@ -90,14 +84,12 @@ def main():
             '( --contigPathStatsDir ) with names as NAME.contigPathStats.xml and then\n'
             'writes to STDOUT a latex formatted table.')
    parser = OptionParser( usage=usage )
-   initOptions( parser )
    cnfsp.initOptions( parser )
    ( options, args ) = parser.parse_args()
-   checkOptions( args, options, parser )
    cnfsp.checkOptions( options, parser )
    
-   assembliesList = chpst.readDir( options )
-   chpst.calculateErrors( assembliesList, options )
+   assembliesList = ccpst.readDir( options )
+   ccpst.calculateErrors( assembliesList, options )
    assembliesList = sorted( assembliesList, key=lambda x: x.valuesDict[ options.sortOn ], reverse=True )
    maxesDict = calculateMaxesDict( assembliesList )
    

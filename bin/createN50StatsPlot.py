@@ -143,8 +143,9 @@ def drawData( assembliesList, maxesDict, axDict, options ):
                   tick.label1.set_fontsize( 12 )
                else:
                   tick.label1.set_fontsize( 6 )
-            #for label in axDict[ax].xaxis.get_ticklabels():
-            #   label.set_rotation( 90 )
+            if len(assembliesList) > 25:
+               for label in axDict[ax].xaxis.get_ticklabels():
+                  label.set_rotation( 90 )
             axDict[ax].xaxis.set_ticks_position('bottom')
          else:
             axDict[ ax ].set_xticks( [] )
@@ -160,8 +161,9 @@ def drawData( assembliesList, maxesDict, axDict, options ):
                tick.label1.set_fontsize( 12 )
             else:
                tick.label1.set_fontsize( 6 )
-         #for label in axDict[ax].xaxis.get_ticklabels():
-         #      label.set_rotation( 90 )
+         if len(assembliesList) > 25:
+            for label in axDict[ax].xaxis.get_ticklabels():
+               label.set_rotation( 90 )
          axDict[ax].xaxis.set_ticks_position('bottom')
          axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.9, 
                                 maxesDict[ ax ] * 1.05] )

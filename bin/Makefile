@@ -111,7 +111,7 @@ ${bacAWPDir}/bac.annots.pickle: ${projectDir}/annotations/bac.annots.trf.repmask
 covStackFillPlots: covSFPHap1 covSFPHap2 covSFPBac
 covSFPHap1: $(foreach p,cactusHap1 cactusHap1Fill cactusHap1BED cactusHap1StackFillBlocks cactusHap1CP cactusHap1StackFillContigPaths cactusHap1StackFillContigs cactusHap1StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
 covSFPHap2: $(foreach p,cactusHap2 cactusHap2Fill cactusHap2BED cactusHap2StackFillBlocks cactusHap2CP cactusHap2StackFillContigPaths cactusHap2StackFillContigs cactusHap2StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
-covSFPBac: $(foreach p,cactusBac cactusBacFill cactusBacBED cactusBacStackFillBlocks cactusBacCP cactusHap2StackFillContigPaths, ${coverageSFDir}/$p.pdf)
+covSFPBac: $(foreach p,cactusBac cactusBacFill cactusBacBED cactusBacStackFillBlocks cactusBacCP cactusBacStackFillContigPaths, ${coverageSFDir}/$p.pdf)
 # haplotype 1
 ${coverageSFDir}/cactusHap1.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)

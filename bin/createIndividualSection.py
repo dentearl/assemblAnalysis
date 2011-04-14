@@ -62,9 +62,9 @@ def initOptions( parser ):
    parser.add_option( '--submissionStatsDir', dest='submissionStatsDir',
                       type='string',
                       help=('Directory with submission stats. Names: A1.summary.txt .'))
-   parser.add_option( '--submissionSizesDir', dest='submissionSizesDir',
+   parser.add_option( '--submissionLengthsDir', dest='submissionLengthsDir',
                       type='string',
-                      help=('Directory with submission sizes. Names: A1.contigs.txt or A1.scaffolds.txt'))
+                      help=('Directory with submission lengths. Names: A1.contigs.txt or A1.scaffolds.txt'))
    parser.add_option( '--imagesDir', dest='imagesDir',
                       type='string',
                       help=('Directory where .eps images are already stored.'))
@@ -84,7 +84,7 @@ def checkOptions( args, options, parser ):
    dirs = { 'imagesDir'   : options.imagesDir,
             'subStatsDir' : options.subStatsDir,
             'submissionStatsDir' : options.submissionStatsDir,
-            'submissionSizesDir' : options.submissionSizesDir}
+            'submissionLengthsDir' : options.submissionLengthsDir}
    for d in dirs:
       if not dirs[ d ]:
          parser.error('Error, specify --%s\n' % d )
@@ -435,18 +435,18 @@ def readSubmissionStatsDir( assembliesList, options ):
                a.sizeStatsContigs  = d
          f.close()
 
-def readSubmissionSizesDir( assembliesList, options ):
+def readSubmissionLengthsDir( assembliesList, options ):
    for a in assembliesList:
-      if os.path.exists( os.path.join( options.submissionSizesDir, a.ID+'.scaffolds.txt')):
-         f = open( os.path.join( options.submissionSizesDir, a.ID+'.scaffolds.txt'), 'r' )
+      if os.path.exists( os.path.join( options.submissionLengthsDir, a.ID+'.scaffolds.txt')):
+         f = open( os.path.join( options.submissionLengthsDir, a.ID+'.scaffolds.txt'), 'r' )
          cum = 0
          for line in f:
             line = line.strip()
             cum += int( line )
          f.close()
          a.sizeStatsScaffold.append( cum )
-      if os.path.exists( os.path.join( options.submissionSizesDir, a.ID+'.contigs.txt')):
-         f = open( os.path.join( options.submissionSizesDir, a.ID+'.contigs.txt'), 'r' )
+      if os.path.exists( os.path.join( options.submissionLengthsDir, a.ID+'.contigs.txt')):
+         f = open( os.path.join( options.submissionLengthsDir, a.ID+'.contigs.txt'), 'r' )
          cum = 0
          for line in f:
             line = line.strip()
@@ -455,7 +455,7 @@ def readSubmissionSizesDir( assembliesList, options ):
          a.sizeStatsContigs.append( cum )
 
 def main():
-   usage = ( 'usage: %prog --rankFile=rFile --infoFile=iFile --subStatsDir=path/to/dir/ --submissionStatsDir=path/to/dir/ --submissionSizesDir=path/to/dir/ [options]\n\n'
+   usage = ( 'usage: %prog --rankFile=rFile --infoFile=iFile --subStatsDir=path/to/dir/ --submissionStatsDir=path/to/dir/ --submissionLengthsDir=path/to/dir/ [options]\n\n'
              '%prog writes the Individual Section of the report in latex format.\n\n'
              '%prog takes in an assembly rank file ( --rankFile ), an assembly info file\n'
              ' ( --infoFile ), a substitution stats directory ( --subStatsDir ), a submission stats\n'
@@ -471,7 +471,7 @@ def main():
    assembliesList = readRankFile( teamsDict, options )
    readSubStatsDir( assembliesList, options )
    readSubmissionStatsDir( assembliesList, options )
-   readSubmissionSizesDir( assembliesList, options )
+   readSubmissionLengthsDir( assembliesList, options )
    
    sortEntriesLists( teamsDict )
 

@@ -73,9 +73,10 @@ def readDir( options ):
    assembliesList = []
    for f in aFiles:
       name = re.match( namepat, os.path.basename( f )).group( 1 )
-      if options.subsetFile:
-         if name not in options.assemblySubset:
-            continue
+      if 'subsetFile' in vars( options ):
+         if options.subsetFile:
+            if name not in options.assemblySubset:
+               continue
       try:
          xmlTree = ET.parse( f )
       except expat.ExpatError: # broken xml file

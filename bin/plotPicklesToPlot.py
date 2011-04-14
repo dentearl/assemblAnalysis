@@ -287,7 +287,7 @@ def loadMafs( options, data ):
             if options.stackFillBlocks:
                key = 'maf' + l
             elif options.stackFillContigPaths:
-               key = 'mafHpl' + l
+               key = 'mafCpl' + l
             elif options.stackFillContigs:
                key = 'mafCtg' + l
             elif options.stackFillScaffPaths:
@@ -584,8 +584,8 @@ def drawMafs( axDict, options, data ):
                                              linewidth = 0.0 )
          elif options.stackFillContigPaths:
             k = -1
-            for r in [ 'maf', 'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
-                       'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7' ]:
+            for r in [ 'maf', 'mafCpl1e2', 'mafCpl1e3', 'mafCpl1e4', 
+                       'mafCpl1e5', 'mafCpl1e6', 'mafCpl1e7' ]:
                k += 1
                axDict[ c + n ].fill_between( x=data.mafWigDict[ c ][ n ]['xAxis'], 
                                              y1=data.mafWigDict[ c ][ n ][ r ],
@@ -624,13 +624,13 @@ def drawMafs( axDict, options, data ):
          # --contigPathEdgeDensity track
          if options.contigPathEdgeDensity:
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
-                                                    ydata = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'], 
+                                                    ydata = data.mafWigDict[ c ][ n ]['mafCpEdgeCount'], 
                                                     c = myBlue, linewidth=0.3)) #linestyle='None', linewidth=0.0, 
                                                     # marker='.', markerfacecolor='b', markersize=1.0) )
          # --contigPathErrorDensity track
          if options.contigPathErrorDensity:
             axDict[ c + n ].add_line( lines.Line2D( xdata = data.mafWigDict[ c ][ n ]['xAxis'], 
-                                                    ydata = data.mafWigDict[ c ][ n ]['mafHpErrorCount'], 
+                                                    ydata = data.mafWigDict[ c ][ n ]['mafCpErrorCount'], 
                                                     c = myRed, linewidth=0.3))# ,linestyle='None',
                                                     # marker='o', markerfacecolor=myRed, mec='None', 
                                                     # markersize=0.3) )
@@ -679,24 +679,24 @@ def normalizeEdgeErrorDensities( options, data ):
          localEdgeMaxes[ n ]  = 0
          localMaxes[ n ]      = 0
          for c in data.chrNames:
-            if localErrorMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]:
-               localErrorMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
-            if localEdgeMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]:
-               localEdgeMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
-            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]:
-               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
-            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]:
-               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+            if localErrorMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ]:
+               localErrorMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ]
+            if localEdgeMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ]:
+               localEdgeMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ]
+            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ]:
+               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ]
+            if localMaxes[ n ] < data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ]:
+               localMaxes[ n ] = data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ]
          data.axCeilings[ n ] = localMaxes[ n ]
    else:
       globalErrorMax = 0
       globalEdgeMax = 0
       for c in data.chrNames:
          for n in data.orderedMafs:
-            if data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ] > globalErrorMax:
-               globalErrorMax = data.mafWigDict[ c ][ n ][ 'mafHpErrorMax' ]
-            if data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ] > globalEdgeMax:
-               globalEdgeMax = data.mafWigDict[ c ][ n ][ 'mafHpEdgeMax' ]
+            if data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ] > globalErrorMax:
+               globalErrorMax = data.mafWigDict[ c ][ n ][ 'mafCpErrorMax' ]
+            if data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ] > globalEdgeMax:
+               globalEdgeMax = data.mafWigDict[ c ][ n ][ 'mafCpEdgeMax' ]
       for n in data.orderedMafs:
          if options.edgeErrorCeiling:
             data.axCeilings[ n ] = options.edgeErrorCeiling
@@ -706,12 +706,12 @@ def normalizeEdgeErrorDensities( options, data ):
    for c in data.chrNames:
       for n in data.orderedMafs:
          if options.zerosToNan:
-            whereZeros = data.mafWigDict[ c ][ n ]['mafHpErrorCount'] == 0
-            data.mafWigDict[ c ][ n ]['mafHpErrorCount'][ whereZeros ] = float( 'nan' )
+            whereZeros = data.mafWigDict[ c ][ n ]['mafCpErrorCount'] == 0
+            data.mafWigDict[ c ][ n ]['mafCpErrorCount'][ whereZeros ] = float( 'nan' )
          if options.edgeErrorCeiling:
-            whereGreater = data.mafWigDict[ c ][ n ]['mafHpErrorCount']  > float( options.edgeErrorCeiling )
+            whereGreater = data.mafWigDict[ c ][ n ]['mafCpErrorCount']  > float( options.edgeErrorCeiling )
             # do something with whereGreater here...
-            whereGreater = data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  > float( options.edgeErrorCeiling )
+            whereGreater = data.mafWigDict[ c ][ n ]['mafCpEdgeCount']  > float( options.edgeErrorCeiling )
             # do something with whereGreater here...
 
 def normalizeBlockEdgeDensities( options, data ):
@@ -797,8 +797,8 @@ def normalizeCoverages( options, data ):
       for n in data.orderedMafs:
          for r in [ 'maf', 'maf1e2', 'maf1e3', 'maf1e4', 
                     'maf1e5', 'maf1e6', 'maf1e7',
-                    'mafHpl1e2', 'mafHpl1e3', 'mafHpl1e4', 
-                    'mafHpl1e5', 'mafHpl1e6', 'mafHpl1e7',
+                    'mafCpl1e2', 'mafCpl1e3', 'mafCpl1e4', 
+                    'mafCpl1e5', 'mafCpl1e6', 'mafCpl1e7',
                     'mafCtg1e2', 'mafCtg1e3', 'mafCtg1e4', 
                     'mafCtg1e5', 'mafCtg1e6', 'mafCtg1e7',
                     'mafSpl1e2', 'mafSpl1e3', 'mafSpl1e4', 
@@ -808,13 +808,13 @@ def normalizeCoverages( options, data ):
 def transformErrorDensities( options, data ):
    for c in data.chrNames:
       for n in data.orderedMafs:
-         data.mafWigDict[ c ][ n ]['mafHpErrorCount'] = data.mafWigDict[ c ][ n ]['mafHpErrorCount'] ** 0.25
-         data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  = data.mafWigDict[ c ][ n ]['mafHpEdgeCount']  ** 0.25
+         data.mafWigDict[ c ][ n ]['mafCpErrorCount'] = data.mafWigDict[ c ][ n ]['mafCpErrorCount'] ** 0.25
+         data.mafWigDict[ c ][ n ]['mafCpEdgeCount']  = data.mafWigDict[ c ][ n ]['mafCpEdgeCount']  ** 0.25
 
 def transformBlockEdgeDensities( options, data ):
    for c in data.chrNames:
       for n in data.orderedMafs:
-         data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] = data.mafWigDict[ c ][ n ]['mafHpEdgeCount'] ** 0.25
+         data.mafWigDict[ c ][ n ]['mafCpEdgeCount'] = data.mafWigDict[ c ][ n ]['mafCpEdgeCount'] ** 0.25
 
 def normalizeData( options, data ):
    data.axCeilings = {} # keyed on axisnames like P1, B1, CDS, tandem, etc
