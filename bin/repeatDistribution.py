@@ -30,7 +30,7 @@ def processStream( options ):
       line = line.strip()
       if line == '':
          continue
-      if line[0] == '>':
+      if line.startswith('>'):
          continue
       for c in line:
          if c == options.uChar or c == options.lChar:
