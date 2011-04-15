@@ -3,10 +3,10 @@ export SHELLOPTS=pipefail
 # dent earl dearl (a) soe ucsc edu
 # 11 April 2011
 ##############################
-binDir:=/hive/users/dearl/assemblathon/code/trunk/bin
+binDir:=../../code/trunk/bin
 projectDir:=.
 resultsDir:=${projectDir}/publication
-fltpage:=/hive/users/dearl/assemblathon/latexSupplemental/trunk/fltpage.sty # YOU MUST SPECIFY THIS FOR TEX TABLES
+fltpage:=/hive/users/dearl/assemblathon/latexSupplemental/trunk/fltpage.sty
 chrNames:= chr0,chr1,chr2
 hap1ChrLengths:= 76252953,18509915,17699484
 hap2ChrLengths:= 76285600,18539192,17710169
@@ -18,15 +18,15 @@ linkagePlotsDir:=${resultsDir}/linkagePlots
 coverageSFDir:=${resultsDir}/coverageStackFillPlots
 hap1WPSDir:=${projectDir}/picklesMafsScaffoldHap1
 hap1WPCDir:=${projectDir}/picklesMafsContigHap1
-hap1AWPDir:=${projectDir}/picklesAnnotsHap1/
+hap1AWPDir:=${projectDir}/picklesAnnotsHap1
 hap2WPSDir:=${projectDir}/picklesMafsScaffoldHap2
 hap2WPCDir:=${projectDir}/picklesMafsContigHap2
-hap2AWPDir:=${projectDir}/picklesAnnotsHap2/
+hap2AWPDir:=${projectDir}/picklesAnnotsHap2
 bacWPSDir:=${projectDir}/picklesMafsScaffoldBac
 bacWPCDir:=${projectDir}/picklesMafsContigBac
-bacAWPDir:=${projectDir}/picklesAnnotsBac/
+bacAWPDir:=${projectDir}/picklesAnnotsBac
 rankingsDir:=${resultsDir}/rankings
-rankingsFiles:=${rankingsDir}/N50_CPN50.tab ${rankingsDir}/N50_NA50.tab ${rankingsDir}/N50_SPN50.tab ${rankingsDir}/copyNumberErrors.tab ${rankingsDir}/coverageTotal.tab ${rankingsDir}/linkageRanks.tab ${rankingsDir}/structuralContigPathErrors.tab ${rankingsDir}/substitutionErrors.tab 
+rankingsFiles:=$(foreach r,N50_CPN50.tab N50_NA50.tab N50_SPN50.tab copyNumberErrors.tab coverageTotal.tab linkageRanks.tab structuralContigPathErrors.tab substitutionErrors.tab,${rankingsDir}/$r)
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
@@ -541,9 +541,9 @@ ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir
 	mkdir -p $(dir $@)
 	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/tab2tex.py | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTmp.tex
-	cd ${tablesDir} && latex coverageRankingTableTmp.tex && latex coverageRankingTableTmp.tex \
+	pushd ${tablesDir} && latex coverageRankingTableTmp.tex && latex coverageRankingTableTmp.tex \
 		latex coverageRankingTableTmp.tex && dvips -Ppdf coverageRankingTableTmp.dvi && \
-		ps2pdf coverageRankingTableTmp.ps
+		ps2pdf coverageRankingTableTmp.ps && popd
 	mv ${tablesDir}/coverageRankingTableTmp.pdf $@
 # coverage rankings table, subset
 ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${binDir}/subsetTabs.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
@@ -551,9 +551,9 @@ ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${b
 	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/subsetTabs.py --subsetFile \
 		${rankingsDir}/subsetTeamTopEntry | ${binDir}/tab2tex.py | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTeamsTmp.tex
-	cd ${tablesDir} && latex coverageRankingTableTeamsTmp.tex && latex coverageRankingTableTeamsTmp.tex \
+	pushd ${tablesDir} && latex coverageRankingTableTeamsTmp.tex && latex coverageRankingTableTeamsTmp.tex \
 		latex coverageRankingTableTeamsTmp.tex && dvips -Ppdf coverageRankingTableTeamsTmp.dvi && \
-		ps2pdf coverageRankingTableTeamsTmp.ps
+		ps2pdf coverageRankingTableTeamsTmp.ps && popd
 	mv ${tablesDir}/coverageRankingTableTeamsTmp.pdf $@
 
 # Contig Path (haplotype path) / structural error table
@@ -562,9 +562,9 @@ ${tablesDir}/contigPathStatsTable.pdf: ${binDir}/createContigPathStatsTable.py $
 	${binDir}/createContigPathStatsTable.py --subsetFile ${rankingsDir}/subsetTeamTopEntry \
 		 --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ | ${binDir}/latexWrapper.py > \
 		${tablesDir}/contigPathStatsTableTmp.tex
-	cd ${tablesDir} && latex contigPathStatsTableTmp.tex && latex contigPathStatsTableTmp.tex \
+	pushd ${tablesDir} && latex contigPathStatsTableTmp.tex && latex contigPathStatsTableTmp.tex \
 		latex contigPathStatsTableTmp.tex && dvips -Ppdf contigPathStatsTableTmp.dvi && \
-		ps2pdf contigPathStatsTableTmp.ps
+		ps2pdf contigPathStatsTableTmp.ps && popd
 	mv ${tablesDir}/contigPathStatsTableTmp.pdf $@
 
 # linkage rankings
@@ -592,7 +592,7 @@ ${rankingsDir}/copyNumberErrors.tab: ${binDir}/createCopyNumberStatsFacetedPlot.
 	mv $@.tmp $@
 
 # all n50 stats
-${rankingsDir}/N50All.txt: ${binDir}/createN50StatsPlot.py 
+${rankingsDir}/N50All.txt: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/contigPathStatsScaffolds/*)
 	mkdir -p $(dir $@)
 	${binDir}/createN50StatsPlot.py --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ --outputRanks --sortOn contigNA50 > $@.tmp
 	mv $@.tmp $@
@@ -627,10 +627,10 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsDir}/*tab | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
 	 	sed '/^$$/d' | ${binDir}/tab2tex.py > ${tablesDir}/rankingSummaryTable.tex
-	cd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
+	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
 		latex rankingSummaryTableWrapped.tex && dvips -Ppdf rankingSummaryTableWrapped.dvi && \
-		ps2pdf rankingSummaryTableWrapped.ps
+		ps2pdf rankingSummaryTableWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableWrapped.pdf $@
 # rankings table, subset
 ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py ${binDir}/tab2tex.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
@@ -638,9 +638,9 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	${binDir}/summarizeRankings.py rankings/*tab | ${binDir}/summarizedRankingToTeamTop.py | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | ${binDir}/tab2tex.py > \
 		${tablesDir}/rankingSummaryTableTeams.tex
-	cd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
+	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \
-		ps2pdf rankingSummaryTableTeamsWrapped.ps
+		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
 
