@@ -55,16 +55,29 @@ def checkOptions( options, parser ):
    if not m:
       parser.error('Error, unable to match --name=%s to regex "%s"' % (options.name, regex))
    if len(m.group(1)) > 1:
-      sys.stderr.write('Warning, --name=%s has more than a 1 letter ID, legends, tables, axis labels may all break in other scripts.\n' % m.group(1))
+      sys.stderr.write('Warning, --name=%s has more than a 1 letter ID, legends, '
+                       'tables, axis labels may all break in other scripts.\n' % m.group(1))
    if len( options.name ) > 3:
-      sys.stderr.write('Warning, --name=%s is in total more than 3 characters long, legends, tables, axis labels may all break in other scripts.\n' % options.name )
+      sys.stderr.write('Warning, --name=%s is in total more than 3 characters long, '
+                       'legends, tables, axis labels may all break in other scripts.\n' % options.name )
    if os.path.exists( options.outDir ) and not os.path.isdir( options.outDir ):
       parser.error('Error, --outDir %s is not a directory!\n' % options.outDir )
-   if not os.path.exists( options.outDir ):
-      os.makedirs( options.outDir )
+
+def verifyNameIsUnique( options ):
+   pass
 
 def populateDirectoryStructure( options ):
-   pass
+   if not os.path.exists( options.outDir ):
+      os.makedirs( options.outDir )
+   for d in [ 'mafsContigs', 'mafsScaffolds', 'statsContigsAggregateColumns',
+              'statsScaffoldsAggregateColumns', 'statsScaffoldsContigPath', 'statsScaffoldsCopyNumber',
+              'statsScaffoldsLinkage', 'statsScaffoldsSubstitions' ]:
+      d = os.path.join( options.outDir, d )
+      if os.path.exists( d ) and not os.path.isdir( d ):
+         sys.stderr.write('Error, %s exists but is not a directory!\n' % d )
+         sys.exit(1)
+      if not os.path.exists( d ):
+         os.makedirs( d )
 
 def migrate( options ):
    pass
@@ -75,12 +88,15 @@ def main():
              'and a directory where you are staging the data for analysis ( --outDir )\n'
              'the type of alignment, either contig or scaffold, and then migrates the\n'
              'relevant files into the outDir. Use the --name flag to specify the name\n'
-             '(e.g. --name R1) of the assembly in the analysis.')
+             '(e.g. --name R1) of the assembly in the analysis.' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
    ( options, args ) = parser.parse_args()
    checkOptions( options, parser )
-   
+
+   verifyNameIsUnique( options )
+   populateDirectoryStructure( options )
+
    migrate( options )
 
 

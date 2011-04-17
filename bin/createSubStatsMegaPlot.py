@@ -18,8 +18,11 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter # minor tick m
 import numpy
 from optparse import OptionParser
 import os
+import signal # deal with broken pipes
 import sys
 import re
+
+signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
 class Data:
    """ Dummy class
@@ -182,9 +185,6 @@ def establishAxes( fig, options, data ):
 
 def drawData( assembliesDict, sortOrder, axDict, options, data ):
    lGray = ( 0.8, 0.8, 0.8 )
-   for ax in axDict:
-      axDict[ ax ].set_xlim( 0, len(assembliesDict) + 3 )
-
    # all plot
    yMax = 0
    yMin = sys.maxint
@@ -199,10 +199,12 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
          yMin = float( a.allLo )
    if options.raw:
       yMin = logLower( yMin )
+   # partitions
    for i in xrange( 1, len( assembliesDict ) ):
-      if not i % 10:
+      if not i % 5:
          axDict[ 'all' ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ yMin, yMax ],
+                                                 ydata=[ yMin, yMax * 1.1],
+                                                 linestyle='dotted',
                                                  color=lGray))
    i = 0
    for aName in sortOrder:
@@ -220,7 +222,8 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
       sys.stderr.write( 'Error, yMin > yMax: %f > %f\n' % ( yMin, yMax ))
       sys.exit( 1 )
    axDict[ 'all' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
-   axDict[ 'all' ].set_xticks( range( 1, len(xNames) + 2 ))
+   axDict[ 'all' ].set_xlim( 0, len(xNames) + 1 )
+   axDict[ 'all' ].set_xticks( range( 1, len(xNames) + 1 ))
    axDict[ 'all' ].set_xticklabels( xNames )
    if not options.subsetFile:
       for tick in axDict[ 'all' ].xaxis.get_major_ticks():
@@ -241,14 +244,17 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
          a = assembliesDict[ aName ]
          if yMax < float( a.subStatsUpper[ axNames[ key ] ]):
             yMax = float( a.subStatsUpper[ axNames[ key ] ])
-         if yMin > float( a.subStatsLower[ axNames[ key ] ]): 
-            yMin = float( a.subStatsLower[ axNames[ key ] ])
+         if a.subStatsLower[ axNames[ key ]] > 0:
+            if yMin > float( a.subStatsLower[ axNames[ key ] ]): 
+               yMin = float( a.subStatsLower[ axNames[ key ] ])
          if options.raw:
             yMin = logLower( yMin )
-      for i in range( 1, len( assembliesDict ) ):
-         if not i % 10:
+      # partitions
+      for i in xrange( 1, len( assembliesDict ) ):
+         if not i % 5:
             axDict[ key ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                  ydata=[ yMin, yMax ],
+                                                  ydata=[ yMin, yMax * 1.1],
+                                                  linestyle='dotted',
                                                   color=lGray))
       i = 0
       for aName in sortOrder:
@@ -263,7 +269,19 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
       #if not options.normalize:
       axDict[ key ].set_yscale('log')
       axDict[ key ].set_ylim( [ yMin, yMax] )
+      axDict[ key ].set_xlim( 0, len(xNames) + 1 )
       axDict[ key ].set_xticks( range( 1, len(xNames) + 2 ))
+
+      # grid
+      for ax in axDict:
+         mts = axDict[ax].yaxis.get_majorticklocs()
+         for m in mts:
+            axDict[ax].add_line( lines.Line2D( xdata=[ 1, len(xNames) ],
+                                               ydata=[ m, m ],
+                                               linewidth=1,
+                                               color=lGray,
+                                               linestyle='dotted'))
+
       if key == 'het':
          axDict[ key ].set_xticklabels( xNames )
       else:
@@ -281,27 +299,6 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    axDict['all'].set_title( 'Sum of Substitution Errors%s' % suffix )
    axDict['hom'].set_title( 'Homozygous Substitution Errors%s' % suffix )
    axDict['het'].set_title( 'Heterozygous Substitution Errors%s' % suffix )
-   #axDict['indel'].set_title( 'Indel Substitution Errors%s' % suffix )
-   # axDict[ 'all' ].text( x=0.01, y=0.98, s = 'All Sub Errors%s' % suffix,
-   #                fontsize = 12, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.2, 0.2, 0.2 ),
-   #                transform=axDict['all'].transAxes )
-   # axDict[ 'hom' ].text( x=0.01, y=0.98, s = 'Homozygous Sub Errors%s' % suffix,
-   #                fontsize = 12, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.2, 0.2, 0.2 ),
-   #                transform=axDict['hom'].transAxes )
-   # axDict[ 'het' ].text( x=0.01, y=0.98, s = 'Heterozygous Sub Errors' + suffix,
-   #                fontsize = 12, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.2, 0.2, 0.2 ),
-   #                transform=axDict['het'].transAxes )
-   # axDict[ 'indel' ].text( x=0.01, y=0.98, s = 'Indel Sub Errors%s' % suffix,
-   #                fontsize = 12, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.2, 0.2, 0.2 ),
-   #                transform=axDict[ 'indel' ].transAxes )
    
 def logLower( y ):
    """ find the approprate lower bound for y

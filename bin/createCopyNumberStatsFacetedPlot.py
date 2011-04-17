@@ -172,10 +172,11 @@ def drawData( axDict, sList, options, data ):
          if yMin > float( value(s, '%sLower'%ax) ): 
             yMin = float( value(s, '%sLower'%ax) )
       for i in xrange( 1, len( sList ) ):
-         if not i % 10:
+         if not i % 5:
             axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
-                                                 ydata=[ yMin, yMax ],
-                                                 color=lGray))
+                                                 ydata=[ yMin, yMax * 1.1 ],
+                                                 color=lGray,
+                                                 linestyle='dotted'))
       i=0
       for s in sList:
          i += 1
@@ -211,6 +212,14 @@ def drawData( axDict, sList, options, data ):
          axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
          axDict[ ax ].set_xticklabels( [] )
       axDict[ ax ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
+      # grid
+      mts = axDict[ax].yaxis.get_majorticklocs()
+      for m in mts:
+         axDict[ax].add_line( lines.Line2D( xdata=[ 1, len( sList ) ],
+                                            ydata=[ m, m ],
+                                            linewidth=1,
+                                            color=lGray,
+                                            linestyle='dotted'))
       #plt.ylabel( 'log proportion ' )
    
    axDict['sum'].set_title('Sum of Proportional Copy Errors')

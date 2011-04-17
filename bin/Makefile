@@ -582,7 +582,8 @@ ${rankingsDir}/structuralContigPathErrors.tab: ${binDir}/createContigPathStatsTa
 # base substitution errors rankings
 ${rankingsDir}/substitutionErrors.tab: ${binDir}/createSubStatsMegaPlot.py $(wildcard ${projectDir}/subStatsScaffolds/*)
 	mkdir -p $(dir $@)
-	${binDir}/createSubStatsMegaPlot.py --subStatsDir ${projectDir}/subStatsScaffolds/ --outputRanks > $@.tmp
+	${binDir}/createSubStatsMegaPlot.py --subStatsDir ${projectDir}/subStatsScaffolds/ --outputRanks | \
+		awk 'NR==1; NR>1 {printf "%s\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\t%.3e\n",$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9}' > $@.tmp
 	mv $@.tmp $@
 
 # copy number errors rankings
@@ -600,19 +601,19 @@ ${rankingsDir}/N50All.txt: ${binDir}/createN50StatsPlot.py $(wildcard ${projectD
 # NA50 rankings
 ${rankingsDir}/N50_NA50.tab: ${rankingsDir}/N50All.txt
 	mkdir -p $(dir $@)
-	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' $< > $@.tmp
+	awk -F='\t' '{print $$1,"\t",$$2}' $< | awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' > $@.tmp
 	mv $@.tmp $@
 
 # contig path N50 rankings
 ${rankingsDir}/N50_CPN50.tab: ${rankingsDir}/N50All.txt
 	mkdir -p $(dir $@)
-	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k3"}' $< > $@.tmp
+	awk -F='\t' '{print $$1,"\t",$$3}' $< | awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' > $@.tmp
 	mv $@.tmp $@
 
 # scaffold path N50 rankings
 ${rankingsDir}/N50_SPN50.tab: ${rankingsDir}/N50All.txt
 	mkdir -p $(dir $@)
-	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k4"}' $< > $@.tmp
+	awk -F='\t' '{print $$1,"\t",$$4}' $< | awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' > $@.tmp
 	mv $@.tmp $@
 
 # The top assembly from each team
@@ -625,7 +626,7 @@ ${rankingsDir}/subsetTeamTopEntry: ${binDir}/summarizeRankings.py ${rankingsFile
 # rankings table, all
 ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/tab2tex.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py ${rankingsDir}/*tab | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
+	${binDir}/summarizeRankings.py ${rankingsDir}/*tab --retainValues | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
 	 	sed '/^$$/d' | ${binDir}/tab2tex.py > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
@@ -635,7 +636,7 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 # rankings table, subset
 ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py ${binDir}/tab2tex.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py rankings/*tab | ${binDir}/summarizedRankingToTeamTop.py | \
+	${binDir}/summarizeRankings.py ${rankingsDir}/*tab --retainValues | ${binDir}/summarizedRankingToTeamTop.py | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | ${binDir}/tab2tex.py > \
 		${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \

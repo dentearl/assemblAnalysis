@@ -143,9 +143,10 @@ ID & Haplotype to haplotype, intra chromosomal & Haplotype to haplotype inter ch
 \\vspace{0.3in}'''
 
 def printRanks( assembliesList, options ):
-   print '#Assembly\tHap-Hap-sameChr\tHap-Hap-diffChr\tHap-Ins\tHap-Del\tHap-Ins&Del\tCtgEndsIns\tSumErr'
+   print '#Assembly\tSumErr\tHap-Hap-sameChr\tHap-Hap-diffChr\tHap-Ins\tHap-Del\tHap-Ins&Del\tCtgEndsIns'
    for row in assembliesList:
       sys.stdout.write( '%s' % ( row.ID ))
+      sys.stdout.write( '\t%s' % row.totalErrors )
       for v in [ 'totalErrorsHaplotypeToHaplotypeSameChromosome',
                  'totalErrorsHaplotypeToHaplotypeDifferentChromosome',
                  'totalErrorsHaplotypeToInsertion',
@@ -154,7 +155,7 @@ def printRanks( assembliesList, options ):
                  'totalErrorsContigEndsWithInsert' ]:
          sys.stdout.write( '\t%s' % ( row.valuesDict[v] ))
       #sys.stdout.write( ' & %s' % ( prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
-      sys.stdout.write( '\t%s\n' % row.totalErrors )
+      sys.stdout.write( '\n' )
 
 def calculateErrors( assembliesList, options ):
    for a in assembliesList:

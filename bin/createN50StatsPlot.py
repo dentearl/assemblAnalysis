@@ -115,13 +115,14 @@ def getIDs( assembliesList ):
    return v
 
 def drawData( assembliesList, maxesDict, axDict, options ):
-   
    for ax in axDict:
+      # partition
       for i in range(1, len( assembliesList )):
-         if not i % 10:
+         if not i % 5:
             axDict[ax].add_line( lines.Line2D( xdata=[ i-1, i-1 ],
-                                               ydata=[ 1, maxesDict[ ax ] ],
-                                               linewidth=0.5,
+                                               ydata=[ 1, maxesDict[ ax ]*1.6 ],
+                                               linewidth=1.0,
+                                               linestyle='dotted',
                                                color=(0.8, 0.8, 0.8) ))
       p1 = axDict[ax].plot( range( 0,len( assembliesList ) ), getVals( assembliesList, ax ), 
                             '.', color='#1f77b4', markersize=10.0)
@@ -152,7 +153,6 @@ def drawData( assembliesList, maxesDict, axDict, options ):
          axDict[ ax ].set_yscale( 'log' )
          axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.6, 
                                 maxesDict[ ax ] * 1.6] )
-         
       else:
          axDict[ax].set_xticks( range( 0, len( assembliesList ) ))
          axDict[ax].set_xticklabels( getIDs( assembliesList )  )
@@ -167,6 +167,14 @@ def drawData( assembliesList, maxesDict, axDict, options ):
          axDict[ax].xaxis.set_ticks_position('bottom')
          axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.9, 
                                 maxesDict[ ax ] * 1.05] )
+      # grid
+      mts = axDict[ax].yaxis.get_majorticklocs()
+      for m in mts:
+         axDict[ax].add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
+                                            ydata=[ m, m ],
+                                            linewidth=1,
+                                            color=(0.8, 0.8, 0.8),
+                                            linestyle='dotted'))
       axDict[ax].set_xlim( [ -0.5, len( assembliesList )] )
       if options.sortOn == ax:
          axDict[ax].set_title( options.labelDict[ ax ] + ' (sorted)' )

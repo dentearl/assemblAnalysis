@@ -8,15 +8,27 @@ import signal # deal with broken pipes
 
 signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
-class Team:
+class Assembly:
+   def __init__(self):
+      self.teamName = ''
+      self.name     = ''
+      self.ranks    = []
+      self.values   = []
+
+class Tab:
    def __init__(self):
       self.name  = ''
-      self.ranks = []
+      self.rank  = 0
+      self.value = -1.0
 
 def initOptions( parser ):
    parser.add_option( '--overall', dest='overall', default=False, action='store_true',
                       help=('Instead of ranking based on within Team, '
                             'ranks instead are global. default=%default'))
+   parser.add_option( '--retainValues', dest='retainValues', default=False,
+                      action='store_true',
+                      help=('Stores the second column of the tab and outputs the value in '
+                            'parenthesis following the ranking.'))
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
@@ -39,10 +51,14 @@ def readFiles( args, options ):
          if line.startswith('#'):
             continue
          rank += 1
+         a = Tab()
          d = line.split()
-         if d[0] not in assemblies:
-            assemblies[ d[0] ] = []
-         assemblies[ d[0] ].append( rank )
+         a.name  = d[0]
+         a.rank  = rank
+         a.value = d[1]
+         if a.name not in assemblies:
+            assemblies[ a.name ] = []
+         assemblies[ a.name ].append( a )
    return assemblies
 
 def printHeader( options ):
@@ -52,27 +68,40 @@ def printHeader( options ):
          name = os.path.basename( f )[:-4]
       else:
          name = os.path.basename( f )
+      if options.retainValues:
+         name += ' (value)'
       sys.stdout.write('\t%s' % name )
    sys.stdout.write('\n')
 
 def reportRank( assemblies, options ):
    printHeader( options )
    if options.overall:
-      ranked = sorted( assemblies, key=lambda x: sum( assemblies[x] ) )
+      overallDict = {}
+      for t in assemblies:
+         overallDict[t] = 0
+         for a in t:
+            overallDict[t] += a.rank
+      ranked = sorted( overallDict, key=lambda x: overallDict[x] )
       for r in ranked:
-         print '%s\t%d' % ( r, sum(assemblies[r]) )
+         print '%s\t%d' % ( r, overallDict[r] )
          for z in assemblies[r]:
-            sys.stdout.write('\t%d' % z )
+            if options.retainValue:
+               sys.stdout.write('\t%d (%s)' % (z.rank, z.value))
+            else:
+               sys.stdout.write('\t%d' % z.rank )
          sys.stdout.write('\n')
    else:
       teams = {}
       for a in assemblies:
          if a[0] not in teams:
             teams[ a[0] ] = []
-         t = Team()
-         t.name = a
-         t.ranks = assemblies[ a ]
-         teams[ a[0] ].append( t )
+         newAssemb = Assembly()
+         newAssemb.teamName = a[0]
+         newAssemb.name = a
+         for z in assemblies[ a ]:
+            newAssemb.ranks.append( z.rank )
+            newAssemb.values.append( z.value )
+         teams[ a[0] ].append( newAssemb )
       # sort alphabetically
       aemst = teams.keys()
       aemst.sort()
@@ -81,8 +110,11 @@ def reportRank( assemblies, options ):
          ranked = sorted( teams[ t ], key=lambda x: sum( x.ranks ))
          for r in ranked:
             sys.stdout.write( '%s\t%d' % ( r.name, sum( r.ranks ) ))
-            for z in r.ranks:
-               sys.stdout.write('\t%d' % z )
+            for j in xrange( 0, len(r.ranks)):
+               if options.retainValues:
+                  sys.stdout.write('\t%d (%s)' % (r.ranks[j], r.values[j] ))
+               else:
+                  sys.stdout.write('\t%d' % r.ranks[j] )
             sys.stdout.write('\n')
 
 def main():
