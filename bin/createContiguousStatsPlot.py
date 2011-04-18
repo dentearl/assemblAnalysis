@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-createLinkageStatsPlot.py
+createContiguousStatsPlot.py
 31 March 2011
 dent earl dearl (a) soe ucsc edu
 
 used in the assemblathon report project to
-create a plot from a single linkage
+create a plot from a single contiguous
 stats xml file.
 
 """
@@ -35,11 +35,11 @@ class Bucket:
 
 def initOptions( parser ):
    parser.add_option( '--title', dest='title',
-                      type='string', default='Cumulative Linkage Statistics',
+                      type='string', default='Cumulative Contiguous Statistics',
                       help='Title placed at the top of the plot. default=%default' )
    parser.add_option( '--legendElements', dest='legendElements',
                       type='string', help=('Specify the legend text. Comma separated list.'))
-   parser.add_option( '--out', dest='out', default='myLinkageStatsPlot',
+   parser.add_option( '--out', dest='out', default='myContiguousStatsPlot',
                       type='string',
                       help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outputRanks', dest='outputRanks', default=False,
@@ -58,7 +58,7 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
-      parser.error('Error, please specify at least one linkage file to inspect as a positional argument.\n' )
+      parser.error('Error, please specify at least one contiguous file to inspect as a positional argument.\n' )
    options.files = []
    for f in args:
       if not os.path.exists( f ):
@@ -158,7 +158,7 @@ def drawLegend( options, data ):
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
    else:
-      sys.stderr.write('Error, length of items in --legendElements not equal to number of linkage xml files.\n')
+      sys.stderr.write('Error, length of items in --legendElements not equal to number of contiguous xml files.\n')
       sys.exit( 1 )
    # data.axDict['main'].add_patch( patches.Rectangle( xy= ( 0.03, 0.0 ), width=0.05, 
    #                                                    height=0.5, color='r',
@@ -229,7 +229,7 @@ def rankFiles( options, data ):
 
 def main():
    usage = ( 'usage: %prog [options] file1.xml file2.xml\n\n'
-             '%prog takes in linkage path statistics file(s)\n'
+             '%prog takes in contiguous path statistics file(s)\n'
              'and creates an image file.' )
    data = Data()
    parser = OptionParser( usage=usage )
