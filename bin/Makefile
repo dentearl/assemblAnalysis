@@ -14,7 +14,7 @@ bacChrLength:= 4747819
 ####################
 tablesDir:=${resultsDir}/tables
 copyNumberPlotsDir:=${resultsDir}/copyNumberPlots
-contiguousPlotsDir:=${resultsDir}/contiguous
+contiguousPlotsDir:=${resultsDir}/contiguousPlots
 coverageSFDir:=${resultsDir}/coverageStackFillPlots
 hap1WPSDir:=${projectDir}/picklesMafsScaffoldHap1
 hap1WPCDir:=${projectDir}/picklesMafsContigHap1
@@ -458,17 +458,18 @@ ${resultsDir}/facets/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildc
 	mv ${resultsDir}/facets/n50statsFacetsTmp.pdf $@
 
 # contiguous individual plots
-${contiguousPlotsDir}/%.contiguousStats.pdf: ${projectDir}/contigousStatsScaffolds/%.contiguousStats.xml ${binDir}/createContiguousStatsPlot.py
-	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --title "$* Copy Number Statistics" --out ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf --outFormat pdf $<
-	mv ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf $@
+contiguousPlots: $(foreach f,$(wildcard ${projectDir}/contiguousStatsScaffolds/*.xml),$(join ${contiguousPlotsDir}/, $(subst xml,pdf,$(notdir $f)) ))
+
 # contiguous individual plots
-contiguousPlots: $(foreach f,$(wildcard ${projectDir}/contiguousStatsScaffolds/*.xml), $(join ${contiguousPlotsDir}/, $(subst xml,pdf, $(notdir $f)) ))
+${contiguousPlotsDir}/%.contiguousStats.pdf: ${projectDir}/contiguousStatsScaffolds/%.contiguousStats.xml ${binDir}/createContiguousStatsPlot.py
+	mkdir -p $(dir $@)
+	${binDir}/createContiguousStatsPlot.py --title "$* Contiguity Statistics" --out ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf --outFormat pdf $<
+	mv ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf $@
 
 # contiguous facet plot
 ${resultsDir}/facets/contiguousStatsFacets.pdf: ${binDir}/createContiguousStatsPlot.py $(wildcard ${projectDir}/contiguousStatsScaffolds/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/facets/contiguousStatsFacetsTmp --outFormat pdf --title 'Contiguous Statistics' ${projectDir}/contiguousStatsScaffolds/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
+	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/facets/contiguousStatsFacetsTmp --outFormat pdf --title 'Contiguity Statistics' ${projectDir}/contiguousStatsScaffolds/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
 	mv ${resultsDir}/facets/contiguousStatsFacetsTmp.pdf $@
 
 # copy number individual plots
