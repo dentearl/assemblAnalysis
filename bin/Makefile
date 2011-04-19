@@ -38,7 +38,7 @@ bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${b
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/contiguousStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${rankingsDir}/subsetTeamTopEntry
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/contiguousStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty
 	@echo Work Complete.
 
 clean:
@@ -531,16 +531,16 @@ ${rankingsDir}/coverageBac.txt: ${binDir}/extractPlotPickleCounts.py $(wildcard 
 ${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}/coverageHap2.txt ${rankingsDir}/coverageBac.txt
 	mkdir -p $(dir $@)
 	paste $^ > ${rankingsDir}/coverageTotal.txt
-	echo -e '#Assembly\tHap Total\tHap 1\tHap 2\tBac' > ${rankingsDir}/coverageTotalSummary.tab
-	cat ${rankingsDir}/coverageTotal.txt | awk '{printf "%s\t%f\t%f\t%f\t%f\n", $$1, (($$2+$$5)/224997313), $$2/112462352, $$5/112534961, $$8/4747819}' >> ${rankingsDir}/coverageTotalSummary.tab
-	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' ${rankingsDir}/coverageTotalSummary.tab | awk 'NR==1; NR>1 {printf "%s\t%.3f\t%.3f\t%.3f\t%.3f\n", $$1, $$2, $$3, $$4, $$5 }'  > $@.tmp
+	echo -e '#Assembly\tHap Total (%)\tHap 1 (%)\tHap 2 (%)\tBac (%)' > ${rankingsDir}/coverageTotalSummary.tab
+	cat ${rankingsDir}/coverageTotal.txt | awk '{printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\n", $$1, (($$2+$$5)/2249973.13), $$2/1124623.52, $$5/1125349.61, $$8/47478.19}' >> ${rankingsDir}/coverageTotalSummary.tab
+	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' ${rankingsDir}/coverageTotalSummary.tab | awk 'NR==1; NR>1 {printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\n", $$1, $$2, $$3, $$4, $$5 }'  > $@.tmp
 	rm ${rankingsDir}/coverageTotalSummary.tab
 	mv $@.tmp $@
 
 # coverage rankings table, all
 ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/tab2tex.py | \
+	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/tab2tex.py --columnTitleCharLimit 15 | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTmp.tex && latex coverageRankingTableTmp.tex \
 		latex coverageRankingTableTmp.tex && dvips -Ppdf coverageRankingTableTmp.dvi && \
@@ -550,7 +550,7 @@ ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir
 ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${binDir}/subsetTabs.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/subsetTabs.py --subsetFile \
-		${rankingsDir}/subsetTeamTopEntry | ${binDir}/tab2tex.py | \
+		${rankingsDir}/subsetTeamTopEntry | ${binDir}/tab2tex.py --columnTitleCharLimit 15 | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTeamsTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTeamsTmp.tex && latex coverageRankingTableTeamsTmp.tex \
 		latex coverageRankingTableTeamsTmp.tex && dvips -Ppdf coverageRankingTableTeamsTmp.dvi && \
