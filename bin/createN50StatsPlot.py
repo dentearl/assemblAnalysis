@@ -54,20 +54,20 @@ def checkOptions( options, parser ):
    dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
    for d in dirs:
       if not dirs[ d ]:
-         parser.error('Error, specify --%s\n' % d )
+         parser.error('specify --%s\n' % d )
       if not os.path.exists( dirs[ d ] ):
-         parser.error('Error, --%s %s does not exist!\n' % ( d, dirs[ d ] ))
+         parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error('Error, --%s %s is not a directory!\n' % (d, dirs[ d ]) )
+         parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
    if options.outputRanks:
       return
    allowedKeys = set(['contigNA50', 'scaffoldPathN50', 'haplotypePathN50', 'blockN50'])
    if options.sortOn not in allowedKeys:
-      parser.error('Error, --sortOn %s is not in the dict of allowed keys: %s' % 
+      parser.error('--sortOn %s is not in the dict of allowed keys: %s' % 
                    ( options.sortOn, allowedKeys ))
    labelList = options.labels.split(',')
    if len( labelList ) != 4:
-      parser.error('Error, --label needs to contain 4 items, comma separated.')
+      parser.error('--label needs to contain 4 items, comma separated.')
    k = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50',  'contigNA50']
    options.labelDict = dict( zip( k, labelList ))
 

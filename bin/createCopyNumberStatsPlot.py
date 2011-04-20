@@ -43,19 +43,19 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
-      parser.error('Error, please specify at least one linkage file to inspect as a positional argument.\n' )
+      parser.error('please specify at least one linkage file to inspect as a positional argument.\n' )
    options.files = []
    for f in args:
       if not os.path.exists( f ):
-         parser.error('Error, %s does not exist!\n' % ( f ))
+         parser.error('%s does not exist!\n' % ( f ))
       if not f.endswith('.xml'):
-         parser.error('Error, file "%s" does not end in ".xml".\n' % f )
+         parser.error('file "%s" does not end in ".xml".\n' % f )
       options.files.append( os.path.abspath( f ) )
    if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
         options.out.endswith('.eps') ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def initImage( options, data ):
    pdf = None
@@ -122,7 +122,7 @@ def readFiles( options ):
          c = storedCategories[ t ]
          acn = int( elm.attrib[ 'assemblyCopyNumber' ] )
          if acn in c.assemblyColumnCounts:
-            sys.stderr.write( 'Error, dupilicate assemblyCopyNumber= %d found in %s' % ( acn, f ))
+            sys.stderr.write( 'dupilicate assemblyCopyNumber= %d found in %s' % ( acn, f ))
             sys.exit( 1 )
          c.assemblyColumnCounts[ acn ] = int( elm.attrib[ 'columnCount' ] )
    return storedCategories

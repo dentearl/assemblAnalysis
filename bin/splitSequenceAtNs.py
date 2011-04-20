@@ -23,9 +23,9 @@ def initOptions( parser ):
 
 def checkOptions( options, parser ):
    if options.n == None:
-      parser.error( 'Error, specify --splitAt.\n' )
+      parser.error( 'specify --splitAt.\n' )
    if options.n < 1:
-      parser.error( 'Error, --splitAt must be greater than 0.\n' )
+      parser.error( '--splitAt must be greater than 0.\n' )
 
 def processStream( options ):
    register = 0

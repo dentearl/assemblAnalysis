@@ -38,22 +38,22 @@ def checkOptions( options, parser ):
             'type'   : ' [scaffold|contig]' }
    for o in opts:
       if not opts[ o ]:
-         parser.error('Error, specify --%s%s\n' % (o, xhelp[o] ))
+         parser.error('specify --%s%s\n' % (o, xhelp[o] ))
    dirs = { 'inDir'  : options.inDir }
    for d in dirs:
       if not os.path.exists( dirs[ d ] ):
-         parser.error('Error, --%s %s does not exist!\n' % ( d, dirs[ d ] ))
+         parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error('Error, --%s %s is not a directory!\n' % (d, dirs[ d ]) )
+         parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
    
    if options.type not in ( 'scaffold', 'contig' ):
-      parser.error('Error, --type must either be scaffold or contig, %s is not recognized.' % options.type )
+      parser.error('--type must either be scaffold or contig, %s is not recognized.' % options.type )
    
    regex = '([a-zA-Z]+)(\d+)'
    pat = re.compile(regex)
    m = re.match( pat, options.name )
    if not m:
-      parser.error('Error, unable to match --name=%s to regex "%s"' % (options.name, regex))
+      parser.error('unable to match --name=%s to regex "%s"' % (options.name, regex))
    if len(m.group(1)) > 1:
       sys.stderr.write('Warning, --name=%s has more than a 1 letter ID, legends, '
                        'tables, axis labels may all break in other scripts.\n' % m.group(1))
@@ -61,7 +61,7 @@ def checkOptions( options, parser ):
       sys.stderr.write('Warning, --name=%s is in total more than 3 characters long, '
                        'legends, tables, axis labels may all break in other scripts.\n' % options.name )
    if os.path.exists( options.outDir ) and not os.path.isdir( options.outDir ):
-      parser.error('Error, --outDir %s is not a directory!\n' % options.outDir )
+      parser.error('--outDir %s is not a directory!\n' % options.outDir )
 
 def verifyNameIsUnique( options ):
    pass
@@ -74,7 +74,7 @@ def populateDirectoryStructure( options ):
               'statsScaffoldsLinkage', 'statsScaffoldsSubstitions' ]:
       d = os.path.join( options.outDir, d )
       if os.path.exists( d ) and not os.path.isdir( d ):
-         sys.stderr.write('Error, %s exists but is not a directory!\n' % d )
+         sys.stderr.write('%s exists but is not a directory!\n' % d )
          sys.exit(1)
       if not os.path.exists( d ):
          os.makedirs( d )

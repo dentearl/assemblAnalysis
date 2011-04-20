@@ -67,7 +67,7 @@ def createMap( options ):
             continue
         if line[0] == '>':
             if line in faMap:
-                sys.stderr.write( 'Error, duplicate header found: %s.\n' % line )
+                sys.stderr.write( 'duplicate header found: %s.\n' % line )
                 sys.exit( 1 )
             faMap[ line ] = '>%s%s%06d' % ( prefix, options.label, num )
             num += 1
@@ -92,7 +92,7 @@ def translate( faMap, options ):
             if line in faMap:
                 print faMap[ line ]
             else:
-                sys.stderr.write( 'Error, unable to find header "%s" in map file "%s"\n' % 
+                sys.stderr.write( 'unable to find header "%s" in map file "%s"\n' % 
                                   ( line, options.map) )
                 sys.exit( 1 )
         else:

@@ -74,24 +74,24 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if not options.rankFile:
-      parser.error('Error, specify --rankFile\n')
+      parser.error('specify --rankFile\n')
    if not os.path.exists( options.rankFile ):
-      parser.error('Error, --rankFile %s does not exist!\n' % options.rankFile )
+      parser.error('--rankFile %s does not exist!\n' % options.rankFile )
    if not options.infoFile:
-      parser.error('Error, specify --infoFile\n')
+      parser.error('specify --infoFile\n')
    if not os.path.exists( options.infoFile ):
-      parser.error('Error, --infoFile %s does not exist!\n' % options.infoFile )
+      parser.error('--infoFile %s does not exist!\n' % options.infoFile )
    dirs = { 'imagesDir'   : options.imagesDir,
             'subStatsDir' : options.subStatsDir,
             'submissionStatsDir' : options.submissionStatsDir,
             'submissionLengthsDir' : options.submissionLengthsDir}
    for d in dirs:
       if not dirs[ d ]:
-         parser.error('Error, specify --%s\n' % d )
+         parser.error('specify --%s\n' % d )
       if not os.path.exists( dirs[ d ] ):
-         parser.error('Error, --%s %s does not exist!\n' % ( d, dirs[ d ] ))
+         parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error('Error, --%s %s is not a directory!\n' % (d, dirs[ d ]) )
+         parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
 
 def readInfoFile( options ):
    teamsDict = {}

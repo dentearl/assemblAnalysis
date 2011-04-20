@@ -58,13 +58,13 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
-      parser.error('Error, please specify at least one contiguous file to inspect as a positional argument.\n' )
+      parser.error('please specify at least one contiguous file to inspect as a positional argument.\n' )
    options.files = []
    for f in args:
       if not os.path.exists( f ):
-         parser.error('Error, %s does not exist!\n' % ( f ))
+         parser.error('%s does not exist!\n' % ( f ))
       if not f.endswith('.xml'):
-         parser.error('Error, file "%s" does not end in ".xml".\n' % f )
+         parser.error('file "%s" does not end in ".xml".\n' % f )
       options.files.append( os.path.abspath( f ) )
    if options.outputRanks:
       return
@@ -72,7 +72,7 @@ def checkOptions( args, options, parser ):
         options.out.endswith('.eps') ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if options.legendElements != None:
       options.legendElements = options.legendElements.split(',')
 
@@ -158,7 +158,7 @@ def drawLegend( options, data ):
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
    else:
-      sys.stderr.write('Error, length of items in --legendElements not equal to number of contiguous xml files.\n')
+      sys.stderr.write('length of items in --legendElements not equal to number of contiguous xml files.\n')
       sys.exit( 1 )
    # data.axDict['main'].add_patch( patches.Rectangle( xy= ( 0.03, 0.0 ), width=0.05, 
    #                                                    height=0.5, color='r',

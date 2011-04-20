@@ -7,6 +7,7 @@ binDir:=../../code/trunk/bin
 projectDir:=.
 resultsDir:=${projectDir}/publication
 fltpage:=/hive/users/dearl/assemblathon/latexSupplemental/trunk/fltpage.sty
+simulationStatsTab:=${projectsDir}/simulationTable.tab
 chrNames:= chr0,chr1,chr2
 hap1ChrLengths:= 76252953,18509915,17699484
 hap2ChrLengths:= 76285600,18539192,17710169
@@ -38,7 +39,7 @@ bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${b
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/contiguousStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/contiguousStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf
 	@echo Work Complete.
 
 clean:
@@ -651,3 +652,9 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
 
+${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
+	cat $< | ${binDir}/tab2tex.py | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
+	pushd ${tablesDir} && latex simulationSummaryTableWrapped.tex && latex simulationSummaryTableWrapped.tex \
+		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
+		ps2pdf simulationSummaryTableWrapped.ps && popd
+	mv ${tablesDir}/simulationSummaryTableWrapped.pdf $@

@@ -53,19 +53,19 @@ def initOptions( parser ):
    
 def checkOptions( options, parser ):
    if options.scaffoldsFile == None:
-      parser.error( 'Error, specify --scaffoldsFile.\n' )
+      parser.error( 'specify --scaffoldsFile.\n' )
    if not os.path.exists( options.scaffoldsFile ):
-      parser.error( 'Error, --scaffoldsFile %s does not exist.\n' % options.scaffoldsFile )
+      parser.error( '--scaffoldsFile %s does not exist.\n' % options.scaffoldsFile )
    if options.contigsFile == None:
-      parser.error( 'Error, specify --contigsFile.\n' )
+      parser.error( 'specify --contigsFile.\n' )
    if not os.path.exists( options.contigsFile ):
-      parser.error( 'Error, --contigsfile %s does not exist.\n' % options.contigsFile )
+      parser.error( '--contigsfile %s does not exist.\n' % options.contigsFile )
    if options.size == None:
-      parser.error('Error, specify --size\n')
+      parser.error('specify --size\n')
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if options.title == None:
-      parser.error('Error, specify --title.\n')
+      parser.error('specify --title.\n')
    if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
         options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]

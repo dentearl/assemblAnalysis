@@ -32,12 +32,12 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
-      parser.error('Error, no files in positional arguments. Input a filename.')
+      parser.error('no files in positional arguments. Input a filename.')
    for f in args:
       if not os.path.exists( f ):
-         parser.error('Error, file "%s" does not exist.\n' % f )
+         parser.error('file "%s" does not exist.\n' % f )
       if not f.endswith('.tab'):
-         parser.error('Error, file "%s" does not end in ".tab".\n' % f )
+         parser.error('file "%s" does not end in ".tab".\n' % f )
 
 def readFiles( args, options ):
    assemblies = {}

@@ -63,18 +63,18 @@ def initOptions( parser ):
 
 def checkOptions( options, parser ):
    if options.file == None:
-      parser.error( 'Error, specify --file.\n' )
+      parser.error( 'specify --file.\n' )
    if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
         options.out.endswith('.eps') ):
       options.out = options.out[:-4]
    if not os.path.exists( options.file ):
-      parser.error( 'Error, --file %s does not exist.\n' % options.file )
+      parser.error( '--file %s does not exist.\n' % options.file )
    options.file = os.path.abspath( options.file )
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    modes = set(['contigs', 'contamination', 'blocks', 'contigPaths', 'scaffPaths', 'scaffolds'])
    if options.mode not in modes:
-      parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
+      parser.error('you must specify one of the modes listed under --mode in --help.\n')
    if options.mode in set([ 'blocks', 'contigPaths', 'contigs', 'scaffPaths', 'scaffolds']):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
@@ -247,7 +247,7 @@ def prettyList( uglyList ):
 
 def vectorAddition( v1, v2 ):
    if len( v1 ) != len( v2 ):
-      sys.stderr.write( 'Error, lists are not the same length, cannot add %s to %s\n' % ( str(v1), str(v2) ))
+      sys.stderr.write( 'lists are not the same length, cannot add %s to %s\n' % ( str(v1), str(v2) ))
       sys.exit(1)
    r = []
    for i in range( 0, len(v1)):
@@ -276,7 +276,7 @@ def normalizeDataNormalMode( valuesDict, options, data ):
    # verify the columns all have the same sum
    for i in range(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
-         sys.stderr.write('Error, column sums do not equal one another, col 0 != col %d\n' % i)
+         sys.stderr.write('column sums do not equal one another, col 0 != col %d\n' % i)
          sys.exit( 1 )
    # create the OR categories where we collapse hap1/!hap2 and !hap1/hap2 into hap1ORhap2
    valuesDict[ 'hapA1ORhapA2/assembly' ] = vectorAddition( valuesDict['!hapA1/hapA2/assembly'], 
@@ -307,7 +307,7 @@ def normalizeDataContaminationMode( options, data ):
    # verify the columns all have the same sum
    for i in range(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
-         sys.stderr.write( 'Error, column sums do not equal one another, '
+         sys.stderr.write( 'column sums do not equal one another, '
                            'col 0 (%d) != col %d (%d)\n' % ( colSum[0], i, colSum[i] ))
          sys.exit( 1 )
    # normalize the data

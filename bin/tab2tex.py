@@ -11,10 +11,15 @@ def initOptions( parser ):
    parser.add_option( '--columnTitleCharLimit', dest='n',
                       type='int', default=9,
                       help='Limits each columns title to "n" characters. default=%default' )
+   parser.add_option( '--tableStyle', dest='tableStyle',
+                      default='FPtable', type='string',
+                      help=('This string is inserted in \\begin{ STYLE }. default=%default'))
 
 def checkOptions( options, parser ):
    if options.n < 0:
-      parser.error( 'Error, --columnTitleCharLimit must be >= 0, %d not allowed.\n' % options.n )
+      parser.error( '--columnTitleCharLimit must be >= 0, %d not allowed.\n' % options.n )
+   if options.tableStyle not in ('FPtable', 'table'):
+      parser.error('--tableStyle must be either FPtable or table, not %s' % options.tableStyle )
 
 def main():
    usage = ( 'usage: %prog [options] < fasta.fa\n\n'
@@ -28,10 +33,10 @@ def main():
    header = []
    print '''
 \\rowcolors{1}{tableShade}{white}
-\\begin{FPtable}
+\\begin{%s}
 \caption[A table.]{A table.}
 \\tiny
-\\centering'''
+\\centering''' % options.tableStyle
    hline = False
    for line in sys.stdin:
       line = line.strip()
@@ -56,9 +61,10 @@ def main():
             sys.stdout.write( ' \\\\\n\\hline\n\\hline\n' )
             continue
       data = line.split('\t')
-      sys.stdout.write( '%s' % data[0] )
+      sys.stdout.write( '%s' % data[0].replace('_', ' ') )
       for i in xrange( 1, len( data ) ):
-         sys.stdout.write(' & %s' % data[ i ])
+         d = data[ i ].replace('_', ' ')
+         sys.stdout.write(' & %s' % d )
          
       sys.stdout.write(' \\\\\n')
       if not (linenumber - 1) % 10:
@@ -70,9 +76,9 @@ def main():
       print '\\hline'
    print '''\\end{tabular}
 \\label{table:aTable}
-\\end{FPtable}\par
+\\end{%s}\par
 \\normalsize
-\\vspace{0.3in}'''   
+\\vspace{0.3in}''' % options.tableStyle
 
 if __name__ == '__main__':
    main()

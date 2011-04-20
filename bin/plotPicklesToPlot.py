@@ -124,21 +124,21 @@ def initOptions( parser ):
 
 def checkOptions( options, parser, data ):
    if options.ref == None:
-      parser.error( 'Error, specify --referenceGenome.\n' )
+      parser.error( 'specify --referenceGenome.\n' )
    dirs = { 'annotPickleDir' : options.annotDir,
             'mafPickleDir'   : options.mafDir }
    for d in dirs:
       if dirs[ d ] == None:
-         parser.error( 'Error, specify --%s.' % d)
+         parser.error( 'specify --%s.' % d)
       if not os.path.exists( dirs[ d ] ):
-         parser.error( 'Error, --%s %s does not exist.\n' % ( d, dirs[ d ]))
+         parser.error( '--%s %s does not exist.\n' % ( d, dirs[ d ]))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error( 'Error, --%s %s is not a directory.\n' % ( d, dirs[ d ] ))
+         parser.error( '--%s %s is not a directory.\n' % ( d, dirs[ d ] ))
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
       if opts[ a ] == None:
-         parser.error('Error, specify --%s.\n' % a )
+         parser.error('specify --%s.\n' % a )
    combos = [ { 'name':'stackFillBlocks',        'value':options.stackFillBlocks }, 
               { 'name':'stackFillContigPaths',   'value':options.stackFillContigPaths },
               { 'name':'stackFillContigs',       'value':options.stackFillContigs }, 
@@ -147,7 +147,7 @@ def checkOptions( options, parser, data ):
    for i in range(0, len(combos) - 1):
       for j in range(i+1, len(combos)):
          if combos[ i ]['value'] and combos[ j ][ 'value' ]:
-            parser.error('Error, specify either --%s or --%s not more than one.\n' %
+            parser.error('specify either --%s or --%s not more than one.\n' %
                          ( combos[ i ][ 'name' ], combos[ j ][ 'name' ] ))
 
    data.chrLengths = options.chrLengths.split(',')
@@ -155,13 +155,13 @@ def checkOptions( options, parser, data ):
    data.chrLabelsByChrom  = {}
    data.chrNames   = options.chrNames.split(',')
    if len( data.chrLengths ) != len( data.chrNames ):
-      parser.error('Error, number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
+      parser.error('number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
    if options.chrLabels == '':
       data.chrLabels = data.chrNames
    else:
       data.chrLabels = options.chrLabels.split(',')
    if len( data.chrNames ) != len( data.chrLabels ):
-      parser.error('Error, number of elemnts in --chrLabels not equal to number of elements in --chrNames.\n')
+      parser.error('number of elemnts in --chrLabels not equal to number of elements in --chrNames.\n')
    
    for i in range( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
@@ -169,7 +169,7 @@ def checkOptions( options, parser, data ):
       data.chrLabelsByChrom[ data.chrNames[ i ] ] = data.chrLabels[ i ]
 
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.' % options.dpi )
    data.genomeLength = 0
    for c in data.chrLengths:
       data.genomeLength += c
@@ -202,14 +202,14 @@ def checkOptions( options, parser, data ):
       annots = options.annotationOrder.split(',')
       for d in annots:
          if d not in options.annotColors:
-            parser.error('Error, %s is not a valid annotation' % a )
+            parser.error('%s is not a valid annotation' % a )
       data.annotationOrder = annots
    else:
       data.annotationOrder = [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'repeat' ]
    if options.annotationCeilings:
       ceilings = options.annotationCeilings.split(',')
       if len( ceilings ) != len( data.annotationOrder ):
-         parser.error('Error, length of --annotationCeilings (%d) is not equal to --annotationOrder (%d)' % ( len( ceilings ), len( data.annotationOrder )))
+         parser.error('length of --annotationCeilings (%d) is not equal to --annotationOrder (%d)' % ( len( ceilings ), len( data.annotationOrder )))
       data.annotationCeilings = []
       for ceiling in ceilings:
          data.annotationCeilings.append( int( ceiling ))
@@ -221,7 +221,7 @@ def checkOptions( options, parser, data ):
    
 def unpackData( filename, options, data ):
    if not os.path.exists( filename ):
-      sys.stderr.write( 'Error, %s does not exist.\n' % filename)
+      sys.stderr.write( '%s does not exist.\n' % filename)
       sys.exit( 1 )
    f = open( filename, 'rb' )
    d = cPickle.load( f )
@@ -244,7 +244,7 @@ def loadMafs( options, data ):
    for f in mafFiles:
       m = re.search( pat, f )
       if m == None:
-         sys.stderr.write('Error, unable to find genome name in filename %s using regex %s\n' % f, patStr )
+         sys.stderr.write('unable to find genome name in filename %s using regex %s\n' % f, patStr )
          sys.exit( 1 )
       name = m.group(1)
       if options.subsetFile:
@@ -510,10 +510,10 @@ def scaleFont( c, chrLen, genLen, axLen, options, data):
 def drawAnnotations( axDict, options, data ):
    for c in data.chrNames:
       if c not in data.annotWigDict:
-         sys.stderr.write('Error, unable to locate chromosome %s in annotWigDict!\n' % c )
+         sys.stderr.write('unable to locate chromosome %s in annotWigDict!\n' % c )
          sys.exit( 1 )
       if 'xAxis' not in data.annotWigDict[ c ]:
-         sys.stderr.write('Error, unable to locate xAxis in annotWigDict[ %s ]!\n' % c )
+         sys.stderr.write('unable to locate xAxis in annotWigDict[ %s ]!\n' % c )
          sys.exit( 1 )
       i = -1
       for a in data.annotationOrder:

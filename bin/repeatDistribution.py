@@ -18,9 +18,9 @@ def initOptions( parser ):
 
 def checkOptions( options, parser ):
    if options.char == None:
-      parser.error( 'Error, specify --char.\n' )
+      parser.error( 'specify --char.\n' )
    if len( options.char ) > 1:
-      parser.error( 'Error, --char should only be one character.\n')
+      parser.error( '--char should only be one character.\n')
    options.uChar = options.char.upper()
    options.lChar = options.char.lower()
 

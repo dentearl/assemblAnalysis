@@ -37,7 +37,7 @@ def checkOptions( parser, options ):
 
 def idLookup( faMap, options ):
    if options.id not in faMap:
-      sys.stderr.write( 'Error, cannot find %s in map file.\n' % options.id )
+      sys.stderr.write( 'cannot find %s in map file.\n' % options.id )
       sys.exit(1)
    print faMap[ options.id ]
 

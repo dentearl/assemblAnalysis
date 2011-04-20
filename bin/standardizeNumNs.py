@@ -39,11 +39,11 @@ def initOptions( parser ):
 
 def checkOptions( options, parser ):
    if options.n == None:
-      parser.error( 'Error, specify --expandAt.\n' )
+      parser.error( 'specify --expandAt.\n' )
    if options.n < 1:
-      parser.error( 'Error, --expandAt must be greater than 0.\n' )
+      parser.error( '--expandAt must be greater than 0.\n' )
    if options.n > 25:
-      parser.error( 'Error, --expandAt must be less than 26.\n' )
+      parser.error( '--expandAt must be less than 26.\n' )
 
 def myPrint( s, register, options ):
    if register == ( options.lineLength - 1 ):

@@ -59,13 +59,13 @@ def checkOptions( args, options, parser ):
    dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
    for d in dirs:
       if not dirs[ d ]:
-         parser.error('Error, specify --%s\n' % d )
+         parser.error('specify --%s\n' % d )
       if not os.path.exists( dirs[ d ] ):
-         parser.error('Error, --%s %s does not exist!\n' % ( d, dirs[ d ] ))
+         parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error('Error, --%s %s is not a directory!\n' % ( d, dirs[ d ]) )
+         parser.error('--%s %s is not a directory!\n' % ( d, dirs[ d ]) )
    if options.sortOn not in allowedKeys:
-      parser.error( 'Error, --sortOn %s is not in dict of allowed keys:\n %s.' % ( options.sortOn, allowedKeys ))
+      parser.error( '--sortOn %s is not in dict of allowed keys:\n %s.' % ( options.sortOn, allowedKeys ))
 
 def readDir( options ):
    aFiles = glob.glob( os.path.join( options.contigPathStatsDir, '*.contigPathStats.xml'))
@@ -169,7 +169,7 @@ def calculateErrors( assembliesList, options ):
                    'totalErrorsContigEndsWithInsert' ]:
          a.totalErrors += a.valuesDict[ elm ]
       if a.totalErrors != a.valuesDict[ 'totalErrors' ]:
-         sys.stderr.write('Error, calculated sum of total errors not equal to value from xml! %s\n' % a.ID )
+         sys.stderr.write('calculated sum of total errors not equal to value from xml! %s\n' % a.ID )
 
 def performSort( assembliesList, options ):
    if options.sortOn == 'totalErrors':

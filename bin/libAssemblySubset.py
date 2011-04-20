@@ -26,7 +26,7 @@ def checkOptions( options, parser ):
    if options.subsetFile == None:
       return
    if not os.path.exists( options.subsetFile ):
-      parser.error('Error, %s does not exist!\n' % ( options.subsetFile ))
+      parser.error('%s does not exist!\n' % ( options.subsetFile ))
    f = open( options.subsetFile, 'r' )
    for line in f:
       line = line.strip()

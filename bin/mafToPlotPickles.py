@@ -61,33 +61,33 @@ def initOptions( parser ):
 
 def checkOptions( options, parser, data ):
    if options.maf == None:
-      parser.error( 'Error, specify --maf.\n' )
+      parser.error( 'specify --maf.\n' )
    if not os.path.exists( options.maf ):
-      parser.error( 'Error, --maf %s does not exist.\n' % options.maf )
+      parser.error( '--maf %s does not exist.\n' % options.maf )
    if options.outDir == None:
       options.outDir = os.getcwd()
    if not os.path.exists( options.outDir ):
-      parser.error( 'Error, --outDir %s does not exist.\n' % options.outDir )
+      parser.error( '--outDir %s does not exist.\n' % options.outDir )
    if not os.path.isdir( options.outDir ):
-      parser.error( 'Error, --outDir %s is not a directory.\n' % options.outDir )
+      parser.error( '--outDir %s is not a directory.\n' % options.outDir )
    if options.ref == None:
-      parser.error( 'Error, specify --referenceGenome.\n' )
+      parser.error( 'specify --referenceGenome.\n' )
    if options.other == None:
-      parser.error( 'Error, specify --comparisonGenome.\n' )
+      parser.error( 'specify --comparisonGenome.\n' )
    data.genomesDict = { options.ref   : True,
                         options.other : True }
    if options.numBins < 1:
-      parser.error('Error, number of bins (%d) must be >= 1.' % options.numBins )
+      parser.error('number of bins (%d) must be >= 1.' % options.numBins )
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
       if opts[ a ] == None:
-         parser.error('Error, specify --%s.\n' % a )
+         parser.error('specify --%s.\n' % a )
    data.chrNames   = options.chrNames.split(',')
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    if len( data.chrLengths ) != len( data.chrNames ):
-      parser.error('Error, number of elemnts in --chrLengths not equal to '
+      parser.error('number of elemnts in --chrLengths not equal to '
                    'number of elements in --chrNames.\n')
    for i in xrange( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
@@ -96,7 +96,7 @@ def checkOptions( options, parser, data ):
    for c in data.chrLengths:
       data.genomeLength += c
    if options.numBins > data.genomeLength:
-      parser.error('Error, number of bins (%d) must be '
+      parser.error('number of bins (%d) must be '
                    '< length of genome (%d).' % ( options.numBins, data.genomeLength ))
 
 def packData( options, data, prot='py23Bin' ):
@@ -140,7 +140,7 @@ def extractMafLine( line, order, pat, options, data ):
    ml.totalLength = int( m.group( 6 ) )
    if ml.genome == options.ref:
       if ml.totalLength != data.chrLengthsByChrom[ ml.chr ]:
-         sys.stderr.write( 'Error, file %s: maf block on chromosome "%s" has sequence length (%d) '
+         sys.stderr.write( 'file %s: maf block on chromosome "%s" has sequence length (%d) '
                            'that does not equal the corresponding input from --chrLengths (%d). '
                            'Line below:\n%s\n' % ( options.maf, ml.chr, ml.totalLength,
                                                    data.chrLengthsByChrom[ ml.chr ], line ))
@@ -148,7 +148,7 @@ def extractMafLine( line, order, pat, options, data ):
    ml.sequence = m.group( 7 )
    for b in ml.sequence:
       if b == '-':
-         sys.stderr.write( 'Error, file %s: maf line contains \'-\' character. Mafs are assumed '
+         sys.stderr.write( 'file %s: maf line contains \'-\' character. Mafs are assumed '
                            'to be gapless. Bad line:\n%s\n' % ( options.maf, line ) )
          sys.exit( 1 )
    return ( ml, order )
@@ -192,23 +192,23 @@ def createMafBlockFromPair( iLine, jLine, hplList, options, data ):
          mb.hplEnd     = hplList[ jLine.order ][ 'hThree' ]
          mb.spl        = hplList[ jLine.order ][ 'spl' ]
       else:
-         sys.stderr.write( 'Error, creating mafBlock but jLine.order (%d) is '
+         sys.stderr.write( 'creating mafBlock but jLine.order (%d) is '
                            'greating than the length of the hpl list (%d))\n' % ( jLine.order, len( hplList ) ))
          sys.exit(1)
    if mb.refEnd > mb.refTotalLength:
-      sys.stderr.write( 'Error, creating mafBlock but reference end is greater than total length! %d > %d %s\n' 
+      sys.stderr.write( 'creating mafBlock but reference end is greater than total length! %d > %d %s\n' 
                         % ( mb.refEnd, mb.refTotalLength, mb.refChr ))
       sys.exit(1)
    if mb.refStart > mb.refTotalLength:
-      sys.stderr.write( 'Error, creating mafBlock but reference start is greater than total length! %d > %d %s\n' 
+      sys.stderr.write( 'creating mafBlock but reference start is greater than total length! %d > %d %s\n' 
                         % ( mb.refStart, mb.refTotalLength, mb.refChr ))
       sys.exit(1)
    if mb.pairEnd > mb.pairTotalLength:
-      sys.stderr.write( 'Error, creating mafBlock but pair end is greater than total length! %d > %d %s\n' 
+      sys.stderr.write( 'creating mafBlock but pair end is greater than total length! %d > %d %s\n' 
                         % ( mb.pairEnd, mb.pairTotalLength, mb.pairChr ))
       sys.exit(1)
    if mb.pairStart > mb.pairTotalLength:
-      sys.stderr.write( 'Error, creating mafBlock but pair start is greater than total length! %d > %d %s\n' 
+      sys.stderr.write( 'creating mafBlock but pair start is greater than total length! %d > %d %s\n' 
                         % ( mb.pairStart, mb.pairTotalLength, mb.pairChr ))
       sys.exit(1)
    data.mafBlocksByChrom[ mb.refChr ].append( mb )
@@ -259,7 +259,7 @@ def readMaf( options, data ):
          line = line.strip()
          ( ml, order ) = extractMafLine( line, order, pat, options, data )
          if ml == None:
-            sys.stderr.write( 'Error, regexp fail on file %s line: \'%s\'\n'
+            sys.stderr.write( 'regexp fail on file %s line: \'%s\'\n'
                               'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
             sys.exit( 1 )
          if ml == 'notOurGenome':
@@ -331,7 +331,7 @@ def switchToPositiveStrandCoordinates( options, data ):
             m.hplStart, m.hplEnd = m.hplStart, m.hplEnd # this is now left-right draw order
          # sanity check
          if m.refStart > data.chrLengthsByChrom[ c ] or m.refEnd > data.chrLengthsByChrom[ c ]:
-            sys.stderr.write( 'Error, file %s has maf block on chr %s with '
+            sys.stderr.write( 'file %s has maf block on chr %s with '
                               'bounds [%d - %d] which are beyond featLen (%d)\n' %
                               ( options.maf, m.refChr, m.refStart, m.refEnd, data.chrLengthsByChrom[ c ] ))
             sys.exit( 1 )
@@ -400,7 +400,7 @@ def verifyStacks( options, data ):
          for i in xrange( 0, len( tests[t] ) - 1):
             if sum( data.mafWigDict[ c ][ tests[t][ i ]] < 
                     data.mafWigDict[ c ][ tests[t][ i + 1]] ):
-               sys.stderr.write('Error, stack validation failed on file:%s '
+               sys.stderr.write('stack validation failed on file:%s '
                                 'chr:%s %s %s > %s !\n' 
                                 % ( options.maf, c, tests[ t ][ i + 1 ], tests[ t ][ i ] ))
                sys.exit( 1 )
@@ -419,7 +419,7 @@ def verifyElements( options, data ):
                  'mafSpl1e3', 'mafSpl1e4', 'mafSpl1e5', 
                  'mafSpl1e6', 'mafSpl1e7' ]:
          if sum( data.mafWigDict[ c ][ t ] > 1.0 ) > 0:
-            sys.stderr.write('Error, element validation failed on file:%s '
+            sys.stderr.write('element validation failed on file:%s '
                              'chr:%s type:%s contains values '
                              'greater than 1.0\n' % ( options.maf, c, t ))
             sys.exit( 1 )
@@ -438,7 +438,7 @@ def verifyDistinct( options, data ):
       for mb in d:
          for i in xrange( mb.refStart, mb.refEnd + 1):
             if i in s:
-               sys.stderr.write('Error, duplicate base found! %s %d [%d-%d], %s [%d-%d]\n'
+               sys.stderr.write('duplicate base found! %s %d [%d-%d], %s [%d-%d]\n'
                                 % (mb.refChr, i, mb.refStart, mb.refEnd, 
                                    mb.pairChr, mb.pairStart, mb.pairEnd ))
                sys.exit( 1 )
@@ -461,13 +461,13 @@ def verifyLengths( options, data ):
              'mafCpEdgeCount', 'mafCpErrorCount', 
              'mafCpScafGapCount', 'blockEdgeCount' ]
    if ( len( data.chrNames ) ) != len( data.mafWigDict ): 
-      sys.stderr.write('Error, the expected length of the data wig '
+      sys.stderr.write('the expected length of the data wig '
                        'dictionary is %d (i.e. number of chromosomes), but actual is %d\n' 
                        % ( len( data.chrNames ), len( data.mafWigDict )))
       sys.exit( 1 )
    for c in data.chrNames:
       if ( len( types ) + 5 ) != len( data.mafWigDict[c] ): # extra 5 are from the *Max records
-         sys.stderr.write('Error, the expected length of the data wig '
+         sys.stderr.write('the expected length of the data wig '
                           'dictionary for %s is %d, but actual is %d\n' 
                           % ( c, len( types ) + 5, len( data.mafWigDict[c] )))
          sys.stderr.write( '%s\n' % str( data.mafWigDict[ c ].keys() ))
@@ -476,7 +476,7 @@ def verifyLengths( options, data ):
    for c in data.chrNames:
       for i in xrange(0, len( types ) - 1):
          if len( data.mafWigDict[c][ types[i] ] ) != len( data.mafWigDict[c][ types[i+1] ]):
-            sys.stderr.write('Error, the lengths of all vectors must the '
+            sys.stderr.write('the lengths of all vectors must the '
                              'same for a given chromosome. %s, %s (%d) != %s (%d)\n' 
                              % ( c, types[i], len(data.mafWigDict[c][types[i]]), 
                                  types[i+1], len(data.mafWigDict[c][types[i+1]]) ))

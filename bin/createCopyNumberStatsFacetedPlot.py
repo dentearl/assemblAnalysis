@@ -61,19 +61,19 @@ def initOptions( parser ):
 
 def checkOptions( args, options, parser ):
    if len( args ) > 0:
-      parser.error('Error, unanticipated arguments: %s.\n' % args )
+      parser.error('unanticipated arguments: %s.\n' % args )
    if options.dir == None:
-      parser.error( 'Error, specify --dir\n' )
+      parser.error( 'specify --dir\n' )
    if not os.path.exists( options.dir ):
-      parser.error('Error, --dir %s does not exist!\n' % ( options.dir ))
+      parser.error('--dir %s does not exist!\n' % ( options.dir ))
    if not os.path.isdir( options.dir ):
-      parser.error('Error, --dir %s is not a directory!\n' % ( options.dir ))
+      parser.error('--dir %s is not a directory!\n' % ( options.dir ))
    options.dir = os.path.abspath( options.dir )
    if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
         options.out.endswith('.eps') ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def initImage( options, data ):
    pdf = None

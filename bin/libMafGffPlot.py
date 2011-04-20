@@ -89,7 +89,7 @@ def newMafWigDict( numBins ):
     import numpy
     import sys
     if numBins < 1:
-        sys.stderr.write('Error, libMafGffPlot.py, numBins=%s is less than one\n' % str(numBins))
+        sys.stderr.write('libMafGffPlot.py, numBins=%s is less than one\n' % str(numBins))
         sys.exit( 1 )
     return { 'maf'       : numpy.zeros( shape = ( numBins )),
              'maf1e2'    : numpy.zeros( shape = ( numBins )),
@@ -158,7 +158,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
                 continue
             # verify input
             if a.start > featLen or a.end > featLen:
-                sys.stderr.write( 'libMafGffPlot.py: Error, file %s has annotation on chr %s '
+                sys.stderr.write( 'libMafGffPlot.py: file %s has annotation on chr %s '
                                   'with bounds [%d - %d] which are beyond featLen (%d)\n' %
                                   ( filename, a.chr, a.start, a.end, featLen ))
                 sys.exit( 1 )
@@ -323,7 +323,7 @@ def objListUtility_addBlockEdges( data, mb, featLen, numBins ):
         if p < 0:
             sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position, %d, is less than 0\n' % p )
         elif p >= len( data['blockEdgeCount'] ):
-            sys.stderr.write('Error, a position, %d, is greater than or '
+            sys.stderr.write('a position, %d, is greater than or '
                              'equal to len(data[\'blockEdgeCount\']) %d [%d-%d]\n' 
                              % (p, len(data['blockEdgeCount']), mb.refStart, mb.refEnd))
         data['blockEdgeCount'][ p ] += 1.0

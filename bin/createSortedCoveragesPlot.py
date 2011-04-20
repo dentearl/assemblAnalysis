@@ -51,7 +51,7 @@ def checkOptions( options, parser ):
         options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than '
+      parser.error('I refuse to have a dpi less than '
                    'screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def initImage( options, data ):

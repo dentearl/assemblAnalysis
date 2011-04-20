@@ -56,16 +56,16 @@ def checkOptions( args, options, parser, data ):
          print k
       sys.exit( 0 )
    if options.key == '':
-      parser.error('Error, please specify --key\n')
+      parser.error('please specify --key\n')
    if options.key not in allowedKeys:
-      parser.error('Error, please specify --key from one of the %s\n' % allowedKeys )
+      parser.error('please specify --key from one of the %s\n' % allowedKeys )
    if len( args ) < 1:
-      parser.error('Error, please specify at least one pickle to inspect as a positional argument.\n' )
+      parser.error('please specify at least one pickle to inspect as a positional argument.\n' )
    for f in args:
       if not os.path.exists( f ):
-         parser.error('Error, file "%s" does not exist.\n' % f )
+         parser.error('file "%s" does not exist.\n' % f )
       if not f.endswith('.pickle'):
-         parser.error('Error, file "%s" does not end in ".pickle".\n' % f )
+         parser.error('file "%s" does not end in ".pickle".\n' % f )
    if options.printChroms:
       for f in args:
          d = unpackData( f, options, {} )
@@ -80,7 +80,7 @@ def checkOptions( args, options, parser, data ):
          d = unpackData( f, options, {} )
          for c in options.chrSet:
             if c not in d:
-               sys.stderr.write('Error, chromosome %s is not present in %s\n' % ( c, f ))
+               sys.stderr.write('chromosome %s is not present in %s\n' % ( c, f ))
    else:
       options.chrSet = set()
       for f in args:
@@ -99,14 +99,14 @@ def printData( valuesDict, options, data ):
          for i in range( 0, len( valuesDict[c][ options.key ]) ):
             print valuesDict[c][ options.key ][i]
       else:
-         sys.stderr.write( 'Error, unexpected object type '
+         sys.stderr.write( 'unexpected object type '
                            'for valuesDict[ %s ][ %s ]: %s\n' % ( c, options.key, 
                                                                   valuesDict[c][ options.key ].__class__ ))
          sys.exit( 1 )
 
 def unpackData( filename, options, data ):
    if not os.path.exists( filename ):
-      sys.stderr.write( 'Error, %s does not exist.\n' % filename)
+      sys.stderr.write( '%s does not exist.\n' % filename)
       sys.exit( 1 )
    f = open( filename, 'rb' )
    d = cPickle.load( f )
@@ -115,10 +115,10 @@ def unpackData( filename, options, data ):
 
 def checkKey( key, chr, dictionary ):
    if chr not in dictionary:
-      sys.stderr.write( 'Error, chromosome %s not in this dictionary.\n' % chr )
+      sys.stderr.write( 'chromosome %s not in this dictionary.\n' % chr )
       sys.exit( 1 )
    if key not in dictionary[ chr ]:
-      sys.stderr.write( 'Error, key %s not in this dictionary for chr %s.\n' % ( key, chr ))
+      sys.stderr.write( 'key %s not in this dictionary for chr %s.\n' % ( key, chr ))
       sys.exit( 1 )
 
 def verify( valuesDict, options, data ):
@@ -129,9 +129,9 @@ def verify( valuesDict, options, data ):
          pass
       elif isinstance( valuesDict[c][ options.key ], numpy.ndarray ):
          if sum( valuesDict[c][ options.key ] > 1.0 ) > 0:
-            sys.stderr.write('Error, elements greater than 1.0 detected.\n')
+            sys.stderr.write('elements greater than 1.0 detected.\n')
       else:
-         sys.stderr.write( 'Error, unexpected object type '
+         sys.stderr.write( 'unexpected object type '
                            'for valuesDict[ %s ][ %s ]: %s\n' % ( options.key, c,
                                                                   valuesDict[c][ options.key ].__class__ ))
       sys.exit( 1 )

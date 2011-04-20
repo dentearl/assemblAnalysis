@@ -52,31 +52,31 @@ def initOptions( parser ):
 
 def checkOptions( options, parser, data ):
    if options.gff == None:
-      parser.error( 'Error, specify --gff.\n' )
+      parser.error( 'specify --gff.\n' )
    if not os.path.exists( options.gff ):
-      parser.error( 'Error, --gff %s does not exist.\n' % options.gff )
+      parser.error( '--gff %s does not exist.\n' % options.gff )
    if options.outDir == None:
       options.outDir = os.getcwd()
    if not os.path.exists( options.outDir ):
-      parser.error( 'Error, --outDir %s does not exist.\n' % options.outDir )
+      parser.error( '--outDir %s does not exist.\n' % options.outDir )
    if not os.path.isdir( options.outDir ):
-      parser.error( 'Error, --outDir %s is not a directory.\n' % options.outDir )
+      parser.error( '--outDir %s is not a directory.\n' % options.outDir )
    if options.prefix != None:
       options.prefix = options.prefix + '.'
    else:
       options.prefix = ''
    if options.numBins < 1:
-      parser.error('Error, number of bins (%d) must be >= 1.' % options.numBins )
+      parser.error('number of bins (%d) must be >= 1.' % options.numBins )
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
       if opts[ a ] == None:
-         parser.error('Error, specify --%s.\n' % a )
+         parser.error('specify --%s.\n' % a )
    data.chrNames   = options.chrNames.split(',')
    data.chrLengths = options.chrLengths.split(',')
    data.chrLengthsByChrom = {}
    if len( data.chrLengths ) != len( data.chrNames ):
-      parser.error('Error, number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
+      parser.error('number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
    for i in range( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
@@ -84,7 +84,7 @@ def checkOptions( options, parser, data ):
    for c in data.chrLengths:
       data.genomeLength += c
    if options.numBins > data.genomeLength:
-      parser.error('Error, number of bins (%d) must be < length of genome (%d).' % ( options.numBins, data.genomeLength ))
+      parser.error('number of bins (%d) must be < length of genome (%d).' % ( options.numBins, data.genomeLength ))
 
 def packData( options, data, prot='py23Bin' ):
    """ prot refers to the protocol to use.

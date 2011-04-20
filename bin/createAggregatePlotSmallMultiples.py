@@ -62,21 +62,21 @@ def initOptions( parser ):
 
 def checkOptions( options, parser ):
    if options.dir == None:
-      parser.error( 'Error, specify --dir.\n' )
+      parser.error( 'specify --dir.\n' )
    if not os.path.exists( options.dir ):
-      parser.error( 'Error, --dir %s does not exist.\n' % options.dir )
+      parser.error( '--dir %s does not exist.\n' % options.dir )
    if not os.path.isdir( options.dir ):
-      parser.error( 'Error, --dir %s is not a directory.\n' % options.dir )
+      parser.error( '--dir %s is not a directory.\n' % options.dir )
    options.dir = os.path.abspath( options.dir )
    if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
         options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
         options.mode != 'blocks' and options.mode != 'contigPaths' and 
         options.mode != 'scaffPaths' ):
-      parser.error('Error, you must specify one of the modes listed under --mode in --help.\n')
+      parser.error('you must specify one of the modes listed under --mode in --help.\n')
    if ( options.mode == 'blocks' or options.mode == 'contigPaths' or options.mode == 'contigs' or
         options.mode == 'scaffPaths' ):
       options.topBotOrder = [ 'hapA1/hapA2/!assembly', 'hapA1ORhapA2/!assembly',
@@ -97,7 +97,7 @@ def readFiles( options, data ):
    fileType = options.mode
    matches = glob.glob( os.path.join( options.dir, '*.' + fileType + '.*'))
    if len( matches ) < 1:
-      sys.stderr.write( 'Error, unable to locate any %s files in %s' % ( options.mode, options.dir ))
+      sys.stderr.write( 'unable to locate any %s files in %s' % ( options.mode, options.dir ))
       sys.exit( 1 )
    data.recordsDict = {} # keyed by assemblyID
    regEx = '([A-Z]\d{1,2})\.' + fileType + '.*'

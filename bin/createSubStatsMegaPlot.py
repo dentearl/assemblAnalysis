@@ -64,16 +64,16 @@ def checkOptions( options, parser ):
    dirs = { 'subStatsDir' : options.subStatsDir }
    for d in dirs:
       if not dirs[ d ]:
-         parser.error('Error, specify --%s\n' % d )
+         parser.error('specify --%s\n' % d )
       if not os.path.exists( dirs[ d ] ):
-         parser.error('Error, --%s %s does not exist!\n' % ( d, dirs[ d ] ))
+         parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
-         parser.error('Error, --%s %s is not a directory!\n' % (d, dirs[ d ]) )
+         parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
    if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
         options.out[-4:] == '.eps' ):
       options.out = options.out[:-4]
    if options.dpi < 72:
-      parser.error('Error, I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def readSubStatsDir( assembliesDict, options ):
    lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.txt') )
@@ -84,7 +84,7 @@ def readSubStatsDir( assembliesDict, options ):
    for l in lowerStatsFiles:
       m = re.match( namepat, os.path.basename( l ))
       if not m:
-         sys.stderr.write('Error, unable to match regex "%s" against filename "%s"' % ( namereg, l ))
+         sys.stderr.write('unable to match regex "%s" against filename "%s"' % ( namereg, l ))
          sys.exit( 1 )
       ID = m.group( 1 )
       if options.subsetFile:
@@ -101,14 +101,14 @@ def readSubStatsDir( assembliesDict, options ):
    for u in upperStatsFiles:
       m = re.match( namepat, os.path.basename( u ))
       if not m:
-         sys.stderr.write('Error, unable to match regex "%s" against filename "%s"' % ( namepat, u ))
+         sys.stderr.write('unable to match regex "%s" against filename "%s"' % ( namepat, u ))
          sys.exit( 1 )
       ID = m.group( 1 )
       if options.subsetFile:
          if ID not in options.assemblySubset:
             continue
       if ID not in assembliesDict:
-         sys.stderr.write('Error, unable to locate key %s in assembliesDict.\n')
+         sys.stderr.write('unable to locate key %s in assembliesDict.\n')
          sys.exit( 1 )
       f = open( u, 'r' )
       for line in f:
@@ -219,7 +219,7 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    #if not options.normalize:
    axDict[ 'all' ].set_yscale('log')
    if yMin > yMax:
-      sys.stderr.write( 'Error, yMin > yMax: %f > %f\n' % ( yMin, yMax ))
+      sys.stderr.write( 'yMin > yMax: %f > %f\n' % ( yMin, yMax ))
       sys.exit( 1 )
    axDict[ 'all' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
    axDict[ 'all' ].set_xlim( 0, len(xNames) + 1 )
