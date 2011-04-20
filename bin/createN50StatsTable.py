@@ -67,8 +67,8 @@ def calculateMaxesDict( assembliesList ):
                  'blockN50':0 }
    for a in assembliesList:
       for m in maxesDict:
-         if maxesDict[ m ] < a.valuesDict [ m ]:
-            maxesDict[ m ] = a.valuesDict [ m ]
+         if maxesDict[ m ] < a.valuesDict[ m ]:
+            maxesDict[ m ] = a.valuesDict[ m ]
    return maxesDict
 
 def calculateMinError( assembliesList ):

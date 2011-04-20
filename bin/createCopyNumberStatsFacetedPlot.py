@@ -117,7 +117,7 @@ def establishAxes( fig, options, data ):
       #plt.box( on=False )
    for ax in axDict:
       for loc, spine in axDict[ ax ].spines.iteritems():
-         if loc in ['left','bottom', 'right']:
+         if loc in ['left', 'bottom']:
             spine.set_position(('outward',10)) # outward by 10 points
          elif loc in ['right','top']:
             spine.set_color('none') # don't draw spine               
@@ -171,7 +171,7 @@ def drawData( axDict, sList, options, data ):
             yMax = float( value(s, '%sUpper'%ax) )
          if yMin > float( value(s, '%sLower'%ax) ): 
             yMin = float( value(s, '%sLower'%ax) )
-      for i in xrange( 1, len( sList ) ):
+      for i in xrange( 1, len( sList ) + 1 ):
          if not i % 5:
             axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
                                                  ydata=[ yMin, yMax * 1.1 ],

@@ -40,7 +40,8 @@ def initOptions( parser ):
                       type='string',
                       help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
    parser.add_option('--labels', dest='labels',
-                     type='string', default=( 'Block N50,Contig Path N50,Scaffold Path N50,Contig NA50'),
+                     type='string',
+                     default=( 'Block N50,Contig Path N50,Scaffold Path N50,Contig NA50, N50 Statistics'),
                      help=('Lables of the facets, comma separated, from top '
                            'to bottom: default=%default'))
    parser.add_option( '--sortOn', dest='sortOn',
@@ -66,9 +67,9 @@ def checkOptions( options, parser ):
       parser.error('--sortOn %s is not in the dict of allowed keys: %s' % 
                    ( options.sortOn, allowedKeys ))
    labelList = options.labels.split(',')
-   if len( labelList ) != 4:
-      parser.error('--label needs to contain 4 items, comma separated.')
-   k = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50',  'contigNA50']
+   if len( labelList ) != 5:
+      parser.error('--label needs to contain 5 items, comma separated.')
+   k = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50',  'contigNA50', 'main']
    options.labelDict = dict( zip( k, labelList ))
 
 def initImage( options, data ):
@@ -95,11 +96,8 @@ def establishAxis( fig, options, data ):
    indvHeight = ( options.axHeight - (len( columns) - 1.0) * options.margin ) / float( len( columns ))
    prevY = options.axTop
    i = -1
-   for n in columns:
-      i += 1
-      axDict[ n ] = fig.add_axes( [options.axLeft, prevY - indvHeight,
-                                   options.axWidth, indvHeight ] )
-      prevY = ( prevY - indvHeight ) - options.margin
+   axDict['main'] = fig.add_axes( [options.axLeft, options.axBottom,
+                                   options.axWidth, options.axHeight ] )
    return axDict
 
 def getVals( assembliesList, key ):
@@ -114,72 +112,81 @@ def getIDs( assembliesList ):
       v.append( a.ID )
    return v
 
-def drawData( assembliesList, maxesDict, axDict, options ):
-   for ax in axDict:
-      # partition
-      for i in range(1, len( assembliesList )):
-         if not i % 5:
-            axDict[ax].add_line( lines.Line2D( xdata=[ i-1, i-1 ],
-                                               ydata=[ 1, maxesDict[ ax ]*1.6 ],
-                                               linewidth=1.0,
-                                               linestyle='dotted',
-                                               color=(0.8, 0.8, 0.8) ))
-      p1 = axDict[ax].plot( range( 0,len( assembliesList ) ), getVals( assembliesList, ax ), 
-                            '.', color='#1f77b4', markersize=10.0)
-      for loc, spine in axDict[ax].spines.iteritems():
-         if loc in [ 'left'  ]:
-            spine.set_position(('outward',10)) # outward by 10 points
-         elif loc in [ 'top',  'right' ]:
-            spine.set_color('none') # don't draw spine               
-         elif loc in [ 'bottom' ]:
-            pass
-         else:
-            raise ValueError('unknown spine location: %s' % loc )
-      if ax != 'blockN50':
-         if ax == 'contigNA50':
-            axDict[ax].set_xticks( range( 0, len( assembliesList ) ))
-            axDict[ax].set_xticklabels( getIDs( assembliesList )  )
-            for tick in axDict[ax].xaxis.get_major_ticks():
-               if options.subsetFile:
-                  tick.label1.set_fontsize( 12 )
-               else:
-                  tick.label1.set_fontsize( 6 )
-            if len(assembliesList) > 25:
-               for label in axDict[ax].xaxis.get_ticklabels():
-                  label.set_rotation( 90 )
-            axDict[ax].xaxis.set_ticks_position('bottom')
-         else:
-            axDict[ ax ].set_xticks( [] )
-         axDict[ ax ].set_yscale( 'log' )
-         axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.6, 
-                                maxesDict[ ax ] * 1.6] )
+def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
+   # partition
+   for i in xrange(1, len( assembliesList )+1):
+      if not i % 5:
+         axDict['main'].add_line( lines.Line2D( xdata=[ i-1, i-1 ],
+                                                ydata=[ 1, maxesMax * 1.6 ],
+                                                linewidth=1.0,
+                                                linestyle='dotted',
+                                                color=(0.8, 0.8, 0.8) ))
+   columns = ['contigNA50', 'contigN50', 'scaffoldPathN50', 'haplotypePathN50','blockN50' ]
+   columnLabels = { 'blockN50':'Block N50', 
+                    'haplotypePathN50':'Contig Path N50',
+                    'scaffoldPathN50':'Scaffold Path N50',
+                    'contigN50':'Contig N50',
+                    'contigNA50':'Contig NG50' }
+   colors = { 'blockN50':'#d62728', # darker red
+              'haplotypePathN50':'#ffbb78', # light orange
+              'scaffoldPathN50':'#ff7f0e', # darker orange
+              'contigN50':'#aec7e8', # lighter blue
+              'contigNA50':'#1f77b4' # darker blue }
+              }
+   shapes = { 'blockN50':'.', 
+              'haplotypePathN50':'.',
+              'scaffoldPathN50':'.',
+              'contigN50':'.',
+              'contigNA50':'.' }
+   plots = []
+   # jitter the odd numbered points 0.1 to the 
+   # left and the even numbered points 0.1 to the right
+   jitter = 0.1
+   side = 1
+   for c in columns:
+      side = -side
+      plots.append( axDict['main'].plot( numpy.arange(0, len( assembliesList )) + jitter*side,
+                                         getVals( assembliesList, c ), 
+                                         marker=shapes[c], color=colors[c], markersize=18.0,
+                                         linestyle='none', markeredgecolor='w'))
+   for loc, spine in axDict['main'].spines.iteritems():
+      if loc in [ 'left'  ]:
+         spine.set_position(('outward',10)) # outward by 10 points
+      elif loc in [ 'top',  'right' ]:
+         spine.set_color('none') # don't draw spine               
+      elif loc in [ 'bottom' ]:
+         pass
       else:
-         axDict[ax].set_xticks( range( 0, len( assembliesList ) ))
-         axDict[ax].set_xticklabels( getIDs( assembliesList )  )
-         for tick in axDict[ax].xaxis.get_major_ticks():
-            if options.subsetFile:
-               tick.label1.set_fontsize( 12 )
-            else:
-               tick.label1.set_fontsize( 6 )
-         if len(assembliesList) > 25:
-            for label in axDict[ax].xaxis.get_ticklabels():
-               label.set_rotation( 90 )
-         axDict[ax].xaxis.set_ticks_position('bottom')
-         axDict[ax].set_ylim( [ min( getVals( assembliesList, ax ))*.9, 
-                                maxesDict[ ax ] * 1.05] )
-      # grid
-      mts = axDict[ax].yaxis.get_majorticklocs()
-      for m in mts:
-         axDict[ax].add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
-                                            ydata=[ m, m ],
-                                            linewidth=1,
-                                            color=(0.8, 0.8, 0.8),
-                                            linestyle='dotted'))
-      axDict[ax].set_xlim( [ -0.5, len( assembliesList )] )
-      if options.sortOn == ax:
-         axDict[ax].set_title( options.labelDict[ ax ] + ' (sorted)' )
+         raise ValueError('unknown spine location: %s' % loc )
+   axDict['main'].set_xticks( range( 0, len( assembliesList ) ))
+   axDict['main'].set_xticklabels( getIDs( assembliesList )  )
+   for tick in axDict['main'].xaxis.get_major_ticks():
+      if options.subsetFile:
+         tick.label1.set_fontsize( 12 )
       else:
-         axDict[ax].set_title( options.labelDict[ ax ] )
+         tick.label1.set_fontsize( 6 )
+      if len(assembliesList) > 25:
+         for label in axDict['main'].xaxis.get_ticklabels():
+            label.set_rotation( 90 )
+      axDict['main'].xaxis.set_ticks_position('bottom')
+   axDict['main'].set_yscale( 'log' )
+   axDict['main'].set_ylim( [ minsMin *.6, 
+                              maxesMax * 1.6] )
+  # grid
+   mts = axDict['main'].yaxis.get_majorticklocs()
+   for m in mts:
+      axDict['main'].add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
+                                             ydata=[ m, m ],
+                                             linewidth=1,
+                                             color=(0.8, 0.8, 0.8),
+                                             linestyle='dotted'))
+   axDict['main'].set_xlim( [ -0.5, len( assembliesList )] )
+   axDict['main'].set_title( options.labelDict[ 'main' ] )
+   legendLabels = []
+   for c in columns:
+      legendLabels.append( columnLabels[c] )
+   leg = plt.legend( plots, legendLabels, 'upper right', numpoints=1 )
+   leg._drawFrame=False
 
 def rankings( assembliesList, options ):
    print '#Assembly\tNA50\tContig Path N50\tScaffold Path N50'
@@ -188,6 +195,17 @@ def rankings( assembliesList, options ):
       for e in [ 'contigNA50', 'haplotypePathN50', 'scaffoldPathN50' ]:
          sys.stdout.write('\t%s' % a.valuesDict[ e ])
       sys.stdout.write('\n')
+
+def findMaxMin( assembliesList, options ):
+   theMax = 0
+   theMin = sys.maxint
+   for a in assembliesList:
+      for c in ['contigN50', 'contigNA50', 'scaffoldPathN50', 'haplotypePathN50','blockN50' ]:
+         if theMax < a.valuesDict[ c ]:
+            theMax = a.valuesDict[ c ]
+         if theMin > a.valuesDict[ c ]:
+            theMin = a.valuesDict[ c ]
+   return ( theMax, theMin )
 
 def main():
    usage = ( 'usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
@@ -206,7 +224,7 @@ def main():
    assembliesList = readDir( options )
    assembliesList = sorted( assembliesList, key=lambda x: x.valuesDict[ options.sortOn ], 
                             reverse=True )
-   maxesDict = cnfst.calculateMaxesDict( assembliesList )
+   ( maxesMax, minsMin ) = findMaxMin( assembliesList, options )
 
    if options.outputRanks:
       rankings( assembliesList, options )
@@ -215,7 +233,7 @@ def main():
    ( fig, pdf ) = initImage( options, data )
    axDict = establishAxis( fig, options, data )
 
-   drawData( assembliesList, maxesDict, axDict, options )
+   drawData( assembliesList, maxesMax, minsMin, axDict, options )
    
    cscp.writeImage( fig, pdf, options )
    
