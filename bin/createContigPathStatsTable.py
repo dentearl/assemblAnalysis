@@ -110,7 +110,7 @@ def printTable( assembliesList, caption, options ):
 \\centering
 \\begin{tabular}{| r | p{.75in} | p{.75in} | p{.4in} | p{.4in} | p{.5in} | p{.5in} || c |}
 \\hline
-ID & Haplotype to haplotype, intra chromosomal & Haplotype to haplotype inter chromosomal & Haplotype to insert & haplotype to deletion & haplotype to insert and deletion & contig ends in insert & \(\sum\) errors \\\\
+ID & Intra chromosomal joins & Inter chromosomal joins & Insertions & Deletions & Insertion and deletion & Insertion at ends & \(\sum\) errors \\\\
 \\hline
 \\hline''' % ( caption ) # hom/het sw & scf & ctgE+ctgN 
    i = 0

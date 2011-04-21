@@ -13,13 +13,18 @@ def initOptions( parser ):
                       help='Limits each columns title to "n" characters. default=%default' )
    parser.add_option( '--tableStyle', dest='tableStyle',
                       default='FPtable', type='string',
-                      help=('This string is inserted in \\begin{ STYLE }. default=%default'))
+                      help=('This string is inserted in \\begin{ STYLE }. default=%default'))   
+   parser.add_option( '--partitionEvery', dest='mod',
+                      type='int', default=5,
+                      help=('A horizontal dividing line will be drawn every MOD rows. default=%default'))
 
 def checkOptions( options, parser ):
    if options.n < 0:
       parser.error( '--columnTitleCharLimit must be >= 0, %d not allowed.\n' % options.n )
    if options.tableStyle not in ('FPtable', 'table'):
       parser.error('--tableStyle must be either FPtable or table, not %s' % options.tableStyle )
+   if options.mod < 0:
+      parser.error( '--partitionEvery must be >= 0, %d not allowed.\n' % options.mod )
 
 def main():
    usage = ( 'usage: %prog [options] < fasta.fa\n\n'
@@ -55,19 +60,19 @@ def main():
             sys.stdout.write( '}\n\\hline\n' )
             sys.stdout.write( '%s' % header[0][:options.n] )
             for i in xrange(1, len(header)):
-               t = header[i][:options.n].replace('_', ' ')
+               t = header[i][:options.n]
                t = t.replace('%', '\\%')
                sys.stdout.write(' & %s' % t )
             sys.stdout.write( ' \\\\\n\\hline\n\\hline\n' )
             continue
       data = line.split('\t')
-      sys.stdout.write( '%s' % data[0].replace('_', ' ') )
-      for i in xrange( 1, len( data ) ):
-         d = data[ i ].replace('_', ' ')
+      sys.stdout.write( '%s' % data[0] )
+      for i in xrange( 1, len( data )):
+         d = data[ i ]
          sys.stdout.write(' & %s' % d )
          
       sys.stdout.write(' \\\\\n')
-      if not (linenumber - 1) % 10:
+      if not (linenumber - 1) % options.mod:
          print '\\hline'
          hline = True
       else:

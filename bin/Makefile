@@ -27,7 +27,7 @@ bacWPSDir:=${projectDir}/picklesMafsScaffoldBac
 bacWPCDir:=${projectDir}/picklesMafsContigBac
 bacAWPDir:=${projectDir}/picklesAnnotsBac
 rankingsDir:=${resultsDir}/rankings
-rankingsFiles:=$(foreach r,N50_CPN50.tab N50_NA50.tab N50_SPN50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab,${rankingsDir}/$r)
+rankingsFiles:=$(foreach r,N50_NA50.tab N50_CPN50.tab N50_SPN50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab,${rankingsDir}/$r)
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
@@ -454,8 +454,8 @@ ${coverageSFDir}/all_cactusBacStackFillContigPaths.pdf: ${binDir}/plotPicklesToP
 ${resultsDir}/facets/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/contigPathStatsScaffolds/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createN50StatsPlot.py --contigPathStatsDir ${projectDir}/contigPathStatsScaffolds/ \
-		--out ${resultsDir}/facets/n50statsFacetsTmp.pdf --outFormat pdf \
-	--subsetFile ${rankingsDir}/subsetTeamTopEntry
+		--out ${resultsDir}/facets/n50statsFacetsTmp.pdf --outFormat pdf --sortOn scaffoldPathN50\
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --labels unused,unused,unused,unusued,'Average size of assembled piece (N50)'
 	mv ${resultsDir}/facets/n50statsFacetsTmp.pdf $@
 
 # contiguous individual plots
@@ -532,7 +532,7 @@ ${rankingsDir}/coverageBac.txt: ${binDir}/extractPlotPickleCounts.py $(wildcard 
 ${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}/coverageHap2.txt ${rankingsDir}/coverageBac.txt
 	mkdir -p $(dir $@)
 	paste $^ > ${rankingsDir}/coverageTotal.txt
-	echo -e '#Assembly\tHap Total (%)\tHap 1 (%)\tHap 2 (%)\tBac (%)' > ${rankingsDir}/coverageTotalSummary.tab
+	echo -e '#Assembly\tHap Total (%)\tHap \(\\alpha_1\) (%)\tHap \(\\alpha_2\) (%)\tBac (%)' > ${rankingsDir}/coverageTotalSummary.tab
 	cat ${rankingsDir}/coverageTotal.txt | awk '{printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\n", $$1, (($$2+$$5)/2249973.13), $$2/1124623.52, $$5/1125349.61, $$8/47478.19}' >> ${rankingsDir}/coverageTotalSummary.tab
 	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' ${rankingsDir}/coverageTotalSummary.tab | awk 'NR==1; NR>1 {printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\n", $$1, $$2, $$3, $$4, $$5 }'  > $@.tmp
 	rm ${rankingsDir}/coverageTotalSummary.tab
@@ -541,7 +541,7 @@ ${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}
 # coverage rankings table, all
 ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/tab2tex.py --columnTitleCharLimit 15 | \
+	cat ${rankingsDir}/coverageTotal.tab | sed 's/Assembly/ID/;' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTmp.tex && latex coverageRankingTableTmp.tex \
 		latex coverageRankingTableTmp.tex && dvips -Ppdf coverageRankingTableTmp.dvi && \
@@ -551,7 +551,7 @@ ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir
 ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${binDir}/subsetTabs.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/subsetTabs.py --subsetFile \
-		${rankingsDir}/subsetTeamTopEntry | ${binDir}/tab2tex.py --columnTitleCharLimit 15 | \
+		${rankingsDir}/subsetTeamTopEntry | sed 's/Assembly/ID/;' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | \
 		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTeamsTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTeamsTmp.tex && latex coverageRankingTableTeamsTmp.tex \
 		latex coverageRankingTableTeamsTmp.tex && dvips -Ppdf coverageRankingTableTeamsTmp.dvi && \
@@ -634,7 +634,10 @@ ${rankingsDir}/subsetTeamTopEntry: ${binDir}/summarizeRankings.py ${rankingsFile
 ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/tab2tex.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
-	 	sed '/^$$/d' | perl -ple 's/Assembly/Asm./' | ${binDir}/tab2tex.py > ${tablesDir}/rankingSummaryTable.tex
+	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | sed 's/NA50/NG50/' |\
+		sed 's/ (value)//g;' | sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
+		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
+		sed 's/substitutionErrors/Substitions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
 		latex rankingSummaryTableWrapped.tex && dvips -Ppdf rankingSummaryTableWrapped.dvi && \
@@ -644,8 +647,11 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py ${binDir}/tab2tex.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues | ${binDir}/summarizedRankingToTeamTop.py | \
-		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | ${binDir}/tab2tex.py | \
-		perl -ple 's/Assembly/Asm./' > ${tablesDir}/rankingSummaryTableTeams.tex
+		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/NA50/NG50/' | sed 's/ (value)//g;'| \
+		sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
+		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
+		sed 's/substitutionErrors/Substitions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | sed 's/Assembly/ID/' | \
+		sed 's/_/ /g;'  > ${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \
@@ -653,7 +659,7 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
 
 ${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
-	cat $< | ${binDir}/tab2tex.py | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
+	cat $< | ${binDir}/tab2tex.py --partitionEvery 10 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
 	pushd ${tablesDir} && latex simulationSummaryTableWrapped.tex && latex simulationSummaryTableWrapped.tex \
 		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
 		ps2pdf simulationSummaryTableWrapped.ps && popd
