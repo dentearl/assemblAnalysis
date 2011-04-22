@@ -637,7 +637,7 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | sed 's/NA50/NG50/' |\
 		sed 's/ (value)//g;' | sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
+		sed 's/substitutionErrors/Substitutions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
 		latex rankingSummaryTableWrapped.tex && dvips -Ppdf rankingSummaryTableWrapped.dvi && \
@@ -650,7 +650,7 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/NA50/NG50/' | sed 's/ (value)//g;'| \
 		sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | sed 's/Assembly/ID/' | \
+		sed 's/substitutionErrors/Substitutions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | sed 's/Assembly/ID/' | \
 		sed 's/_/ /g;'  > ${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ../../${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \

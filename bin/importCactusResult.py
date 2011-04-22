@@ -71,7 +71,7 @@ def populateDirectoryStructure( options ):
       os.makedirs( options.outDir )
    for d in [ 'mafsContigs', 'mafsScaffolds', 'statsContigsAggregateColumns',
               'statsScaffoldsAggregateColumns', 'statsScaffoldsContigPath', 'statsScaffoldsCopyNumber',
-              'statsScaffoldsLinkage', 'statsScaffoldsSubstitions' ]:
+              'statsScaffoldsLinkage', 'statsScaffoldsSubstitutions' ]:
       d = os.path.join( options.outDir, d )
       if os.path.exists( d ) and not os.path.isdir( d ):
          sys.stderr.write('%s exists but is not a directory!\n' % d )
