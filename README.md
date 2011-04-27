@@ -19,4 +19,4 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 an
 * latex: http://www.latex-project.org/ for latex tables
 * fltpage: http://www.ctan.org/tex-archive/macros/latex/contrib/fltpage for formatting the latex tables
 * Data: http://hgwdev.cse.ucsc.edu/~benedict/code/Assemblathon_1.html
-* Annotations: finding a permanent home for these.
+* Annotations: I'm finding a permanent home for these, will update this soon.
