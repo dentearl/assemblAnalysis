@@ -4,14 +4,14 @@
 Scripts to automate the creation of Tables and Figures for the Assemblathon 1 analysis.
 
 ##Installation and use
-0. Run <code>assemblaScripts</code> on some data.
-1. Create a new directory where you'd like to create perform an analysis.
-2. Run <code>importCactusResult.py</code> to bring in the necessary files for both the **Scaffold** and **Contig** alignments into your new directory.
-3. <code>cp</code> the <code>analysisMakefile</code> into the new directory.
-4. Edit <code>analysisMakefile</code> to set the variables for <code>binDir</code>, <code>fltpage</code> and <code>simulationStatsTab</code>. The <code>binDir</code> should be the relative path to this repo's <code>bin/</code>. The <code>simulationStatsTab</code> should point to the file in <code>extra/</code>.
-5. Run <code>make -f analysisMakefile</code>. **Pro tip**: The makefile was written to use <code>-j</code> for a speedup.
-6. Once the make finishes, all of the results are stored in <code>publication/</code>
-7. _There is no step seven!_
+1. Run <code>assemblaScripts</code> on some data.
+2. Create a new directory where you'd like to create perform an analysis.
+3. Run <code>importCactusResult.py</code> to bring in the necessary files for both the **Scaffold** and **Contig** alignments into your new directory.
+4. <code>cp</code> the <code>analysisMakefile</code> into the new directory.
+5. Edit <code>analysisMakefile</code> to set the variables for <code>binDir</code>, <code>fltpage</code> and <code>simulationStatsTab</code>. The <code>binDir</code> should be the relative path to this repo's <code>bin/</code>. The <code>simulationStatsTab</code> should point to the file in <code>extra/</code>.
+6. Run <code>make -f analysisMakefile</code>. **Pro tip**: The makefile was written to use <code>-j</code> for a speedup.
+7. Once the make finishes, all of the results are stored in <code>publication/</code>
+8. _There is no step eight!_
 
 ##Dependencies
 * assemblaScripts: https://github.com/benedictpaten/assemblaScripts which has its own dependencies
