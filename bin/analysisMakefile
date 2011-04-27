@@ -28,7 +28,7 @@ export SHELLOPTS=pipefail
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
-binDir:=../../code/trunk/bin
+binDir:=~/assemblathon/assemblAnalysis/bin
 projectDir:=.
 resultsDir:=${projectDir}/publication
 # THESE 2 FILES ARE EXTERNAL DEPENDENCIES
