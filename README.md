@@ -1,7 +1,7 @@
 #Assemblathon Analysis Scripts
 [Dent Earl](https://github.com/dentearl/) and [Benedict Paten](https://github.com/benedictpaten/)
 
-Scripts to automate the creation of Tables and Figures for the Assemblathon 1 analysis.
+Scripts to automate the creation of Tables and Figures for the Assemblathon 1 project analysis.
 
 ##Installation and use
 1. Run <code>assemblaScripts</code> on some data.
