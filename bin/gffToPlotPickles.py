@@ -16,14 +16,13 @@ chromosomes are split into a single pickle per
 chromosome.
 
 """
-import cPickle
 from libMafGffPlot import Data
 from libMafGffPlot import GffRecord
 from libMafGffPlot import objListToBinnedWiggle
+from libMafGffPlot import packData
 import numpy
 from optparse import OptionParser
 import os
-import re
 import sys
 
 def initOptions( parser ):
@@ -85,16 +84,7 @@ def checkOptions( options, parser, data ):
       data.genomeLength += c
    if options.numBins > data.genomeLength:
       parser.error('number of bins (%d) must be < length of genome (%d).' % ( options.numBins, data.genomeLength ))
-
-def packData( options, data, prot='py23Bin' ):
-   """ prot refers to the protocol to use.
-   """
-   protocols = { 'ASCII' : 0,
-                 'pre23Bin' : 1,
-                 'py23Bin'  : 2 }
-   f = open( os.path.join( options.outDir, options.prefix + 'annots.pickle' ), 'wb' )
-   cPickle.dump( data.annotWigDict, f, protocol = protocols[ prot ] )
-   f.close()
+   options.filename = os.path.join( options.outDir, options.prefix + 'annots.pickle' )
 
 def readGff( options, data ):
    """ read the gff file, parse each line into
@@ -187,7 +177,8 @@ def main():
    for c in data.chrNames:
       data.gffRecordsByChrom[ c ].sort( key = lambda x: x.start, reverse=False )
    convertDataToWiggle( options, data )
-   packData( options, data )
+   
+   packData( data.annotWigDict, options.filename, options )
 
 if __name__ == '__main__':
    main()

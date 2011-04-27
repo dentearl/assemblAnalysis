@@ -19,7 +19,7 @@ hapA1/!hapA2/!assembly	805664	805664	806240	881474	1460826	1476034	1476034	14760
 
 """
 from libMafGffPlot import Data
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
@@ -29,7 +29,6 @@ import numpy
 from optparse import OptionParser
 import os
 import sys
-import re
 
 def initOptions( parser ):
    parser.add_option( '--file', dest='file',
@@ -110,14 +109,6 @@ def readFile( filename, options ):
             trimmedData[ d ].append( int( data[d][i] ) )
    f.close()
    return trimmedData
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 10), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
 
 def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
    axMain.set_xscale('log')
@@ -218,20 +209,6 @@ def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
       axBlowUp.xaxis.set_minor_locator( minorLocator )
       if axCrazy:
          axCrazy.xaxis.set_minor_locator( minorLocator )
-
-def writeImage( fig, pdf, options, data ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
 
 def prettyList( uglyList ):
    """ takes a list of numbers in str format,
@@ -507,7 +484,7 @@ def main():
    initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
-   fig, pdf = initImage( options, data )
+   fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
    axDict = establishAxes( fig, options, data )
    
    data.valuesDict = readFile( options.file, options )
@@ -532,7 +509,7 @@ def main():
 
    establishTicks( axDict['main'], axDict['crazy'], 
                    axDict['blowUp'], options, data )
-   writeImage( fig, pdf, options, data )
+   lpt.writeImage( fig, pdf, options )
 
 if __name__ == '__main__':
    main()

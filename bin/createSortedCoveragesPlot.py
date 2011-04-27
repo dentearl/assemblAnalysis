@@ -8,18 +8,15 @@ This script takes a list of numbers on STDIN and produces
 a pretty picture. 
 
 """
-
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
-import numpy
 from optparse import OptionParser
 import os
 import sys
-import re
 
 class Data:
    """Dummy class to hold data to 
@@ -53,14 +50,6 @@ def checkOptions( options, parser ):
    if options.dpi < 72:
       parser.error('I refuse to have a dpi less than '
                    'screen res, 72. (%d) must be >= 72.\n' % options.dpi )
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 6), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
 
 def readStream( options ):
    values = []
@@ -156,20 +145,6 @@ def extractAllValues( values ):
       a.append( v.bac )
    return a
 
-def writeImage( fig, pdf, options ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
-
 def main():
    usage = ( 'usage: %prog [options] < rankedAssemblies.txt\n\n'
              '%prog takes via STDIN a list of coverage values, each line formatted as:\n'
@@ -189,12 +164,12 @@ def main():
    valuesList = readStream( options )
    valuesList = sorted( valuesList, key=lambda key: key.tot, reverse=True )
    
-   fig, pdf = initImage( options, data )
+   fig, pdf = lpt.initImage( 8.0, 6.0, options, data )
    ax = establishAxis( fig, options, data )
    
    drawData( valuesList, ax, options )
 
-   writeImage( fig, pdf, options )
+   lpt.writeImage( fig, pdf, options )
 
 if __name__ == '__main__':
    main()

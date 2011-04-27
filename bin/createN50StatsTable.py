@@ -10,8 +10,8 @@ create the N50 stats table.
 output is latex
 
 """
+from libGeneral import prettyNumber
 import createContigPathStatsTable as ccpst
-import createIndividualSection as cis
 import createN50StatsPlot as cnfsp
 import xml.etree.ElementTree as ET
 import glob
@@ -54,9 +54,9 @@ ID & \# Contigs & N50 & NA50 & SPA50 & HPA50 & BNA50 & \(\sum\) Errors\\\\
 
 def isMaxFormat( n, m ):
    if n == m:
-      return '\\textbf{ %s }' % ccpst.prettyNumber( n )
+      return '\\textbf{ %s }' % prettyNumber( n )
    else:
-      return '%s' % ccpst.prettyNumber( n )
+      return '%s' % prettyNumber( n )
 
 def calculateMaxesDict( assembliesList ):
    maxesDict = { 'totalContigNumber':0,

@@ -18,16 +18,14 @@ hapA1/!hapA2/!assembly	761105	761105	763235	791242	1085617	1575676	1575676	15756
 !hapA1/!hapA2/assembly	1001654	1001338	923700	823749	508292	437	0	0
 """
 from libMafGffPlot import Data
+import libPlotting as lpt
 import createAggregatePlot as cacPlot
-
 import glob
-import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter # minor tick marks
-import numpy
 from optparse import OptionParser
 import os
 import sys
@@ -106,14 +104,6 @@ def readFiles( options, data ):
       aName = re.match( pat, os.path.basename( m ) ).group( 1 )
       data.recordsDict[ aName ] = { 'valuesDict': cacPlot.readFile( m, options ) }
       data.recordsDict[ aName ][ 'xData' ] = data.recordsDict[ aName ][ 'valuesDict' ][ 'columnLength' ]
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(7, 8), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   data.pdf = pdf
 
 def establishAxis( options, data ):
    options.axLeft  = 0.05
@@ -219,20 +209,6 @@ def drawPlots( options, data ):
          drawID( axBlowUp, a, options, data, color=( 0.7, 0.7, 0.7) )
       #drawPlaceHolder( i, left, top, plotWidth, plotHeight, options, data )
    
-def writeImage( options, data ):
-   if options.outFormat == 'pdf':
-      data.fig.savefig( data.pdf, format='pdf' )
-      data.pdf.close()
-   elif options.outFormat == 'png':
-      data.fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      data.fig.savefig( data.pdf, format='pdf' )
-      data.pdf.close()
-      data.fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      data.fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      data.fig.savefig( options.out + '.eps', format='eps' )   
-
 def main():
    usage = ( '%prog --dir=path/to/dir --mode=[scaffPaths|contigs|contigPaths|blocks|contamination] [options]\n\n'
              '%prog takes an aggregate directory ( --dir ) and a mode \n'
@@ -244,12 +220,12 @@ def main():
    checkOptions( options, parser )
    
    readFiles( options, data )
-   initImage( options, data )
+   lpt.initImage( 7.0, 8.0, options, data )
    establishAxis( options, data )
    
    drawPlots( options, data )
    
-   writeImage( options, data )
+   lpt.writeImage( options, data )
 
 if __name__ == '__main__':
    main()

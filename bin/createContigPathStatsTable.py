@@ -10,9 +10,9 @@ create the contig path stats table.
 output is latex
 
 """
-import createIndividualSection as cis
 import glob
 import libAssemblySubset as las
+from libGeneral import prettyNumber
 from optparse import OptionParser
 import os
 import re
@@ -121,17 +121,11 @@ def readDirs( options ):
       assembliesDict[ name ].valuesDict[ 'contigNG50' ] = int( root.attrib[ 'contigNG50' ])
    return assembliesDict.values()
 
-def prettyNumber( n ):
-   if isinstance( n, float ):
-      return cis.prettyFloat( float(n), 2 )
-   elif isinstance( n, int ):
-      return cis.prettyInt( int(n) )
-
 def printTable( assembliesList, caption, options ):
    print '''
 \\rowcolors{1}{tableShade}{white}
 \\begin{FPtable}
-\caption[Scaffold path statistics.]{Scaffold path statistics. %s}
+\caption[Contig path statistics.]{Contig path statistics. %s}
 \\tiny
 \\centering
 \\begin{tabular}{| r | p{.75in} | p{.75in} | p{.4in} | p{.4in} | p{.5in} | p{.5in} || c |}
@@ -247,7 +241,7 @@ def main():
    if options.outputRanks:
       printRanks( assembliesList, options )
    else:
-      printTable( assembliesList, caption, options )
+      printTable( assembliesList, '', options )
 
 if __name__ == '__main__':
    main()

@@ -9,8 +9,7 @@ and a genome length, it produces a figure showing the cumulative
 plot of the N statistic for both files.
 
 """
-
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
@@ -80,13 +79,6 @@ def readFile( filename ):
    f.close()
    return d
 
-def initImage( options ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 5), dpi=options.dpi, facecolor='w' )
-   return ( fig, pdf )
-
 def establishAxis( fig, options ):
    """ create one axes per chromosome
    """
@@ -96,8 +88,6 @@ def establishAxis( fig, options ):
    options.axHeight  = 0.75
    ax = fig.add_axes( [options.axLeft, options.axBottom,
                        options.axWidth, options.axHeight ] )
-   #ax = fig.add_subplot(111)
-   #plt.box( on= False )
    return ax
 
 def drawData( scaffolds, contigs, ax, options ):
@@ -149,20 +139,6 @@ def drawData( scaffolds, contigs, ax, options ):
    leg = plt.legend([p1, p2], ['Scaffolds', 'Contigs'])
    leg._drawFrame=False
 
-def writeImage( fig, pdf, options ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
-
 def processData( scaffs, contigs, options ):
    scaffs.sort( reverse = True )
    contigs.sort( reverse = True )
@@ -198,12 +174,12 @@ def main():
    
    pScaffs, pContigs = processData( scaffolds, contigs, options )
    
-   fig, pdf = initImage( options  )
+   fig, pdf = lpt.initImage( 8.0, 5.0, options, data )
    ax = establishAxis( fig, options )
    
    drawData( pScaffs, pContigs, ax, options )
 
-   writeImage( fig, pdf, options )
+   lpt.writeImage( fig, pdf, options )
    
 
 if __name__ == '__main__':

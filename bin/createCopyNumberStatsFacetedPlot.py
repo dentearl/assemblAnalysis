@@ -9,15 +9,13 @@ create a plot of excess, deficient and total copy bases
 from a single copy stats xml file.
 
 """
-import createCopyNumberStatsPlot as ccnsp
 import glob
 import libAssemblySubset as las
 from libMafGffPlot import Data
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
-import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
 import numpy
 from optparse import OptionParser
@@ -74,28 +72,6 @@ def checkOptions( args, options, parser ):
       options.out = options.out[:-4]
    if options.dpi < 72:
       parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=( 8, 10 ), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
-
-def writeImage( fig, pdf, options, data ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
 
 def establishAxes( fig, options, data ):
    axDict = {}
@@ -220,26 +196,10 @@ def drawData( axDict, sList, options, data ):
                                             linewidth=1,
                                             color=lGray,
                                             linestyle='dotted'))
-      #plt.ylabel( 'log proportion ' )
    
    axDict['sum'].set_title('Sum of Proportional Copy Errors')
    axDict['exc'].set_title('Proportional Excess Copy Errors')
    axDict['def'].set_title('Proportional Deficient Copy Errors')
-   # axDict[ 'sum' ].text( x=0.01, y=0.98, s = 'Sum of Proportional Copy Errors',
-   #                fontsize = 13, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.3, 0.3, 0.3 ),
-   #                transform=axDict['sum'].transAxes )
-   # axDict[ 'exc' ].text( x=0.01, y=0.98, s = 'Proportional Excess Copy Errors',
-   #                fontsize = 13, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.3, 0.3, 0.3 ),
-   #                transform=axDict['exc'].transAxes )
-   # axDict[ 'def' ].text( x=0.01, y=0.98, s = 'Proportional Deficient Copy Errors',
-   #                fontsize = 13, horizontalalignment='left',
-   #                verticalalignment = 'top', family='Helvetica',
-   #                color=( 0.3, 0.3, 0.3 ),
-   #                transform=axDict['def'].transAxes )
 
 def readFiles( options ):
    ups = glob.glob( os.path.join( options.dir, '*_0.xml'))
@@ -307,7 +267,7 @@ def main():
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
    if not options.outputRanks:
-      fig, pdf = initImage( options, data )
+      fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
 
    stats = readFiles( options )
    sortedOrder = sorted( stats.values(), key=lambda x: x.sumLower, reverse=False )
@@ -322,7 +282,7 @@ def main():
    drawAxisLabels( axDict, stats, options, data )
    setAxisLimits( axDict, options, data )
    
-   writeImage( fig, pdf, options, data )
+   lpt.writeImage( fig, pdf, options )
 
 if __name__ == '__main__':
    main()

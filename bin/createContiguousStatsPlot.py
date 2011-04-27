@@ -11,13 +11,12 @@ stats xml file.
 """
 import libAssemblySubset as las
 from libMafGffPlot import Data
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
-import numpy
 from optparse import OptionParser
 import os
 import sys
@@ -75,28 +74,6 @@ def checkOptions( args, options, parser ):
       parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if options.legendElements != None:
       options.legendElements = options.legendElements.split(',')
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 10), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
-
-def writeImage( fig, pdf, options, data ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
 
 def establishAxes( fig, options, data ):
    axDict = {}
@@ -239,7 +216,7 @@ def main():
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
    if not options.outputRanks:
-      fig, pdf = initImage( options, data )
+      fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
       axDict = establishAxes( fig, options, data )
    
    data.statsList, data.xData = readFiles( options )
@@ -256,7 +233,7 @@ def main():
    setAxisLimits( axDict['main'], data.xData, options, data )
    establishTicks( axDict['main'], data.xData, options, data )
    
-   writeImage( fig, pdf, options, data )
+   lpt.writeImage( fig, pdf, options )
 
 if __name__ == '__main__':
    main()

@@ -9,7 +9,6 @@ by fastaHeaderMapper.py and pulls out the headers
 based on the standardized headers.
 
 """
-import cPickle
 import fastaHeaderMapper as fhm
 import os
 from optparse import OptionParser

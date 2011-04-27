@@ -11,12 +11,9 @@ output is latex
 
 """
 from createContigPathStatsTable import readDirs
-import createIndividualSection as cis
-import createN50StatsTable as cnfst
 import createSortedCoveragesPlot as cscp
-import glob
 import libAssemblySubset as las
-import matplotlib.backends.backend_pdf as pltBack
+import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
@@ -25,7 +22,6 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, L
 import numpy
 from optparse import OptionParser
 import os
-import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -97,13 +93,6 @@ def checkOptions( options, parser ):
                       'scaffoldN50':'.',
                       'scaffoldNG50':'.'
                       }
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(8, 8), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
 
 def establishAxis( fig, options, data ):
    """ 
@@ -240,12 +229,12 @@ def main():
       rankings( assembliesList, options )
       return
 
-   fig, pdf = initImage( options, data )
+   fig, pdf = lpt.initImage( 8.0, 8.0, options, data )
    axDict = establishAxis( fig, options, data )
 
    drawData( assembliesList, maxesMax, minsMin, axDict, options )
    
-   cscp.writeImage( fig, pdf, options )
+   lpt.writeImage( fig, pdf, options )
    
 
 if __name__ == '__main__':

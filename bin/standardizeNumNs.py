@@ -45,12 +45,17 @@ def checkOptions( options, parser ):
    if options.n > 25:
       parser.error( '--expandAt must be less than 26.\n' )
 
-def myPrint( s, register, options ):
+def myPrint( c, register, options ):
+   """ my print takes a charater, c and a 
+   register position, and based on options.lineLength
+   decides whether or not to simply print the character
+   or the character and a new line.
+   """
    if register == ( options.lineLength - 1 ):
-      sys.stdout.write('%s\n' % s )
+      sys.stdout.write( '%s\n' % c )
       register = 0
    else:
-      sys.stdout.write('%s' % s)
+      sys.stdout.write( '%s' % c )
       register += 1
    return register
 

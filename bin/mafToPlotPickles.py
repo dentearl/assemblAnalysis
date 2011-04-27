@@ -23,6 +23,7 @@ from libMafGffPlot import MafLine
 from libMafGffPlot import newMafWigDict
 from libMafGffPlot import objListToBinnedWiggle
 from libMafGffPlot import objListUtility_xAxis
+from libMafGffPlot import packData
 import math
 import numpy
 from optparse import OptionParser
@@ -98,21 +99,12 @@ def checkOptions( options, parser, data ):
    if options.numBins > data.genomeLength:
       parser.error('number of bins (%d) must be '
                    '< length of genome (%d).' % ( options.numBins, data.genomeLength ))
-
-def packData( options, data, prot='py23Bin' ):
-   """ prot refers to the protocol to use.
-   """
-   protocols = { 'ASCII' : 0,
-                 'pre23Bin' : 1,
-                 'py23Bin'  : 2 }
+   # filename to store pickle
    if options.name:
       prefix = options.name
    else:
       prefix = options.ref + '.' + options.other
-   f = open( os.path.join( options.outDir, prefix +
-                           '.maf.pickle' ), 'wb' )
-   cPickle.dump( data.mafWigDict, f, protocol=protocols[ prot ] )
-   f.close()
+   options.filename = os.path.join( options.outDir, prefix + '.maf.pickle' )
 
 def extractMafLine( line, order, pat, options, data ):
    """ parse a given line from a maf file into a 
@@ -515,8 +507,8 @@ def main():
       verifyStacks( options, data )
       verifyElements( options, data )
       verifyLengths( options, data )
-      
-   packData( options, data )
+   
+   packData( data.mafWigDict, options.filename, options )
 
 if __name__ == '__main__':
    main()

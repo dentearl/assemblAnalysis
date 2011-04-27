@@ -9,6 +9,7 @@ dent earl, dearl(a) soe ucsc edu
 """
 import glob
 import libAssemblySubset as las
+import libPlotting as lpt
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
 import matplotlib.patches as patches
@@ -131,28 +132,6 @@ def sumErrors( assembliesDict, options ):
          # 'Total-errors-in-one-haplotype-only' ]:
          assembliesDict[ a ].allLo += float( assembliesDict[ a ].subStatsLower[ e ] )
          assembliesDict[ a ].allUp += float( assembliesDict[ a ].subStatsUpper[ e ] )
-
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   fig = plt.figure( figsize=(9, 11), dpi=options.dpi, facecolor='w' )
-   data.fig = fig
-   return ( fig, pdf )
-
-def writeImage( fig, pdf, options, data ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
 
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
@@ -355,7 +334,7 @@ def main():
    las.checkOptions( options, parser )
    
    if not options.outputRanks:
-      fig, pdf = initImage( options, data )
+      fig, pdf = lpt.initImage( 9., 11., options, data )
       axDict = establishAxes( fig, options, data )
    
    assembliesDict = {}
@@ -372,7 +351,7 @@ def main():
 
    drawData( assembliesDict, sortOrder, axDict, options, data )
    
-   writeImage( fig, pdf, options, data )
+   lpt.writeImage( fig, pdf, options )
    
 
 if __name__ == '__main__':

@@ -7,8 +7,8 @@ dent earl, dearl (a) soe ucsc edu
 simple script to open up plot pickles and pull out all of the counts
 stored in the numpy array under a particular key value.
 """
-import cPickle
 from libMafGffPlot import Data
+from libMafGffPlot import unpackData
 import numpy
 from optparse import OptionParser
 import os
@@ -103,15 +103,6 @@ def printData( valuesDict, options, data ):
                            'for valuesDict[ %s ][ %s ]: %s\n' % ( c, options.key, 
                                                                   valuesDict[c][ options.key ].__class__ ))
          sys.exit( 1 )
-
-def unpackData( filename, options, data ):
-   if not os.path.exists( filename ):
-      sys.stderr.write( '%s does not exist.\n' % filename)
-      sys.exit( 1 )
-   f = open( filename, 'rb' )
-   d = cPickle.load( f )
-   f.close()
-   return d
 
 def checkKey( key, chr, dictionary ):
    if chr not in dictionary:

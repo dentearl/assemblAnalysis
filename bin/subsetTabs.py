@@ -12,7 +12,7 @@ def main():
    usage = ('usage: %prog --subsetFile=file [options] < table.tab\n\n')
    parser = OptionParser( usage=usage )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    las.checkOptions( options, parser )
 
    for line in sys.stdin:

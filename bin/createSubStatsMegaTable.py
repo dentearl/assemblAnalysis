@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 """
-import createIndividualSection as cis
+from libGeneral import prettyNumber
 import glob
 from optparse import OptionParser
 import os
@@ -85,12 +85,7 @@ def readSubStatsDir( assembliesDict, options ):
          assembliesDict[ ID ].subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
    return assembliesDict
 
-def prettyNumber( n ):
-   pat = re.compile( '^[0-9]+\.[0-9]+$' )
-   if re.match( pat, n ):
-      return cis.prettyFloat( float(n), 2 )
-   else:
-      return cis.prettyInt( int(n) )
+
 
 def printLine( a, kind ):
    sys.stdout.write( '%s' % a.ID )

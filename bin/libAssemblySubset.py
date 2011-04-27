@@ -10,7 +10,7 @@
 # One suggestion is to place code like the following in a readData()
 # function:
 #
-# for input in inputAssemblys:
+# for input in inputAssemblies:
 #    if options.subsetFile:
 #       if input.name not in options.assemblySubset:
 #          continue

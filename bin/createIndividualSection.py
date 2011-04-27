@@ -15,6 +15,7 @@ assembly.
 generally, this script is pretty cool.
 """
 from optparse import OptionParser
+from libGeneral import prettyFloat, prettyInt
 import os
 import sys
 
@@ -145,26 +146,6 @@ def printRankRow( a, gray=False):
                                                                                     a.hap2, a.bac ))
    else:
       print '  %s & %.5f & %.5f & %.5f & %.5f \\\\' % ( a.ID, a.total, a.hap1, a.hap2, a.bac )
-
-def prettyInt( i ):
-   s = ''
-   r = '%d' % i
-   for j in range(0, len( r )):
-      if j > 0 and not j % 3:
-         s = '%s,%s' % ( r[ (len(r) - 1) - j], s )
-      else:
-         s = '%s%s' % ( r[ (len(r) - 1) - j], s )
-   return s
-
-def prettyFloat( f, n ):
-   s = ''
-   r = '%.*f' % ( n, f )
-   for j in range(0, len( r ) ):
-      if not (j - n - 1) % 3 and j > (n + 1):
-         s = '%s,%s' % ( r[ (len(r) - 1) - j], s )
-      else:
-         s = '%s%s' % ( r[ (len(r) - 1) - j], s )
-   return s
 
 def printAssembly( a, assembliesList, captionsDict, options ):
    print '\\subsubsection{%s}' % a.ID

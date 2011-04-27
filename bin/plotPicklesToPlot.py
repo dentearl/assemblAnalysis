@@ -5,14 +5,13 @@ plotPicklesToPlot.py
 dent earl, dearl@soe.ucsc.edu
 
 """
-import cPickle
 import glob
 import libAssemblySubset as las
+import libPlotting as lpt
 from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
 from libMafGffPlot import GffRecord
-import math
-import matplotlib.backends.backend_pdf as pltBack
+from libMafGffPlot import unpackData
 import matplotlib.lines as lines
 import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
@@ -219,15 +218,6 @@ def checkOptions( options, parser, data ):
    # annotationClippingDict is keyed first on chromosomes, 
    # then on the data type, i.e. CDS, or maf, or whatever
    
-def unpackData( filename, options, data ):
-   if not os.path.exists( filename ):
-      sys.stderr.write( '%s does not exist.\n' % filename)
-      sys.exit( 1 )
-   f = open( filename, 'rb' )
-   d = cPickle.load( f )
-   f.close()
-   return d
-
 def loadAnnots( options, data ):
    data.annotWigDict = {}
    f = os.path.join( options.annotDir, '%s.annots.pickle' % ( options.ref ))
@@ -300,14 +290,6 @@ def loadMafs( options, data ):
             if sum( data.mafWigDict[ c ][ n ][ key ] ) > 0:
                data.lengthThresholdPresent[ l ] = True
 
-def initImage( options, data ):
-   pdf = None
-   if options.outFormat == 'pdf' or options.outFormat == 'all':
-      pdf = pltBack.PdfPages( options.out + '.pdf' )
-   figHeight = ( data.numberOfMafs + len( data.annotationOrder ) + 0.5 ) / 4.0 
-   fig = plt.figure( figsize=( 8, figHeight ), dpi=options.dpi, facecolor='w' )
-   return ( fig, pdf )
-
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
@@ -366,20 +348,6 @@ def setAxisLimits( axDict, options, data ):
       axDict[ c ].set_xlim( 0.0, data.chrLengthsByChrom[ c ] )
       axDict[ c ].xaxis.set_major_locator( pylab.NullLocator() )
       axDict[ c ].yaxis.set_major_locator( pylab.NullLocator() )
-
-def writeImage( fig, pdf, options, data ):
-   if options.outFormat == 'pdf':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-   elif options.outFormat == 'png':
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-   elif options.outFormat == 'all':
-      fig.savefig( pdf, format='pdf' )
-      pdf.close()
-      fig.savefig( options.out + '.png', format='png', dpi=options.dpi )
-      fig.savefig( options.out + '.eps', format='eps' )
-   elif options.outFormat == 'eps':
-      fig.savefig( options.out + '.eps', format='eps' )
 
 def drawChrLines( ax, options, data):
    for c in data.chrNames:
@@ -819,7 +787,8 @@ def main():
    normalizeData( options, data )
    transformData( options, data )
 
-   fig, pdf = initImage( options, data )
+   figHeight = ( data.numberOfMafs + len( data.annotationOrder ) + 0.5 ) / 4.0
+   fig, pdf = lpt.initImage( 8.0, figHeight, options, data )
    axDict = establishAxes( fig, options, data )
    labelAxes( fig, axDict, options, data )
    drawAnnotations( axDict, options, data )
@@ -827,7 +796,7 @@ def main():
    drawLegend( options, data )
 
    setAxisLimits( axDict, options, data )
-   writeImage( fig, pdf, options, data )
+   lpt.writeImage( fig, pdf, options )
 
 if __name__ == '__main__':
    main()
