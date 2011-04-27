@@ -27,9 +27,14 @@ class Assembly:
       self.totalErrors = 0
 
 def initOptions( parser ):
-   parser.add_option( '--contigPathStatsDir', dest='contigPathStatsDir',
+   parser.add_option( '--statsScaffoldsContigPathDir', dest='statsScaffoldsContigPathDir',
                       type='string',
-                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
+                      help=('Directory with contigPathStats from Scaffolds alignment. '
+                            'Names: A1.contigPathStats.xml .'))
+   parser.add_option( '--statsContigsContigPathDir', dest='statsContigsContigPathDir',
+                      type='string',
+                      help=('Directory with contigPathStats from Contigs alignment. '
+                            'Names: A1.contigPathStats.xml .'))
    parser.add_option( '--sortOn', dest='sortOn',
                       type='string', default='totalErrors',
                       help=('Column to sort the table on. default=%default'))
@@ -56,7 +61,8 @@ def checkOptions( args, options, parser ):
       for k in allowedKeys:
          print k
       sys.exit( 0 )
-   dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
+   dirs = { 'statsScaffoldsContigPathDir' : options.statsScaffoldsContigPathDir,
+            'statsContigsContigPathDir'   : options.statsContigsContigPathDir }
    for d in dirs:
       if not dirs[ d ]:
          parser.error('specify --%s\n' % d )
@@ -67,11 +73,11 @@ def checkOptions( args, options, parser ):
    if options.sortOn not in allowedKeys:
       parser.error( '--sortOn %s is not in dict of allowed keys:\n %s.' % ( options.sortOn, allowedKeys ))
 
-def readDir( options ):
-   aFiles = glob.glob( os.path.join( options.contigPathStatsDir, '*.contigPathStats.xml'))
-   namepat = re.compile( '^(\S{2,3})\.contigPathStats.xml' )
-   assembliesList = []
-   for f in aFiles:
+def readDirs( options ):
+   sFiles = glob.glob( os.path.join( options.statsScaffoldsContigPathDir, '*.pathStats.xml'))
+   namepat = re.compile( '^(\S{2,3})\.pathStats.xml' )
+   assembliesDict = {}
+   for f in sFiles:
       name = re.match( namepat, os.path.basename( f )).group( 1 )
       if 'subsetFile' in vars( options ):
          if options.subsetFile:
@@ -92,8 +98,28 @@ def readDir( options ):
             a.valuesDict[ elm ] = root.attrib[ elm ].split()
          else:
             a.valuesDict[ elm ] = int( root.attrib[ elm ] )
-      assembliesList.append( a )
-   return assembliesList
+      a.valuesDict[ 'scaffoldN50' ] = int( root.attrib[ 'contigN50' ])
+      a.valuesDict[ 'scaffoldNG50' ] = int( root.attrib[ 'contigNG50' ])
+      assembliesDict[ name ] = a
+   cFiles = glob.glob( os.path.join( options.statsContigsContigPathDir, '*.pathStats.xml'))
+   for f in cFiles:
+      name = re.match( namepat, os.path.basename( f )).group( 1 )
+      if 'subsetFile' in vars( options ):
+         if options.subsetFile:
+            if name not in options.assemblySubset:
+               continue
+      if name not in assembliesDict:
+         sys.stderr.write('Error, %s found in Scaffolds but not in Contigs' % name)
+         sys.exit(1)
+      try:
+         xmlTree = ET.parse( f )
+      except expat.ExpatError: # broken xml file
+         continue
+      xmlTree = ET.parse( f )
+      root=xmlTree.getroot()
+      assembliesDict[ name ].valuesDict[ 'contigN50' ] = int( root.attrib[ 'contigN50' ])
+      assembliesDict[ name ].valuesDict[ 'contigNG50' ] = int( root.attrib[ 'contigNG50' ])
+   return assembliesDict.values()
 
 def prettyNumber( n ):
    if isinstance( n, float ):
@@ -187,17 +213,17 @@ def performSort( assembliesList, options ):
    return assembliesList
 
 def main():
-   usage = ( 'usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
-             '%prog takes in the contig path statistics directory\n'
-             '( --contigPathStatsDir ) and prints to STDOUT a latex formatted table.' )
+   usage = ( 'usage: %prog --statsScaffoldsContigPathDir=path/to/dir/ --statsContigsContigPathDir=path/to/dir/ [options]\n\n'
+             '%prog takes in the contig path statistics directories from both the Scaffolds and Contigs alignments\n'
+             '( --statsScaffoldsContigPathDir --statsContigsContigPathDir ) and prints to STDOUT a latex formatted table.' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
    
-   assembliesList = readDir( options )
+   assembliesList = readDirs( options )
    calculateErrors( assembliesList, options )
 
    assembliesList = performSort( assembliesList, options )

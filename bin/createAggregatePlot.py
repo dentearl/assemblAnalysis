@@ -505,9 +505,9 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
-   ( fig, pdf ) = initImage( options, data )
+   fig, pdf = initImage( options, data )
    axDict = establishAxes( fig, options, data )
    
    data.valuesDict = readFile( options.file, options )

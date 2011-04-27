@@ -303,11 +303,11 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
    if not options.outputRanks:
-      ( fig, pdf ) = initImage( options, data )
+      fig, pdf = initImage( options, data )
 
    stats = readFiles( options )
    sortedOrder = sorted( stats.values(), key=lambda x: x.sumLower, reverse=False )

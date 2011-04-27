@@ -464,7 +464,7 @@ def main():
              'to STDOUT a latex formated section of text.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
 
    teamsDict = readInfoFile( options )

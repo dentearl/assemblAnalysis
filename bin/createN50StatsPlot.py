@@ -10,7 +10,7 @@ create the N50 stats table.
 output is latex
 
 """
-from createContigPathStatsTable import readDir
+from createContigPathStatsTable import readDirs
 import createIndividualSection as cis
 import createN50StatsTable as cnfst
 import createSortedCoveragesPlot as cscp
@@ -36,23 +36,27 @@ class Data:
    pass
 
 def initOptions( parser ):
-   parser.add_option( '--contigPathStatsDir', dest='contigPathStatsDir',
+   parser.add_option( '--statsScaffoldsContigPathDir', dest='statsScaffoldsContigPathDir',
                       type='string',
                       help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
-   parser.add_option('--labels', dest='labels',
+   parser.add_option( '--statsContigsContigPathDir', dest='statsContigsContigPathDir',
+                      type='string',
+                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
+   parser.add_option('--title', dest='title',
                      type='string',
-                     default=( 'Block N50,Contig Path N50,Scaffold Path N50,Contig NA50, N50 Statistics'),
+                     default=( 'N50 Statistics'),
                      help=('Lables of the facets, comma separated, from top '
                            'to bottom: default=%default'))
    parser.add_option( '--sortOn', dest='sortOn',
-                      type='string', default='contigNA50',
+                      type='string', default='contigNG50',
                       help=('Allows a different sort order. default=%default'))
    parser.add_option( '--outputRanks', dest='outputRanks', action='store_true',
                       default=False, help=('Outputs rankings as tab delimited '
                                            'stream to STDOUT. default=%default'))
 
 def checkOptions( options, parser ):
-   dirs = { 'contigPathStatsDir'   : options.contigPathStatsDir }
+   dirs = { 'statsScaffoldsContigPathDir' : options.statsScaffoldsContigPathDir,
+            'statsContigsContigPathDir'   : options.statsContigsContigPathDir }
    for d in dirs:
       if not dirs[ d ]:
          parser.error('specify --%s\n' % d )
@@ -60,18 +64,39 @@ def checkOptions( options, parser ):
          parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
          parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
+   options.columns = [ 'blockNG50', 'contigPathNG50', 'scaffoldPathNG50', 
+                       'contigNG50', 'contigN50', 'scaffoldN50', 'scaffoldNG50' ]
    if options.outputRanks:
       return
-   allowedKeys = set(['contigNA50', 'scaffoldPathN50', 'haplotypePathN50', 'blockN50'])
+   allowedKeys = set([ 'blockNG50', 'contigPathNG50', 'scaffoldPathNG50', 
+                       'scaffoldN50', 'scaffoldNG50', 'contigNG50', 'contigN50' ])
    if options.sortOn not in allowedKeys:
       parser.error('--sortOn %s is not in the dict of allowed keys: %s' % 
                    ( options.sortOn, allowedKeys ))
-   labelList = options.labels.split(',')
-   if len( labelList ) != 5:
-      parser.error('--label needs to contain 5 items, comma separated.')
-   k = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50',  'contigNA50', 'main']
-   options.labelDict = dict( zip( k, labelList ))
-
+   options.columnLabels = { 'blockNG50':'Block NG50', 
+                            'contigPathNG50':'Contig Path NG50',
+                            'scaffoldPathNG50':'Scaffold Path NG50',
+                            'contigN50':'Contig N50',
+                            'contigNG50':'Contig NG50',
+                            'scaffoldN50':'Scaffold N50',
+                            'scaffoldNG50':'Scaffold NG50'
+                            }
+   options.colors = { 'blockNG50':'#d62728',        # darker red
+                      'contigPathNG50':'#ffbb78',   # light orange
+                      'scaffoldPathNG50':'#ff7f0e', # darker orange
+                      'contigN50':'#aec7e8',        # lighter blue
+                      'contigNG50':'#1f77b4',       # darker blue
+                      'scaffoldN50':'gray',
+                      'scaffoldNG50':'k'
+                      }
+   options.shapes = { 'blockNG50':'.', 
+                      'contigPathNG50':'.',
+                      'scaffoldPathNG50':'.',
+                      'contigN50':'.',
+                      'contigNG50':'.',
+                      'scaffoldN50':'.',
+                      'scaffoldNG50':'.'
+                      }
 def initImage( options, data ):
    pdf = None
    if options.outFormat == 'pdf' or options.outFormat == 'all':
@@ -84,7 +109,6 @@ def establishAxis( fig, options, data ):
    """ 
    """
    axDict = {}
-   columns = [ 'blockN50', 'haplotypePathN50', 'scaffoldPathN50','contigNA50' ] 
    # 'totalContigNumber', 'contigN50'
    options.axLeft    = 0.09
    options.axRight   = 0.98
@@ -93,7 +117,7 @@ def establishAxis( fig, options, data ):
    options.axHeight  = 0.9
    options.axTop     = options.axBottom + options.axHeight
    options.margin    = 0.08
-   indvHeight = ( options.axHeight - (len( columns) - 1.0) * options.margin ) / float( len( columns ))
+   indvHeight = ( options.axHeight - (len( options.columns) - 1.0) * options.margin ) / float( len( options.columns ))
    prevY = options.axTop
    i = -1
    axDict['main'] = fig.add_axes( [options.axLeft, options.axBottom,
@@ -121,33 +145,16 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
                                                 linewidth=1.0,
                                                 linestyle='dotted',
                                                 color=(0.8, 0.8, 0.8) ))
-   columns = ['contigNA50', 'contigN50', 'scaffoldPathN50', 'haplotypePathN50','blockN50' ]
-   columnLabels = { 'blockN50':'Block N50', 
-                    'haplotypePathN50':'Contig Path N50',
-                    'scaffoldPathN50':'Scaffold Path N50',
-                    'contigN50':'Contig N50',
-                    'contigNA50':'Contig NG50' }
-   colors = { 'blockN50':'#d62728', # darker red
-              'haplotypePathN50':'#ffbb78', # light orange
-              'scaffoldPathN50':'#ff7f0e', # darker orange
-              'contigN50':'#aec7e8', # lighter blue
-              'contigNA50':'#1f77b4' # darker blue }
-              }
-   shapes = { 'blockN50':'.', 
-              'haplotypePathN50':'.',
-              'scaffoldPathN50':'.',
-              'contigN50':'.',
-              'contigNA50':'.' }
    plots = []
    # jitter the odd numbered points 0.1 to the 
    # left and the even numbered points 0.1 to the right
    jitter = 0.1
    side = 1
-   for c in columns:
+   for c in options.columns:
       side = -side
       plots.append( axDict['main'].plot( numpy.arange(0, len( assembliesList )) + jitter*side,
                                          getVals( assembliesList, c ), 
-                                         marker=shapes[c], color=colors[c], markersize=18.0,
+                                         marker=options.shapes[c], color=options.colors[c], markersize=18.0,
                                          linestyle='none', markeredgecolor='w'))
    for loc, spine in axDict['main'].spines.iteritems():
       if loc in [ 'left'  ]:
@@ -181,18 +188,21 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
                                              color=(0.8, 0.8, 0.8),
                                              linestyle='dotted'))
    axDict['main'].set_xlim( [ -0.5, len( assembliesList )] )
-   axDict['main'].set_title( options.labelDict[ 'main' ] )
+   axDict['main'].set_title( options.title )
    legendLabels = []
-   for c in columns:
-      legendLabels.append( columnLabels[c] )
+   for c in options.columns:
+      legendLabels.append( options.columnLabels[c] )
+   # I want the legend to print in the same order as the data appears
+   legendLabels.reverse()
+   plots.reverse()
    leg = plt.legend( plots, legendLabels, 'upper right', numpoints=1 )
    leg._drawFrame=False
 
 def rankings( assembliesList, options ):
-   print '#Assembly\tNA50\tContig Path N50\tScaffold Path N50'
+   print '#Assembly\tNG50\tContig Path NG50\tScaffold Path NG50'
    for a in assembliesList:
       sys.stdout.write('%s' % a.ID )
-      for e in [ 'contigNA50', 'haplotypePathN50', 'scaffoldPathN50' ]:
+      for e in [ 'contigNG50', 'contigPathNG50', 'scaffoldPathNG50' ]:
          sys.stdout.write('\t%s' % a.valuesDict[ e ])
       sys.stdout.write('\n')
 
@@ -200,7 +210,7 @@ def findMaxMin( assembliesList, options ):
    theMax = 0
    theMin = sys.maxint
    for a in assembliesList:
-      for c in ['contigN50', 'contigNA50', 'scaffoldPathN50', 'haplotypePathN50','blockN50' ]:
+      for c in options.columns:
          if theMax < a.valuesDict[ c ]:
             theMax = a.valuesDict[ c ]
          if theMin > a.valuesDict[ c ]:
@@ -208,29 +218,29 @@ def findMaxMin( assembliesList, options ):
    return ( theMax, theMin )
 
 def main():
-   usage = ( 'usage: %prog --contigPathStatsDir=path/to/dir/ [options]\n\n'
+   usage = ( 'usage: %prog --statsScaffoldsContigPathDir=path/to/dir/ [options]\n\n'
              '%prog takes a directory of contig path stats xml files\n'
-             '( --contigPathStatsDir ) named as NAME.contigPathStats.xml and creates a plot.')
+             '( --statsScaffoldsContigPathDir ) named as NAME.contigPathStats.xml and creates a plot.')
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
    cscp.initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    cscp.checkOptions( options, parser )
    las.checkOptions( options, parser )
    checkOptions( options, parser )
    
-   assembliesList = readDir( options )
+   assembliesList = readDirs( options )
    assembliesList = sorted( assembliesList, key=lambda x: x.valuesDict[ options.sortOn ], 
                             reverse=True )
-   ( maxesMax, minsMin ) = findMaxMin( assembliesList, options )
 
+   maxesMax, minsMin = findMaxMin( assembliesList, options )
    if options.outputRanks:
       rankings( assembliesList, options )
       return
 
-   ( fig, pdf ) = initImage( options, data )
+   fig, pdf = initImage( options, data )
    axDict = establishAxis( fig, options, data )
 
    drawData( assembliesList, maxesMax, minsMin, axDict, options )

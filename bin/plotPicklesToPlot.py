@@ -468,31 +468,6 @@ def drawLegend( options, data ):
                                                      color= col, edgecolor=None, linewidth=0.0 ))
          data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
                              verticalalignment='top', fontsize = 7 )
-   if not options.stackFillBlocks and not options.fill and not options.stackFillContigPaths:
-      pass
-      # data.footerAx.text( x=0.9, y = 0.5, horizontalalignment='right',
-      #                     verticalalignment = 'center',
-      #                     s = 'Coverage', fontsize = 8 )
-      # # baseline
-      # data.footerAx.add_line( lines.Line2D( xdata=[0.91, 0.97],
-      #                                       ydata=[ 0.45, 0.45],
-      #                                       color= ( 0.8, 0.8, 0.8),
-      #                                       linewidth=0.3) )
-      # # maf demo line
-      # data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959,.96, 0.97 ],
-      #                                       ydata = [ 0.55, 0.55, 0.55, 0.55, 0.52,  0.505, 0.45, 0.45, 0.54, 0.55 ],
-      #                                       c = (0.2, 0.2, 0.2), linewidth = 0.3 ))
-      
-   if options.blockEdgeDensity:
-      pass
-      # data.footerAx.text( x=0.9, y = 0.25, horizontalalignment='right',
-      #                     verticalalignment = 'center',
-      #                     s = 'Gapless block edge density', fontsize = 8 )
-      # # block edge denisty demo line
-      # data.footerAx.add_line( lines.Line2D( xdata = [ 0.91, 0.92, 0.93, 0.94, 0.949, 0.95, 0.951,  0.959, 0.96, 0.961, 0.97 ],
-      #                                       ydata = [ 0.25, 0.24, 0.25, 0.24, 0.24,  0.35, 0.23,  0.23, 0.36, 0.25, 0.245 ],
-      #                                       c = '#FA698D', linewidth = 0.3 ))
-         
 
 def scaleFont( c, chrLen, genLen, axLen, options, data):
    """ find the approximate font size that will allow a string, c, to 
@@ -529,10 +504,6 @@ def drawAnnotations( axDict, options, data ):
                                        y2=0,
                                        facecolor = options.annotColors[ a ],
                                        linewidth = 0.0 )
-         # axDict[ c + a ].add_line( lines.Line2D( xdata=data.annotWigDict[ c ]['xAxis'], 
-         #                                         ydata=data.annotWigDict[ c ][ a + 'Count' ], 
-         #                                         linewidth = 0.4,
-         #                                         color='m'))
          # draw clipping regions
          if len( data.annotationCeilings ) > 0:
             drawClippedAnnotationRegions( axDict, c, a, i, options, data )
@@ -839,7 +810,7 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser, data )
    las.checkOptions( options, parser )
    loadAnnots( options, data )
@@ -848,7 +819,7 @@ def main():
    normalizeData( options, data )
    transformData( options, data )
 
-   ( fig, pdf ) = initImage( options, data )
+   fig, pdf = initImage( options, data )
    axDict = establishAxes( fig, options, data )
    labelAxes( fig, axDict, options, data )
    drawAnnotations( axDict, options, data )

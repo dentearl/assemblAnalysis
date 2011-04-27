@@ -32,7 +32,7 @@ def main():
              '( --columnTitleCharLimit ) will limit the length of each column\'s title.\n' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    linenumber = 0
    header = []

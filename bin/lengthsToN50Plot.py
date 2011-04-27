@@ -190,15 +190,15 @@ def main():
              'and then produces an N50 style figure.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    scaffolds = readFile( options.scaffoldsFile )
    contigs   = readFile( options.contigsFile )
    
-   ( pScaffs, pContigs ) = processData( scaffolds, contigs, options )
+   pScaffs, pContigs = processData( scaffolds, contigs, options )
    
-   ( fig, pdf ) = initImage( options  )
+   fig, pdf = initImage( options  )
    ax = establishAxis( fig, options )
    
    drawData( pScaffs, pContigs, ax, options )

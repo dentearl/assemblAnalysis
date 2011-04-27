@@ -21,6 +21,8 @@ import os
 import signal # deal with broken pipes
 import sys
 import re
+import xml.etree.ElementTree as ET
+import xml.parsers.expat as expat # exception handling for empty xml
 
 signal.signal( signal.SIGPIPE, signal.SIG_DFL ) # broken pipes
 
@@ -42,7 +44,7 @@ class Assembly:
 def initOptions( parser ):
    parser.add_option( '--subStatsDir', dest='subStatsDir',
                       type='string',
-                      help=('Directory with subStats. Names: A1.subStats.upper.txt .'))
+                      help=('Directory with subStats. Names: A1.subStats.upper.xml .'))
    parser.add_option( '--out', dest='out', default='mySubStatsPlot',
                       type='string',
                       help='filename where figure will be created. No extension. default=%default' )
@@ -76,9 +78,8 @@ def checkOptions( options, parser ):
       parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def readSubStatsDir( assembliesDict, options ):
-   lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.txt') )
-   upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.txt') )
-   
+   lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.xml') )
+   upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.xml') )
    namereg = '^([A-Z0-9]{2,3})\.subStats.*'
    namepat = re.compile( namereg  )
    for l in lowerStatsFiles:
@@ -90,14 +91,16 @@ def readSubStatsDir( assembliesDict, options ):
       if options.subsetFile:
          if ID not in options.assemblySubset:
             continue
+      try:
+         xmlTree = ET.parse( l )
+      except expat.ExpatError: # broken xml file
+         continue
+      xmlTree = ET.parse( l )
+      root=xmlTree.getroot()
       assembliesDict[ ID ] = Assembly()
       assembliesDict[ ID ].ID = ID
-      f = open( l, 'r' )
-      for line in f:
-         line = line.strip()
-         d = line.split('\t')
-         assembliesDict[ ID ].subStatsLower[ d[0] ] = d[ 1 ]
-      f.close()
+      for elm in root.attrib.keys():
+         assembliesDict[ ID ].subStatsLower[ elm ] = int(float( root.attrib[ elm ]))
    for u in upperStatsFiles:
       m = re.match( namepat, os.path.basename( u ))
       if not m:
@@ -110,19 +113,21 @@ def readSubStatsDir( assembliesDict, options ):
       if ID not in assembliesDict:
          sys.stderr.write('unable to locate key %s in assembliesDict.\n')
          sys.exit( 1 )
-      f = open( u, 'r' )
-      for line in f:
-         line = line.strip()
-         d = line.split('\t')
-         assembliesDict[ ID ].subStatsUpper[ d[0] ] = d[ 1 ]
-      f.close()
+      try:
+         xmlTree = ET.parse( u )
+      except expat.ExpatError: # broken xml file
+         continue
+      xmlTree = ET.parse( u )
+      root=xmlTree.getroot()
+      for elm in root.attrib.keys():
+         assembliesDict[ ID ].subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
    return assembliesDict
 
 def sumErrors( assembliesDict, options ):
    for a in assembliesDict:
       assembliesDict[ a ].allUp = 0
       assembliesDict[ a ].allLo = 0
-      for e in [ 'Total-errors-in-homozygous', 'Total-errors-in-heterozygous']: 
+      for e in [ 'totalErrorsInHomozygous', 'totalErrorsInHeterozygous']: 
          # 'Total-errors-in-one-haplotype-only' ]:
          assembliesDict[ a ].allLo += float( assembliesDict[ a ].subStatsLower[ e ] )
          assembliesDict[ a ].allUp += float( assembliesDict[ a ].subStatsUpper[ e ] )
@@ -219,7 +224,7 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    #if not options.normalize:
    axDict[ 'all' ].set_yscale('log')
    if yMin > yMax:
-      sys.stderr.write( 'yMin > yMax: %f > %f\n' % ( yMin, yMax ))
+      sys.stderr.write( 'Error, yMin > yMax: %f > %f\n' % ( yMin, yMax ))
       sys.exit( 1 )
    axDict[ 'all' ].set_ylim( [ yMin * 0.9, yMax * 1.1] )
    axDict[ 'all' ].set_xlim( 0, len(xNames) + 1 )
@@ -232,8 +237,8 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
          label.set_rotation( 90 )
 
    # all the other plots
-   axNames = { 'hom':'Total-errors-in-homozygous', 
-               'het':'Total-errors-in-heterozygous'}
+   axNames = { 'hom':'totalErrorsInHomozygous', 
+               'het':'totalErrorsInHeterozygous'}
    #            'indel':'Total-errors-in-one-haplotype-only' }
    for key in axNames:
       yMax = 0
@@ -309,11 +314,17 @@ def logLower( y ):
          return ( 10.0 ** ( i - 1 ) )
 
 def normalizeData( assembliesDict, options ):
-   names = { 'Total-errors-in-homozygous':'Total-correct-in-homozygous',
-             'Total-errors-in-heterozygous':'Total-correct-in-heterozygous',
-             'Total-errors-in-one-haplotype-only':'Total-correct-in-one-haplotype-only' }
+   names = { 'totalErrorsInHomozygous':'totalCorrectInHomozygous',
+             'totalErrorsInHeterozygous':'totalCorrectInHeterozygous',
+             'totalErrorsInOneHaplotypeOnly':'totalCorrectInOneHaplotypeOnly' }
    for a in assembliesDict:
       for key in names:
+         if key not in assembliesDict[ a ].subStatsLower:
+            sys.stderr.write('Error, assembly %s lower, is missing key %s!\n' % (a, key))
+            sys.exit(1)
+         if key not in assembliesDict[ a ].subStatsUpper:
+            sys.stderr.write('Error, assembly %s upper, is missing key %s!\n' % (a, key))
+            sys.exit(1)
          assembliesDict[ a ].subStatsLower[ key ] = ( float(assembliesDict[ a ].subStatsLower[ key ]) / 
                                                       float(assembliesDict[ a ].subStatsLower[ names[ key ] ]) )
          assembliesDict[ a ].subStatsUpper[ key ] = ( float(assembliesDict[ a ].subStatsUpper[ key ]) / 
@@ -326,25 +337,25 @@ def rankings( assembliesDict, sortOrder, options, data ):
       a = assembliesDict[ aName ]
       for v in [ a.allLo, a.allUp ]:
          sys.stdout.write('\t%s' % v )
-      for key in [ 'Total-errors-in-homozygous', 'Total-errors-in-heterozygous',
-                   'Total-errors-in-one-haplotype-only' ]:
+      for key in [ 'totalErrorsInHomozygous', 'totalErrorsInHeterozygous',
+                   'totalErrorsInOneHaplotypeOnly' ]:
          sys.stdout.write('\t%s\t%s' % ( a.subStatsLower[ key ], a.subStatsUpper[ key ] ))
       sys.stdout.write('\n')
       
 def main():
    usage = ( 'usage: %prog --subStatsDir=path/to/dir/ [options]\n\n'
              '%prog takes in a directory of substitution stats files ( --subStatsDir )\n'
-             'with filenames as NAME.subStats.[upper|lower].txt and produces a plot.')
+             'with filenames as NAME.subStats.[upper|lower].xml and produces a plot.')
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    las.checkOptions( options, parser )
    
    if not options.outputRanks:
-      ( fig, pdf ) = initImage( options, data )
+      fig, pdf = initImage( options, data )
       axDict = establishAxes( fig, options, data )
    
    assembliesDict = {}

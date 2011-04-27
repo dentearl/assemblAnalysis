@@ -72,7 +72,7 @@ def main():
              'N (or n) characters are encountered. Writes to STDOUT.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    processStream( options )

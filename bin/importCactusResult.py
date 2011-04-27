@@ -13,6 +13,7 @@ from optparse import OptionParser
 import os
 import re
 import string
+import shutil
 import sys
 
 def initOptions( parser ):
@@ -64,14 +65,21 @@ def checkOptions( options, parser ):
       parser.error('--outDir %s is not a directory!\n' % options.outDir )
 
 def verifyNameIsUnique( options ):
-   pass
+   typeMap = {'scaffold':'Scaffolds',
+              'contig':'Contigs' }
+   if os.path.exists( os.path.join( options.outDir, 'mafs%s' % typeMap[options.type], options.name )):
+      sys.stderr.write('Error, %s already exists in the project dir.\n' % options.name)
+      sys.exit(1)
+   f = open( os.path.join( options.outDir, 'mafs%s' % typeMap[options.type], options.name+'.maf' ), 'w' )
+   f.close()
 
 def populateDirectoryStructure( options ):
    if not os.path.exists( options.outDir ):
       os.makedirs( options.outDir )
-   for d in [ 'mafsContigs', 'mafsScaffolds', 'statsContigsAggregateColumns',
-              'statsScaffoldsAggregateColumns', 'statsScaffoldsContigPath', 'statsScaffoldsCopyNumber',
-              'statsScaffoldsLinkage', 'statsScaffoldsSubstitutions' ]:
+   for d in [ 'mafsContigs', 'mafsScaffolds', 'statsScaffoldsAggregateColumns', 
+              'statsScaffoldsContigPath', 'statsScaffoldsCopyNumber',
+              'statsScaffoldsContiguity', 'statsScaffoldsSubstitutions',
+              'statsContigsContigPath']:
       d = os.path.join( options.outDir, d )
       if os.path.exists( d ) and not os.path.isdir( d ):
          sys.stderr.write('%s exists but is not a directory!\n' % d )
@@ -79,8 +87,32 @@ def populateDirectoryStructure( options ):
       if not os.path.exists( d ):
          os.makedirs( d )
 
+def myCopy( src, dst ):
+   if not os.path.exists( src ):
+      sys.stderr.write('Error, %s does not exist!\n' % src)
+      sys.exit(1)
+   shutil.copy( src, dst )
+
 def migrate( options ):
-   pass
+   if options.type == 'scaffold':
+      template = { os.path.join( options.inDir, 'annotatedPaths.maf' ): os.path.join( options.outDir, 'mafsScaffolds', options.name+'.maf' ),
+                   os.path.join( options.inDir, 'copyNumberStats_0.xml' ): os.path.join( options.outDir, 'statsScaffoldsCopyNumber', '%s.copyNumber_0.xml' % options.name ),
+                   os.path.join( options.inDir, 'copyNumberStats_1000.xml' ): os.path.join( options.outDir, 'statsScaffoldsCopyNumber', '%s.copyNumber_1000.xml' % options.name ),
+                   os.path.join( options.inDir, 'linkageStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContiguity', '%s.contiguousStats.xml' % options.name),
+                   os.path.join(options.inDir, 'substitutionStats_0_0_0.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.upper.xml' % options.name),
+                   os.path.join( options.inDir, 'substitutionStats_1000_98_5.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.lower.xml' % options.name),
+                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPath', '%s.pathStats.xml' % options.name),
+                   os.path.join( options.inDir, 'coveragePlots', 'blockLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.blocks_haplotypes_agg.txt' % options.name ),
+                   os.path.join( options.inDir, 'coveragePlots', 'contigPathLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contig_path_haplotypes_agg.txt' % options.name ),
+                   os.path.join( options.inDir, 'coveragePlots', 'contigLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contigs_haplotypes_agg.txt' % options.name ),
+                   os.path.join( options.inDir, 'coveragePlots', 'blockLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.blocks_haplotypes_agg.txt' % options.name )
+         }
+   elif options.type == 'contig':
+      template = { os.path.join( options.inDir, 'annotatedPaths.maf' ): os.path.join( options.outDir, 'mafsContigs', options.name+'.maf' ),
+                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsContigsContigPath', '%s.pathStats.xml' % options.name)}
+
+   for src in template:
+      myCopy( src, template[src] )
 
 def main():
    usage = ( 'usage: %prog --inDir=path/to/input --outDir=path/to/out --type=[contig|scaffold] [options]\n\n'
@@ -91,11 +123,11 @@ def main():
              '(e.g. --name R1) of the assembly in the analysis.' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
 
-   verifyNameIsUnique( options )
    populateDirectoryStructure( options )
+   verifyNameIsUnique( options )
 
    migrate( options )
 

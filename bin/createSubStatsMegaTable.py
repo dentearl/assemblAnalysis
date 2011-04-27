@@ -7,6 +7,8 @@ from optparse import OptionParser
 import os
 import re
 import sys
+import xml.etree.ElementTree as ET
+import xml.parsers.expat as expat # exception handling for empty xml
 
 class Assembly:
    """ Assembly objects are generated from lines 
@@ -20,7 +22,7 @@ class Assembly:
 def initOptions( parser ):
    parser.add_option( '--subStatsDir', dest='subStatsDir',
                       type='string',
-                      help=('Directory with subStats. Names: A1.subStats.upper.txt .'))
+                      help=('Directory with subStats. Names: A1.subStats.upper.xml .'))
    parser.add_option( '--order', dest='order',
                       type='string',
                       help=('Order (left-right, top-bottom) of plots, comma '
@@ -41,8 +43,8 @@ def checkOptions( args, options, parser ):
       options.order = []
 
 def readSubStatsDir( assembliesDict, options ):
-   lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.txt') )
-   upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.txt') )
+   lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.xml') )
+   upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.xml') )
    
    namereg = '^([A-Z0-9]{2,3})\.subStats.*'
    namepat = re.compile( namereg  )
@@ -54,12 +56,16 @@ def readSubStatsDir( assembliesDict, options ):
       ID = m.group( 1 )
       assembliesDict[ ID ] = Assembly()
       assembliesDict[ ID ].ID = ID
-      f = open( l, 'r' )
-      for line in f:
-         line = line.strip()
-         d = line.split('\t')
-         assembliesDict[ ID ].subStatsLower[ d[0] ] = d[ 1 ]
-      f.close()
+      try:
+         xmlTree = ET.parse( l )
+      except expat.ExpatError: # broken xml file
+         continue
+      xmlTree = ET.parse( l )
+      root=xmlTree.getroot()
+      assembliesDict[ ID ] = Assembly()
+      assembliesDict[ ID ].ID = ID
+      for elm in root.attrib.keys():
+         assembliesDict[ ID ].subStatsLower[ elm ] = int(float( root.attrib[ elm ]))
    for u in upperStatsFiles:
       m = re.match( namepat, os.path.basename( u ))
       if not m:
@@ -69,12 +75,14 @@ def readSubStatsDir( assembliesDict, options ):
       if ID not in assembliesDict:
          sys.stderr.write('unable to locate key %s in assembliesDict.\n')
          sys.exit( 1 )
-      f = open( u, 'r' )
-      for line in f:
-         line = line.strip()
-         d = line.split('\t')
-         assembliesDict[ ID ].subStatsUpper[ d[0] ] = d[ 1 ]
-      f.close()
+      try:
+         xmlTree = ET.parse( u )
+      except expat.ExpatError: # broken xml file
+         continue
+      xmlTree = ET.parse( u )
+      root=xmlTree.getroot()
+      for elm in root.attrib.keys():
+         assembliesDict[ ID ].subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
    return assembliesDict
 
 def prettyNumber( n ):
@@ -87,18 +95,18 @@ def prettyNumber( n ):
 def printLine( a, kind ):
    sys.stdout.write( '%s' % a.ID )
    if kind == 'hom':
-      for k in [ 'Total-calls-in-homozygous', 
-                 'Total-correct-in-homozygous', 'Total-errors-in-homozygous' ]:
+      for k in [ 'totalCallsInHomozygous', 
+                 'totalCorrectInHomozygous', 'totalErrorsInHomozygous' ]:
          sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
    elif kind == 'het':
-      for k in [ 'Total-calls-in-heterozygous', 
-                 'Total-correct-in-heterozygous', 'Total-errors-in-heterozygous' ]:
+      for k in [ 'totalCallsInHeterozygous', 
+                 'totalCorrectInHeterozygous', 'totalErrorsInHeterozygous' ]:
          sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
    elif kind == 'indel':
-      for k in [ 'Total-calls-in-one-haplotype-only', 
-                 'Total-correct-in-one-haplotype-only', 'Total-errors-in-one-haplotype-only' ]:
+      for k in [ 'totalCallsInOneHaplotypeOnly', 
+                 'totalCorrectInOneHaplotypeOnly', 'totalErrorsInOneHaplotypeOnly' ]:
          sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
 
@@ -144,10 +152,10 @@ Assembly & Calls & Correct (bits) & Errors \\\\
 def main():
    usage = ( 'usage: %prog --subStatsDir=path/to/dir/ [options]\n\n'
              '%prog takes a directory of substitution stats files ( --subStatsdir ) with\n'
-             'names as NAME.subStats.[upper|lower].txt and writes to STDOUT a latex formated table.')
+             'names as NAME.subStats.[upper|lower].xml and writes to STDOUT a latex formated table.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
    
    assembliesDict = {}

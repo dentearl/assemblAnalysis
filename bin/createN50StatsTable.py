@@ -85,10 +85,10 @@ def main():
             'writes to STDOUT a latex formatted table.')
    parser = OptionParser( usage=usage )
    cnfsp.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    cnfsp.checkOptions( options, parser )
    
-   assembliesList = ccpst.readDir( options )
+   assembliesList = ccpst.readDirs( options )
    ccpst.calculateErrors( assembliesList, options )
    assembliesList = sorted( assembliesList, key=lambda x: x.valuesDict[ options.sortOn ], reverse=True )
    maxesDict = calculateMaxesDict( assembliesList )

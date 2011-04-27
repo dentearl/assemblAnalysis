@@ -33,7 +33,7 @@ def main():
              'and writes to STDOUT a latex compilable document.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
 
    NSFMargins = '''

@@ -32,7 +32,7 @@ def main():
               'specified, sequence names are printed next to their length.')
     parser = OptionParser( usage=usage )
     initOptions( parser )
-    ( options, args ) = parser.parse_args()
+    options, args = parser.parse_args()
     checkOptions( options )
     curSeq = ''
     curLen = 0

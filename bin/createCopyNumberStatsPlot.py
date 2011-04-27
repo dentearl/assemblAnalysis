@@ -226,9 +226,9 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
-   ( fig, pdf ) = initImage( options, data )
+   fig, pdf = initImage( options, data )
 
    storedCategories = readFiles( options )
    

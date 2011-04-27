@@ -122,7 +122,7 @@ def main():
              '%prog takes in ranking files and reports the best overall or best within a Team.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
    
    assemblies = readFiles( args, options )

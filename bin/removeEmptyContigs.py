@@ -39,7 +39,7 @@ def main():
              'STDOUT all of the non-empty sequences.' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    header = ''

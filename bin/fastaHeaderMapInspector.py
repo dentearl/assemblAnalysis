@@ -47,7 +47,7 @@ def main():
               '( --id=HEADER ) and then looks up the name of that sequence in the orignal fasta file.' )
     parser = OptionParser( usage=usage )
     initOptions( parser )
-    ( options, args ) = parser.parse_args()
+    options, args = parser.parse_args()
     checkOptions( parser, options )
     faMap = fhm.readMap( options )
     faMap = dict( (v,k) for k, v in faMap.iteritems() )

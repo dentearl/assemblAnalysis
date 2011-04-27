@@ -235,14 +235,14 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
    if not options.outputRanks:
-      ( fig, pdf ) = initImage( options, data )
+      fig, pdf = initImage( options, data )
       axDict = establishAxes( fig, options, data )
    
-   ( data.statsList, data.xData ) = readFiles( options )
+   data.statsList, data.xData = readFiles( options )
    for i in range(0, len( data.statsList )):
       data.statsList[i] = sorted( data.statsList[i], key=lambda x: x.mid, reverse=False )
    

@@ -48,7 +48,7 @@ def main():
              'of repeats of that character in the STDIN file (fasta format).' )
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    processStream( options )

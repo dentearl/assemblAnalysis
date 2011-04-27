@@ -183,13 +183,13 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    valuesList = readStream( options )
    valuesList = sorted( valuesList, key=lambda key: key.tot, reverse=True )
    
-   ( fig, pdf ) = initImage( options, data )
+   fig, pdf = initImage( options, data )
    ax = establishAxis( fig, options, data )
    
    drawData( valuesList, ax, options )

@@ -181,7 +181,7 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser, data )
    readGff( options, data )
    for c in data.chrNames:

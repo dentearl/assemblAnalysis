@@ -96,7 +96,7 @@ def main():
              'Runs of 26 N\'s or more are truncated to be 25. Output written to STDOUT.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    processStream( options )
 

@@ -201,7 +201,7 @@ def drawPlots( options, data ):
          row += 1
       top  = 1.0 - row * float( plotHeight + options.margins )
       left = ( i % numCols ) * float( plotWidth + options.margins )
-      ( axMain, axCrazy, axBlowUp ) = createAxes( left, top, plotWidth, 
+      axMain, axCrazy, axBlowUp = createAxes( left, top, plotWidth, 
                                                   plotHeight, options, data )
       if a in data.recordsDict:
          cacPlot.setAxisLimits( axMain, axCrazy, axBlowUp, 
@@ -240,7 +240,7 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser )
    
    readFiles( options, data )

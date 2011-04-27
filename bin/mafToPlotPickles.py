@@ -257,7 +257,7 @@ def readMaf( options, data ):
          continue
       if line.startswith('s'):
          line = line.strip()
-         ( ml, order ) = extractMafLine( line, order, pat, options, data )
+         ml, order = extractMafLine( line, order, pat, options, data )
          if ml == None:
             sys.stderr.write( 'regexp fail on file %s line: \'%s\'\n'
                               'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
@@ -496,7 +496,7 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
-   ( options, args ) = parser.parse_args()
+   options, args = parser.parse_args()
    checkOptions( options, parser, data )
 
    readMaf( options, data )

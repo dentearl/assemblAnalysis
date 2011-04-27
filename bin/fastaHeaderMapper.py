@@ -104,7 +104,7 @@ def main():
               'map lengthy sequence headers to shorter standardized headers.')
     parser = OptionParser( usage=usage )
     initOptions( parser )
-    ( options, args ) = parser.parse_args()
+    options, args = parser.parse_args()
     checkOptions( parser, options )
     if options.createMap:
         createMap( options )
