@@ -18,5 +18,5 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 pr
 * matplotlib: http://matplotlib.sourceforge.net/ for plots
 * latex: http://www.latex-project.org/ for latex tables
 * fltpage: http://www.ctan.org/tex-archive/macros/latex/contrib/fltpage for formatting the latex tables
-* Data: http://hgwdev.cse.ucsc.edu/~benedict/code/Assemblathon_1.html
-* Annotations: I'm finding a permanent home for these, will update this soon.
+* Data: http://compbio.soe.ucsc.edu/assemblathon1/
+* Annotations: http://compbio.soe.ucsc.edu/assemblathon1/
