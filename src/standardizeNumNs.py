@@ -95,7 +95,7 @@ def processStream( options ):
       line = line.strip()
       if line == '':
          continue
-      if line[0] == '>':
+      if line.startswith('>'):
          if i == 0:
             print '%s' % line
          else:
