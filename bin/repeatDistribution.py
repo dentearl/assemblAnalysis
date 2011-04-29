@@ -42,7 +42,7 @@ def initOptions( parser ):
                       help='Character to look out for (case insensitive).' )
 
 def checkOptions( options, parser ):
-   if options.char == None:
+   if options.char is None:
       parser.error( 'specify --char.\n' )
    if len( options.char ) > 1:
       parser.error( '--char should only be one character.\n')

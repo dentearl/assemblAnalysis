@@ -86,7 +86,7 @@ def initOptions( parser ):
 def checkOptions( args, options, parser ):
    if len( args ) > 0:
       parser.error('unanticipated arguments: %s.\n' % args )
-   if options.dir == None:
+   if options.dir is None:
       parser.error( 'specify --dir\n' )
    if not os.path.exists( options.dir ):
       parser.error('--dir %s does not exist!\n' % ( options.dir ))

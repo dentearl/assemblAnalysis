@@ -48,7 +48,7 @@ def initOptions( parser ):
                        help='Will result in headers like: >prexif.LABEL001 . default=%default')
 
 def checkOptions( options, parser ):
-   if options.n == None:
+   if options.n is None:
       parser.error( 'specify --splitAt.\n' )
    if options.n < 1:
       parser.error( '--splitAt must be greater than 0.\n' )

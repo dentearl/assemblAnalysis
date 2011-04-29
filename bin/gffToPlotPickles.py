@@ -76,11 +76,11 @@ def initOptions( parser ):
                       help='Turns on verbose output. default=%default' )
 
 def checkOptions( options, parser, data ):
-   if options.gff == None:
+   if options.gff is None:
       parser.error( 'specify --gff.\n' )
    if not os.path.exists( options.gff ):
       parser.error( '--gff %s does not exist.\n' % options.gff )
-   if options.outDir == None:
+   if options.outDir is None:
       options.outDir = os.getcwd()
    if not os.path.exists( options.outDir ):
       parser.error( '--outDir %s does not exist.\n' % options.outDir )
@@ -95,7 +95,7 @@ def checkOptions( options, parser, data ):
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
-      if opts[ a ] == None:
+      if opts[ a ] is None:
          parser.error('specify --%s.\n' % a )
    data.chrNames   = options.chrNames.split(',')
    data.chrLengths = options.chrLengths.split(',')
@@ -155,7 +155,7 @@ def annotDataOrNone( gffRecordsByChrom, c ):
    """
    if c not in gffRecordsByChrom:
       return None
-   if gffRecordsByChrom[ c ] == None:
+   if gffRecordsByChrom[ c ] is None:
       return None
    if len( gffRecordsByChrom[ c ] ) < 1:
       return None
@@ -171,7 +171,7 @@ def convertDataToWiggle( options, data ):
       thisChrNumBins = int( ( float( data.chrLengthsByChrom[ c ] ) / data.genomeLength ) * options.numBins )
       annotWigDict[ c ] = {}
       d = annotDataOrNone( data.gffRecordsByChrom, c )
-      if d == None:
+      if d is None:
          annotWigDict[ c ]['xAxis'] = numpy.zeros( shape = ( thisChrNumBins ))
          for t in [ 'CDS', 'UTR', 'NXE', 'NGE', 'island', 'tandem', 'repeat' ]:
             annotWigDict[ c ][ t + 'Count' ] = numpy.zeros( shape = ( thisChrNumBins ))

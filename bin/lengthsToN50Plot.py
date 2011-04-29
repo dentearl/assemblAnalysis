@@ -77,19 +77,19 @@ def initOptions( parser ):
                       help='Dots per inch of the output. default=%default')
    
 def checkOptions( options, parser ):
-   if options.scaffoldsFile == None:
+   if options.scaffoldsFile is None:
       parser.error( 'specify --scaffoldsFile.\n' )
    if not os.path.exists( options.scaffoldsFile ):
       parser.error( '--scaffoldsFile %s does not exist.\n' % options.scaffoldsFile )
-   if options.contigsFile == None:
+   if options.contigsFile is None:
       parser.error( 'specify --contigsFile.\n' )
    if not os.path.exists( options.contigsFile ):
       parser.error( '--contigsfile %s does not exist.\n' % options.contigsFile )
-   if options.size == None:
+   if options.size is None:
       parser.error('specify --size\n')
    if options.dpi < 72:
       parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
-   if options.title == None:
+   if options.title is None:
       parser.error('specify --title.\n')
    if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
         options.out[-4:] == '.eps' ):

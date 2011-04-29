@@ -49,7 +49,7 @@ def initOptions( parser ):
 def checkOptions( options, parser ):
    import os
    options.assemblySubset = set()
-   if options.subsetFile == None:
+   if options.subsetFile is None:
       return
    if not os.path.exists( options.subsetFile ):
       parser.error('%s does not exist!\n' % ( options.subsetFile ))

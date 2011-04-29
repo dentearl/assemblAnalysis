@@ -51,11 +51,11 @@ def initOptions( parser ):
                              'should be specified as >Z1.scaffold000001'))
 
 def checkOptions( parser, options ):
-    if options.map == None:
+    if options.map is None:
         parser.error('You must specify the map you wish to inspect with --map.')
     if not os.path.exists( options.map ):
             parser.error('%s Does not exist.' % options.map )
-    if options.id == None:
+    if options.id is None:
         parser.error('You must specify the id you wish to inspect with --id.')
     if options.id[0] != '>':
       options.id = '>%s' % options.id

@@ -73,7 +73,7 @@ def checkOptions( parser, options ):
         return
     if options.prefix != None:
         parser.error('--prefix may only be used in conjunction with --createMap.')
-    if options.map == None:
+    if options.map is None:
         parser.error('You must specify the map you wish to use with --map.')
     if not os.path.exists( options.map ):
             parser.error('%s Does not exist.' % options.map )

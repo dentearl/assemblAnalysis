@@ -87,7 +87,7 @@ def initOptions( parser ):
                             'details, turns on the printing of the --title as the ID. default=%default' ))
 
 def checkOptions( options, parser ):
-   if options.file == None:
+   if options.file is None:
       parser.error( 'specify --file.\n' )
    if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
         options.out.endswith('.eps') ):
@@ -156,7 +156,7 @@ def setAxisLimits( axMain, axCrazy, axBlowUp, xData, options, data ):
 
    # turn off ticks
    for ax in [ axMain, axCrazy, axBlowUp ]:
-      if not ax == None:
+      if not ax is None:
          ax.xaxis.set_ticks_position('bottom')
          ax.yaxis.set_ticks_position('left')
 
@@ -258,7 +258,7 @@ def vectorAddition( v1, v2 ):
    return r
 
 def normalizeDataNormalMode( valuesDict, options, data ):
-   if options.crazyMax == None:
+   if options.crazyMax is None:
       data.crazyMax = 0
       for v in valuesDict[ '!hapA1/!hapA2/assembly' ]:
          if v > data.crazyMax:

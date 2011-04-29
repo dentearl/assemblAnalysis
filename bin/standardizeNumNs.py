@@ -64,7 +64,7 @@ def initOptions( parser ):
                       help='Changes the length of the output lines. default=%default' )
 
 def checkOptions( options, parser ):
-   if options.n == None:
+   if options.n is None:
       parser.error( 'specify --expandAt.\n' )
    if options.n < 1:
       parser.error( '--expandAt must be greater than 0.\n' )

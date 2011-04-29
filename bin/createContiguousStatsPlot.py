@@ -156,7 +156,7 @@ def establishTicks( ax, xData, options, data ):
 def drawLegend( options, data ):
    if len( options.files ) < 2:
       return
-   if options.legendElements == None:
+   if options.legendElements is None:
       pltListLabels = options.names
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
@@ -208,7 +208,7 @@ def drawData( ax, xData, sList, options, data ):
 
 def rankFiles( options, data ):
    ranks = []
-   if options.legendElements == None:
+   if options.legendElements is None:
       names = []
       for f in options.files:
          names.append( os.path.basename( f ) )

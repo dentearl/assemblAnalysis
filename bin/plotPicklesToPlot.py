@@ -148,12 +148,12 @@ def initOptions( parser ):
    
 
 def checkOptions( options, parser, data ):
-   if options.ref == None:
+   if options.ref is None:
       parser.error( 'specify --referenceGenome.\n' )
    dirs = { 'annotPickleDir' : options.annotDir,
             'mafPickleDir'   : options.mafDir }
    for d in dirs:
-      if dirs[ d ] == None:
+      if dirs[ d ] is None:
          parser.error( 'specify --%s.' % d)
       if not os.path.exists( dirs[ d ] ):
          parser.error( '--%s %s does not exist.\n' % ( d, dirs[ d ]))
@@ -162,7 +162,7 @@ def checkOptions( options, parser, data ):
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
-      if opts[ a ] == None:
+      if opts[ a ] is None:
          parser.error('specify --%s.\n' % a )
    combos = [ { 'name':'stackFillBlocks',        'value':options.stackFillBlocks }, 
               { 'name':'stackFillContigPaths',   'value':options.stackFillContigPaths },
@@ -259,7 +259,7 @@ def loadMafs( options, data ):
    mafFiles = glob.glob( os.path.join( options.mafDir, '%s*maf.pickle' % ( options.ref )))
    for f in mafFiles:
       m = re.search( pat, f )
-      if m == None:
+      if m is None:
          sys.stderr.write('unable to find genome name in filename %s using regex %s\n' % f, patStr )
          sys.exit( 1 )
       name = m.group(1)

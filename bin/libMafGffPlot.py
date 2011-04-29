@@ -164,7 +164,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
    from libMafGffPlot import objListUtility_xAxis
    import numpy
    import sys
-   if objList == None or len( objList ) < 1:
+   if objList is None or len( objList ) < 1:
       return None
    if isinstance( objList[0], GffRecord ):
       """ the Gff return is a single numpy vector of numBins length

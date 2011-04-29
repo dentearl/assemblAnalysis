@@ -87,19 +87,19 @@ def initOptions( parser ):
                             'Not necessary unless the output plots look odd. default=%default' ))
 
 def checkOptions( options, parser, data ):
-   if options.maf == None:
+   if options.maf is None:
       parser.error( 'specify --maf.\n' )
    if not os.path.exists( options.maf ):
       parser.error( '--maf %s does not exist.\n' % options.maf )
-   if options.outDir == None:
+   if options.outDir is None:
       options.outDir = os.getcwd()
    if not os.path.exists( options.outDir ):
       parser.error( '--outDir %s does not exist.\n' % options.outDir )
    if not os.path.isdir( options.outDir ):
       parser.error( '--outDir %s is not a directory.\n' % options.outDir )
-   if options.ref == None:
+   if options.ref is None:
       parser.error( 'specify --referenceGenome.\n' )
-   if options.other == None:
+   if options.other is None:
       parser.error( 'specify --comparisonGenome.\n' )
    data.genomesDict = { options.ref   : True,
                         options.other : True }
@@ -108,7 +108,7 @@ def checkOptions( options, parser, data ):
    opts = { 'chrLengths' : options.chrLengths,
             'chrNames'   : options.chrNames }
    for a in opts:
-      if opts[ a ] == None:
+      if opts[ a ] is None:
          parser.error('specify --%s.\n' % a )
    data.chrNames   = options.chrNames.split(',')
    data.chrLengths = options.chrLengths.split(',')
@@ -137,7 +137,7 @@ def extractMafLine( line, order, pat, options, data ):
    MafLine object.
    """
    m = re.match( pat, line )
-   if m == None:
+   if m is None:
       return ( None, order )
    ml = MafLine()
    ml.genome = m.group( 1 )
@@ -276,7 +276,7 @@ def readMaf( options, data ):
       if line.startswith('s'):
          line = line.strip()
          ml, order = extractMafLine( line, order, pat, options, data )
-         if ml == None:
+         if ml is None:
             sys.stderr.write( 'regexp fail on file %s line: \'%s\'\n'
                               'Regex: \'%s\'\n' % ( options.maf, line, regex ) )
             sys.exit( 1 )
@@ -308,7 +308,7 @@ def mafDataOrNone( mafBlocksByChrom, c ):
    """
    if c not in mafBlocksByChrom:
       return None
-   if mafBlocksByChrom[ c ] == None:
+   if mafBlocksByChrom[ c ] is None:
       return None
    if len( mafBlocksByChrom[ c ] ) < 1:
       return None
@@ -326,7 +326,7 @@ def convertDataToWiggle( options, data ):
                                         options.numBins ))
       mafWigDict[ c ] = {}
       d = mafDataOrNone( data.mafBlocksByChrom, c )
-      if d == None:
+      if d is None:
          mafWigDict[ c ] = newMafWigDict( thisChrNumBins )
          mafWigDict[ c ] ['xAxis'] = objListUtility_xAxis( data.chrLengthsByChrom[c], thisChrNumBins )
       else:
@@ -451,7 +451,7 @@ def verifyDistinct( options, data ):
    for c in data.chrNames:
       s = set()
       d = mafDataOrNone( data.mafBlocksByChrom, c )
-      if d == None:
+      if d is None:
          continue
       for mb in d:
          for i in xrange( mb.refStart, mb.refEnd + 1):
