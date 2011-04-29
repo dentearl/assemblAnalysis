@@ -239,9 +239,11 @@ def main():
    initOptions( parser )
    cscp.initOptions( parser )
    las.initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    cscp.checkOptions( options, parser )
    las.checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    checkOptions( options, parser )
    
    assembliesList = readDirs( options )

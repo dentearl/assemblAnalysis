@@ -64,9 +64,6 @@ def initOptions( parser ):
                       help='Title placed at the top of the plot. default=%default' )
    parser.add_option( '--legendElements', dest='legendElements',
                       type='string', help=('Specify the legend text. Comma separated list.'))
-   parser.add_option( '--out', dest='out', default='myContiguousStatsPlot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
    parser.add_option( '--outputRanks', dest='outputRanks', default=False,
                       action='store_true',
                       help=('Turns off plotting and just prints out the ranks '
@@ -74,12 +71,6 @@ def initOptions( parser ):
    parser.add_option( '--yCutOff', dest='yCutOff', default=0.5,
                       type='float',
                       help='Y-axis will be drawn between 1.0 and this value. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps] default=%default' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output. default=%default' )
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
@@ -93,12 +84,7 @@ def checkOptions( args, options, parser ):
       options.files.append( os.path.abspath( f ) )
    if options.outputRanks:
       return
-   if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
-        options.out.endswith('.eps') ):
-      options.out = options.out[:-4]
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
-   if options.legendElements != None:
+   if options.legendElements is not None:
       options.legendElements = options.legendElements.split(',')
 
 def establishAxes( fig, options, data ):
@@ -238,9 +224,11 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( args, options, parser )
    las.checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    if not options.outputRanks:
       fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
       axDict = establishAxes( fig, options, data )

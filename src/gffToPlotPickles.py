@@ -86,7 +86,7 @@ def checkOptions( options, parser, data ):
       parser.error( '--outDir %s does not exist.\n' % options.outDir )
    if not os.path.isdir( options.outDir ):
       parser.error( '--outDir %s is not a directory.\n' % options.outDir )
-   if options.prefix != None:
+   if options.prefix is not None:
       options.prefix = options.prefix + '.'
    else:
       options.prefix = ''

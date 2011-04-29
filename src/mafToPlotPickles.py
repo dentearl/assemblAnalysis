@@ -478,13 +478,13 @@ def verifyLengths( options, data ):
              'mafSpl1e6', 'mafSpl1e7', 'xAxis',
              'mafCpEdgeCount', 'mafCpErrorCount', 
              'mafCpScafGapCount', 'blockEdgeCount' ]
-   if ( len( data.chrNames ) ) != len( data.mafWigDict ): 
+   if len( data.chrNames ) ) != len( data.mafWigDict: 
       sys.stderr.write('the expected length of the data wig '
                        'dictionary is %d (i.e. number of chromosomes), but actual is %d\n' 
                        % ( len( data.chrNames ), len( data.mafWigDict )))
       sys.exit( 1 )
    for c in data.chrNames:
-      if ( len( types ) + 5 ) != len( data.mafWigDict[c] ): # extra 5 are from the *Max records
+      if len( types ) + 5 ) != len( data.mafWigDict[c]: # extra 5 are from the *Max records
          sys.stderr.write('the expected length of the data wig '
                           'dictionary for %s is %d, but actual is %d\n' 
                           % ( c, len( types ) + 5, len( data.mafWigDict[c] )))

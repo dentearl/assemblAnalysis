@@ -56,15 +56,6 @@ def initOptions( parser ):
    parser.add_option( '--title', dest='title',
                       type='string', default='Copy Number Statistics',
                       help='Title placed at the top of the plot. default=%default' )
-   parser.add_option( '--out', dest='out', default='myCopyNumberStatsPlot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps] default=%default' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output. default=%default' )
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
@@ -76,11 +67,6 @@ def checkOptions( args, options, parser ):
       if not f.endswith('.xml'):
          parser.error('file "%s" does not end in ".xml".\n' % f )
       options.files.append( os.path.abspath( f ) )
-   if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
-        options.out.endswith('.eps') ):
-      options.out = options.out[:-4]
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def establishAxes( fig, categories, options, data ):
    axDict = {}
@@ -226,8 +212,10 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( args, options, parser )
+   lpt.checkOptions( args, options, parser )
    fig, pdf = lpt.initImage( 11.0, 3.25, options, data )
 
    storedCategories = readFiles( options )

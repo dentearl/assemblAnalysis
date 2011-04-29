@@ -69,21 +69,21 @@ def initOptions( parser ):
                        help='Use the supplied map file to move from column 2 to column 1. default=%default')
 
 def checkOptions( parser, options ):
-    if options.createMap != None:
+    if options.createMap is not None:
         return
-    if options.prefix != None:
+    if options.prefix is not None:
         parser.error('--prefix may only be used in conjunction with --createMap.')
     if options.map is None:
         parser.error('You must specify the map you wish to use with --map.')
     if not os.path.exists( options.map ):
             parser.error('%s Does not exist.' % options.map )
-    if ( not options.goForward ) and ( not options.goBackward ):
+    if  not options.goForward and not options.goBackward:
         parser.error('You must specify the direction to map with either --goForward or --goBackward.')
 
 def createMap( options ):
     faMap = {}
     num = 1
-    if options.prefix != None:
+    if options.prefix is not None:
         prefix = '%s.' % options.prefix
     else:
         prefix = ''

@@ -59,23 +59,10 @@ class Assembly:
       self.bac  = -1
 
 def initOptions( parser ):
-   parser.add_option( '--out', dest='out', default='mySortedCoveragePlot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]. default=%default' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output if --outFormat is all or png. default=%default')
+   pass
 
 def checkOptions( options, parser ):
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
-      options.out = options.out[:-4]
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than '
-                   'screen res, 72. (%d) must be >= 72.\n' % options.dpi )
+   pass
 
 def readStream( options ):
    values = []
@@ -184,8 +171,10 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    
    valuesList = readStream( options )
    valuesList = sorted( valuesList, key=lambda key: key.tot, reverse=True )

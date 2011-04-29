@@ -65,15 +65,6 @@ def initOptions( parser ):
                       type='string',
                       help='comma separated list (no spaces) of chromosome names, as you want them '
                       'to appear in l-r order in the figure.' )
-   parser.add_option( '--out', dest='out', default='myPlot',
-                      type='string',
-                      help='output pdf where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]. default=%default' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output, if --outFormat is all or png. default=%default')
    parser.add_option( '--chrLabels', dest='chrLabels', default='',
                       type='string',
                       help='comma separated list (no spaces) of chromosome labels, as the will appear '
@@ -193,8 +184,6 @@ def checkOptions( options, parser, data ):
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
       data.chrLabelsByChrom[ data.chrNames[ i ] ] = data.chrLabels[ i ]
 
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.' % options.dpi )
    data.genomeLength = 0
    for c in data.chrLengths:
       data.genomeLength += c
@@ -202,9 +191,6 @@ def checkOptions( options, parser, data ):
                            'NXE':'#ff600e', 'NGE':'#ffbb78',
                            'island':'#00662c', 'repeat':'#00e32c',
                            'tandem':'#946FA9', 'spare':'#662D91' }
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
-      options.out = options.out[:-4]
    data.stackFillColors = [ ( '#17becf' ), # dark blue
                             ( '#9edae5' ), # light blue
                             ( '#9467bd' ), # dark purple
@@ -459,7 +445,7 @@ def drawLegend( options, data ):
             # only print colored boxes and names for data present in the figure.
             continue
          data.footerAx.add_patch( patches.Rectangle( xy = ( xPos, 0.6 ), width = 0.05, height = 0.3,
-                                                     color= col, edgecolor=None, linewidth=0.0 ))
+                                                     color= col, edgecolor='None', linewidth=0.0 ))
          data.footerAx.text( x=xPos + xunit/2.0, y=0.56, s= labs[i], horizontalalignment='center',
                              verticalalignment='top', fontsize = 7 )
 
@@ -804,9 +790,11 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser, data )
    las.checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    loadAnnots( options, data )
    loadMafs( options, data )
 

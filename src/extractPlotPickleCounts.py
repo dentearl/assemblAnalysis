@@ -100,7 +100,7 @@ def checkOptions( args, options, parser, data ):
             sys.stdout.write('\t%s' % c)
          sys.stdout.write('\n')
       sys.exit(0)
-   if options.chr != None:
+   if options.chr is not None:
       options.chrSet = set( options.chr.split(',') )
       for f in args:
          d = unpackData( f, options, {} )

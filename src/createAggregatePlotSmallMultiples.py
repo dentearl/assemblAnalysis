@@ -67,19 +67,10 @@ def initOptions( parser ):
    parser.add_option( '--crazyMax', dest='crazyMax',
                       type='int',
                       help='Sets the height of the crazy bar plot axis.' )
-   parser.add_option( '--out', dest='out', default='myAggPlot',
-                      type='string',
-                      help='output pdf where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]' )
    parser.add_option( '--order', dest='order',
                       type='string',
                       help=('Order (left-right, top-bottom) of plots, comma '
                             'separated. Names must match file prefixes in the --dir.' ))
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output. default=%default')
    parser.add_option( '--frames', dest='frames', default=False,
                       action='store_true',
                       help='Debug option, turns on the printing of frames around axes. default=%default' )
@@ -92,11 +83,6 @@ def checkOptions( options, parser ):
    if not os.path.isdir( options.dir ):
       parser.error( '--dir %s is not a directory.\n' % options.dir )
    options.dir = os.path.abspath( options.dir )
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
-      options.out = options.out[:-4]
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if ( options.mode != 'contigs' and options.mode != 'contamination' and
         options.mode != 'blocks' and options.mode != 'contigPaths' and 
         options.mode != 'scaffPaths' ):
@@ -107,7 +93,7 @@ def checkOptions( options, parser ):
                               'hapA1ORhapA2/assembly','hapA1/hapA2/assembly' ]
    elif options.mode == 'contamination':
       options.topBotOrder = [ 'ecoli/!assembly', 'ecoli/assembly' ]
-   if options.order != None:
+   if options.order is not None:
       options.order = options.order.split(',')
    else:
       options.order = []
@@ -242,8 +228,10 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    
    readFiles( options, data )
    lpt.initImage( 7.0, 8.0, options, data )

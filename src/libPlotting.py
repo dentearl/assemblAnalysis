@@ -28,6 +28,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
+def initOptions( parser ):
+   parser.add_option( '--dpi', dest='dpi', default=300,
+                      type='int',
+                      help='Dots per inch of the output, if --outFormat is all or png. default=%default')
+   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
+                      type='string',
+                      help='output format [pdf|png|all|eps]. default=%default' )
+   parser.add_option( '--out', dest='out', default='myPlot',
+                      type='string',
+                      help='filename where figure will be created. No extension needed. default=%default' )
+
+def checkOptions( options, parser ):
+   if options.dpi < 72:
+      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.' % options.dpi )
+   if options.outFormat not in ('pdf', 'png', 'eps', 'all'):
+      parser.error('Unrecognized output format: %s. Choose one from: pdf png eps all.' % options.outFormat )
+   if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
+        options.out.endswith('.eps') ):
+      options.out = options.out[:-4]
+
 def initImage( width, height, options, data ):
    """
    initImage takes a width and height and returns

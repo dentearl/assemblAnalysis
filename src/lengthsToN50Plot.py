@@ -60,21 +60,12 @@ def initOptions( parser ):
    parser.add_option( '--title', dest='title',
                       type='string',
                       help='Title of the plot.' )
-   parser.add_option( '--out', dest='out', default='myN50Plot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]. default=%default' )
    parser.add_option( '--log', dest='log', default=False,
                       action='store_true',
                       help='Puts y axis into log scale. default=%default')
    parser.add_option( '--n50Line', dest='n50Line', default=False,
                       action='store_true',
                       help=('Adds straight lines from the y-axis to the curves. default=%default'))
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output. default=%default')
    
 def checkOptions( options, parser ):
    if options.scaffoldsFile is None:
@@ -87,14 +78,8 @@ def checkOptions( options, parser ):
       parser.error( '--contigsfile %s does not exist.\n' % options.contigsFile )
    if options.size is None:
       parser.error('specify --size\n')
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    if options.title is None:
       parser.error('specify --title.\n')
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
-      options.out = options.out[:-4]
-   
 
 def readFile( filename ):
    d = []
@@ -192,8 +177,10 @@ def main():
              'and then produces an N50 style figure.')
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    
    scaffolds = readFile( options.scaffoldsFile )
    contigs   = readFile( options.contigsFile )

@@ -72,15 +72,6 @@ def initOptions( parser ):
    parser.add_option( '--xLabel', dest='xLabel',
                       type='string', default='',
                       help='The x axis label placed at the bottom of the plot.' )
-   parser.add_option( '--out', dest='out', default='myAggPlot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps] default=%default' )
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output. default=%default' )
    parser.add_option( '--smallMultipleMode', dest='SMM',
                       action='store_true', default=False,
                       help=('Turns off the printing of the legend and other '
@@ -89,14 +80,9 @@ def initOptions( parser ):
 def checkOptions( options, parser ):
    if options.file is None:
       parser.error( 'specify --file.\n' )
-   if ( options.out.endswith('.png') or options.out.endswith('.pdf') or 
-        options.out.endswith('.eps') ):
-      options.out = options.out[:-4]
    if not os.path.exists( options.file ):
       parser.error( '--file %s does not exist.\n' % options.file )
    options.file = os.path.abspath( options.file )
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
    modes = set(['contigs', 'contamination', 'blocks', 'contigPaths', 'scaffPaths', 'scaffolds'])
    if options.mode not in modes:
       parser.error('you must specify one of the modes listed under --mode in --help.\n')
@@ -444,7 +430,7 @@ def drawLegend( options, data ):
                                    verticalalignment='center', transform=data.axDict['main'].transAxes,
                                    fontsize=9.5)
          yPos -= 0.045
-      if (not options.mode == 'scaffPaths') and ( not options.mode == 'contigPaths' ):
+      if not options.mode == 'scaffPaths' and not options.mode == 'contigPaths':
          data.axDict['main'].add_patch( patches.Rectangle( xy=(left + 0.03, yPos - 0.01), width = 0.02,
                                                            height = 0.025, color = 'r',
                                                            transform=data.axDict['main'].transAxes ))
@@ -483,7 +469,7 @@ def drawLegend( options, data ):
 
 def drawAxisLabels( fig, options, data ):
    if not options.SMM:
-      if options.title != None:
+      if options.title is not None:
          fig.text(x = 0.5, y = 0.96, s = options.title,
                   fontsize = 18, horizontalalignment='center',
                   verticalalignment='bottom')
@@ -508,8 +494,10 @@ def main():
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
    axDict = establishAxes( fig, options, data )
    

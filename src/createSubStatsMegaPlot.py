@@ -72,12 +72,6 @@ def initOptions( parser ):
    parser.add_option( '--subStatsDir', dest='subStatsDir',
                       type='string',
                       help=('Directory with subStats. Names: A1.subStats.upper.xml .'))
-   parser.add_option( '--out', dest='out', default='mySubStatsPlot',
-                      type='string',
-                      help='filename where figure will be created. No extension. default=%default' )
-   parser.add_option( '--outFormat', dest='outFormat', default='pdf',
-                      type='string',
-                      help='output format [pdf|png|all|eps]. default=%default' )
    parser.add_option( '--outputRanks', dest='outputRanks', default=False,
                       action='store_true', 
                       help='Outputs tab delimited rankings. default=%default')
@@ -85,9 +79,6 @@ def initOptions( parser ):
                       action='store_true', 
                       help=('Doesn\'t normalize errors by the "Correct (bits)" '
                             'field, print raw values. default=%default'))
-   parser.add_option( '--dpi', dest='dpi', default=300,
-                      type='int',
-                      help='Dots per inch of the output if --outFormat is all or png. default=%default')
 
 def checkOptions( options, parser ):
    dirs = { 'subStatsDir' : options.subStatsDir }
@@ -98,11 +89,6 @@ def checkOptions( options, parser ):
          parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
          parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
-   if ( options.out[-4:] == '.png' or options.out[-4:] == '.pdf' or 
-        options.out[-4:] == '.eps' ):
-      options.out = options.out[:-4]
-   if options.dpi < 72:
-      parser.error('I refuse to have a dpi less than screen res, 72. (%d) must be >= 72.\n' % options.dpi )
 
 def readSubStatsDir( assembliesDict, options ):
    lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.xml') )
@@ -355,9 +341,11 @@ def main():
    parser = OptionParser( usage=usage )
    initOptions( parser )
    las.initOptions( parser )
+   lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( options, parser )
    las.checkOptions( options, parser )
+   lpt.checkOptions( options, parser )
    
    if not options.outputRanks:
       fig, pdf = lpt.initImage( 9., 11., options, data )

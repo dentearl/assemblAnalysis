@@ -63,7 +63,7 @@ def checkOptions( args, options, parser ):
          parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
          parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
-   if options.order != None:
+   if options.order is not None:
       options.order = options.order.split(',')
    else:
       options.order = []
