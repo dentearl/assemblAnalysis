@@ -119,7 +119,7 @@ GTACGTNNNNNNNNNNNNNNNNNNNNNNNN
       """
       import os
       import subprocess
-      for i in range(30, 61):
+      for i in xrange(30, 61):
          cmd = [ os.path.join( myBinDir, 'splitSequenceAtNs.py' ), 
                  '--splitAt=%d' % 25, '--lineLength=%d' % i,
                  '--label=%s' % 'split']
@@ -128,7 +128,7 @@ GTACGTNNNNNNNNNNNNNNNNNNNNNNNN
          IN = '>seq1\n' + 'A' * 300
          ( streamOut ) = p.communicate( IN )[0]
          for s in streamOut:
-            if s[0] == '>':
+            if s.startswith('>'):
                continue
             self.assertTrue( len( s ) <= i )
 

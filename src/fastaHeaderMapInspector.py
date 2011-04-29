@@ -57,7 +57,7 @@ def checkOptions( parser, options ):
             parser.error('%s Does not exist.' % options.map )
     if options.id is None:
         parser.error('You must specify the id you wish to inspect with --id.')
-    if options.id[0] != '>':
+    if not options.id.startswith('>'):
       options.id = '>%s' % options.id
 
 def idLookup( faMap, options ):

@@ -107,7 +107,7 @@ def processStream( options ):
             count += 1
             if count == options.n:
                expanded = True
-               for j in range( count, 26 ):
+               for j in xrange( count, 26 ):
                   # expand to 25 Ns.
                   i = myPrint( 'N', i, options )
             elif not expanded:

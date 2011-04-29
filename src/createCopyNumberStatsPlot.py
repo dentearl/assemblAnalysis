@@ -127,7 +127,7 @@ def drawLegend( options, data ):
 def prettyInt( i ):
    s = ''
    r = '%d' % i
-   for j in range(0, len( r )):
+   for j in xrange(0, len( r )):
       if j > 0 and not j % 3:
          s = '%s,%s' % ( r[ (len(r) - 1) - j], s )
       else:
@@ -169,7 +169,7 @@ def drawOneDataAxis( ax, key, cDict, options, data ):
    cMax = max( [ key[1] ] + cDict[ key ].assemblyColumnCounts.keys() )
    vMax = float( max( cDict[ key ].assemblyColumnCounts.values() ) )
    
-   for i in range( cMin, cMax + 1 ):
+   for i in xrange( cMin, cMax + 1 ):
       if key[0] <= i <= key[1]:
          color  = 'k'
          weight = 'medium'

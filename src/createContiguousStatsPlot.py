@@ -174,7 +174,7 @@ def drawData( ax, xData, sList, options, data ):
    #                            linewidth=0.25,
    #                            color=(0.8, 0.8, 0.8)
    #                            ))
-   for i in range( 0, len( sList )):
+   for i in xrange( 0, len( sList )):
       yData = []
       for b in sList[ i ]:
          if ( float(b.correct ) / b.samples ) >= options.yCutOff:
@@ -234,7 +234,7 @@ def main():
       axDict = establishAxes( fig, options, data )
    
    data.statsList, data.xData = readFiles( options )
-   for i in range(0, len( data.statsList )):
+   for i in xrange(0, len( data.statsList )):
       data.statsList[i] = sorted( data.statsList[i], key=lambda x: x.mid, reverse=False )
    
    if options.outputRanks:

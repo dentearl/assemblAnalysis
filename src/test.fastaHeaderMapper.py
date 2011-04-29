@@ -125,8 +125,8 @@ TGCATGCAacgt bad characters
       import subprocess
       print ' '
       chars = string.letters + string.digits + ' ' + '\t' + string.punctuation
-      for i in range(50):
-         prefix = ''.join( random.choice( chars ) for x in range(30))
+      for i in xrange(50):
+         prefix = ''.join( random.choice( chars ) for x in xrange(30))
          for pre, post in self.knownValues:
             #add prefix to post
             post2 = ''
@@ -138,7 +138,7 @@ TGCATGCAacgt bad characters
                   if j != len( post.split('\n') ):
                      post2 += '\n'
                   continue
-               if p[0] == '>':
+               if p.startswith('>'):
                   post2+= '>%s.%s\n' % ( prefix, p[1:] )
                else:
                   post2+= '%s\n' % p

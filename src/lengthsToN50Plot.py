@@ -159,12 +159,12 @@ def processData( scaffs, contigs, options ):
                 'xData' : [] }
 
    cum = 0
-   for i in range(0, len(scaffs)):
+   for i in xrange(0, len(scaffs)):
       cum += scaffs[i]
       pScaffs[ 'values' ].append( scaffs[i] )
       pScaffs[ 'xData' ].append( float(cum) / float( options.size ))
    cum = 0
-   for i in range(0, len(contigs)):
+   for i in xrange(0, len(contigs)):
       cum += contigs[i]
       pContigs[ 'values' ].append( contigs[i] )
       pContigs[ 'xData' ].append( float(cum) / float( options.size ))

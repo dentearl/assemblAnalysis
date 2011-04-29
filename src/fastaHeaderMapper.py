@@ -91,7 +91,7 @@ def createMap( options ):
         line=line.strip()
         if line == '':
             continue
-        if line[0] == '>':
+        if line.startswith('>'):
             if line in faMap:
                 sys.stderr.write( 'duplicate header found: %s.\n' % line )
                 sys.exit( 1 )
@@ -114,7 +114,7 @@ def translate( faMap, options ):
         if line == '':
             print line
             continue
-        if line[0] == '>':
+        if line.startswith('>'):
             if line in faMap:
                 print faMap[ line ]
             else:

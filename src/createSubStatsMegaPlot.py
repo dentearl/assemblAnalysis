@@ -300,7 +300,7 @@ def logLower( y ):
    """ find the approprate lower bound for y
    if y is going to be displayed on a log plot
    """
-   for i in range( 1, 8 ):
+   for i in xrange( 1, 8 ):
       if y == ( y % float( 10.0 ** i)):
          return ( 10.0 ** ( i - 1 ) )
 

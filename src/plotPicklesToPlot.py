@@ -160,8 +160,8 @@ def checkOptions( options, parser, data ):
               { 'name':'stackFillContigs',       'value':options.stackFillContigs }, 
               { 'name':'stackFillScaffPaths',    'value':options.stackFillScaffPaths },
               { 'name':'fill',                   'value':options.fill } ]
-   for i in range(0, len(combos) - 1):
-      for j in range(i+1, len(combos)):
+   for i in xrange(0, len(combos) - 1):
+      for j in xrange(i+1, len(combos)):
          if combos[ i ]['value'] and combos[ j ][ 'value' ]:
             parser.error('specify either --%s or --%s not more than one.\n' %
                          ( combos[ i ][ 'name' ], combos[ j ][ 'name' ] ))
@@ -179,7 +179,7 @@ def checkOptions( options, parser, data ):
    if len( data.chrNames ) != len( data.chrLabels ):
       parser.error('number of elemnts in --chrLabels not equal to number of elements in --chrNames.\n')
    
-   for i in range( 0, len( data.chrLengths )):
+   for i in xrange( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
       data.chrLabelsByChrom[ data.chrNames[ i ] ] = data.chrLabels[ i ]
@@ -493,7 +493,7 @@ def drawClippedAnnotationRegions( axDict, c, a, j, options, data ):
       return
    if a not in data.annotationClippingDict[ c ]:
       return
-   for i in range( 0, len( data.annotationClippingDict[ c ][ a ] )):
+   for i in xrange( 0, len( data.annotationClippingDict[ c ][ a ] )):
       nudge = data.annotWigDict[ c ][ 'xAxis' ][ 1 ]
       axDict[ c + a ].add_line( lines.Line2D( xdata=[ data.annotWigDict[ c ][ 'xAxis' ][ data.annotationClippingDict[ c ][ a ][ i ][ 0 ]] - nudge,
                                                       data.annotWigDict[ c ][ 'xAxis' ][ data.annotationClippingDict[ c ][ a ][ i ][ 1 ]] + nudge],
@@ -705,7 +705,7 @@ def arrayIndexToClippingList( where, options, data ):
    """
    cList = []
    start = False
-   for i in range( 0, len( where ) ):
+   for i in xrange( 0, len( where ) ):
       if where[ i ] and not start:
          start = i
       if not where[ i ] and start:

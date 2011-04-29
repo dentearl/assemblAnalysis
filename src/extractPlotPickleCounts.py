@@ -122,7 +122,7 @@ def printData( valuesDict, options, data ):
            isinstance( valuesDict[c][ options.key ], int )):
          print valuesDict[c][ options.key ]
       elif isinstance( valuesDict[c][ options.key ], numpy.ndarray ):
-         for i in range( 0, len( valuesDict[c][ options.key ]) ):
+         for i in xrange( 0, len( valuesDict[c][ options.key ]) ):
             print valuesDict[c][ options.key ][i]
       else:
          sys.stderr.write( 'unexpected object type '

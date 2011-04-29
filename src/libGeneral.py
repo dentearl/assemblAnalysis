@@ -50,7 +50,7 @@ def prettyNumber( n ):
 def prettyInt( i ):
    s = ''
    r = '%d' % i
-   for j in range(0, len( r )):
+   for j in xrange(0, len( r )):
       if j > 0 and not j % 3:
          s = '%s,%s' % ( r[ (len(r) - 1) - j], s )
       else:
@@ -60,7 +60,7 @@ def prettyInt( i ):
 def prettyFloat( f, n ):
    s = ''
    r = '%.*f' % ( n, f )
-   for j in range(0, len( r ) ):
+   for j in xrange(0, len( r ) ):
       if not (j - n - 1) % 3 and j > (n + 1):
          s = '%s,%s' % ( r[ (len(r) - 1) - j], s )
       else:

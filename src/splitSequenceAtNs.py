@@ -60,7 +60,7 @@ def processStream( options ):
       line = line.strip()
       if line == '':
          continue
-      if line[0] == '>':
+      if line.startswith('>'):
          if header != '' and register != 0:
             sys.stdout.write('\n')
          header = line
@@ -75,7 +75,7 @@ def processStream( options ):
             # we buffer the Ns in case we need to split the sequence
          else:
             if nCount < options.n:
-               for j in range( 0, nCount ):
+               for j in xrange( 0, nCount ):
                   register = snn.myPrint( 'N', register, options )
             else:
                splitCount += 1
@@ -86,7 +86,7 @@ def processStream( options ):
             nCount = 0
             register = snn.myPrint( c, register, options )
    if 0 < nCount < options.n:
-      for j in range( 0, nCount ):
+      for j in xrange( 0, nCount ):
          register = snn.myPrint( 'N', register, options )
    if register != 0:
       sys.stdout.write( '\n' )

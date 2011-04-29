@@ -64,7 +64,7 @@ def main():
    for line in sys.stdin:
       line = line.strip()
       if line != '':
-         if line[0] == '>':
+         if line.startswith('>'):
             header = line
             continue
          if header != '':

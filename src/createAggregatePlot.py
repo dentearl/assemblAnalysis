@@ -116,7 +116,7 @@ def readFile( filename, options ):
    trimmedData = {}
    for d in data:
       trimmedData[ d ] = []
-      for i in range(0, len( data[d])):
+      for i in xrange(0, len( data[d])):
          if i not in redundantColumns:
             trimmedData[ d ].append( int( data[d][i] ) )
    f.close()
@@ -207,7 +207,7 @@ def establishTicks( axMain, axCrazy, axBlowUp, options, data ):
       axBlowUp.set_xticklabels( [] )
       axMain.set_yticklabels( [] )
       axMain.set_xticklabels( [] )
-      for i in range( 1, 8 ):
+      for i in xrange( 1, 8 ):
          axMain.add_line( lines.Line2D( xdata=[ 10**i, 10**i ],
                                         ydata=[ 0, 0.1 ],
                                         color=( 0.8, 0.8, 0.8 ),
@@ -239,7 +239,7 @@ def vectorAddition( v1, v2 ):
       sys.stderr.write( 'lists are not the same length, cannot add %s to %s\n' % ( str(v1), str(v2) ))
       sys.exit(1)
    r = []
-   for i in range( 0, len(v1)):
+   for i in xrange( 0, len(v1)):
       r.append( v1[i] + v2[i] )
    return r
 
@@ -252,18 +252,18 @@ def normalizeDataNormalMode( valuesDict, options, data ):
    else:
       data.crazyMax = options.crazyMax
    # normalize crazy data against itself
-   for i in range( 0, len( valuesDict[ '!hapA1/!hapA2/assembly' ])):
+   for i in xrange( 0, len( valuesDict[ '!hapA1/!hapA2/assembly' ])):
       valuesDict[ '!hapA1/!hapA2/assembly' ][i] /= float( data.crazyMax )
       
    # collect column sums, they should all be the same
    upperlimit = len( valuesDict[ '!hapA1/!hapA2/assembly' ])
    colSum = [ 0 ] * upperlimit
-   for i in range( 0, upperlimit ):
+   for i in xrange( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1/!hapA2/assembly',
                 'hapA1/!hapA2/!assembly','!hapA1/hapA2/assembly','!hapA1/hapA2/!assembly' ]:
          colSum[ i ] += valuesDict[ j ][ i ]
    # verify the columns all have the same sum
-   for i in range(1, len( colSum )):
+   for i in xrange(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
          sys.stderr.write('column sums do not equal one another, col 0 != col %d\n' % i)
          sys.exit( 1 )
@@ -273,13 +273,13 @@ def normalizeDataNormalMode( valuesDict, options, data ):
    valuesDict[ 'hapA1ORhapA2/!assembly' ] = vectorAddition( valuesDict['!hapA1/hapA2/!assembly'], 
                                                             valuesDict['hapA1/!hapA2/!assembly'] )
    # normalize the data
-   for i in range( 0, upperlimit ):
+   for i in xrange( 0, upperlimit ):
       for j in ['hapA1/hapA2/assembly','hapA1/hapA2/!assembly','hapA1ORhapA2/assembly',
                 'hapA1ORhapA2/!assembly' ]:
          valuesDict[ j ][ i ] /= float( colSum[ 0 ] )
    # stack the data
    options.topBotOrder.reverse()
-   for i in range( 0, upperlimit ):
+   for i in xrange( 0, upperlimit ):
       cumSum = 0.0
       for j in options.topBotOrder:
          valuesDict[ j ][ i ] += cumSum
@@ -290,22 +290,22 @@ def normalizeDataNormalMode( valuesDict, options, data ):
 def normalizeDataContaminationMode( options, data ):
    # collect column sums, they should all be the same
    colSum = [ 0 ] * 7
-   for i in range( 0, 7 ):
+   for i in xrange( 0, 7 ):
       for j in [ 'ecoli/!assembly', 'ecoli/assembly' ]:
          colSum[ i ] += data.valuesDict[ j ][ i ]
    # verify the columns all have the same sum
-   for i in range(1, len( colSum )):
+   for i in xrange(1, len( colSum )):
       if colSum[ 0 ] != colSum[ i ]:
          sys.stderr.write( 'column sums do not equal one another, '
                            'col 0 (%d) != col %d (%d)\n' % ( colSum[0], i, colSum[i] ))
          sys.exit( 1 )
    # normalize the data
-   for i in range( 0, 7 ):
+   for i in xrange( 0, 7 ):
       for j in ['ecoli/!assembly', 'ecoli/assembly' ]:
          data.valuesDict[ j ][ i ] /= float( colSum[ 0 ] )
    # stack the data
    options.topBotOrder.reverse()
-   for i in range( 0, 7 ):
+   for i in xrange( 0, 7 ):
       cumSum = 0.0
       for j in options.topBotOrder:
          data.valuesDict[ j ][ i ] += cumSum

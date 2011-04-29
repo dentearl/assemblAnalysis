@@ -101,7 +101,7 @@ def extractBacs( values ):
 
 def drawData( values, ax, options ):
    ax.set_title( 'Total coverage for all assemblies' )
-   for i in range(1, len(values)):
+   for i in xrange(1, len(values)):
       if not i % 10:
          ax.add_line( lines.Line2D( xdata=[ i-1, i-1 ],
                                     ydata=[ 0, 1 ],

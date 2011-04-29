@@ -125,7 +125,7 @@ def readInfoFile( options ):
    file = open( options.infoFile, 'r' )
    for line in file:
       line = line.strip()
-      if line[0] == '#':
+      if line.startswith('#'):
          continue
       data = line.split('\t')
       t = Team()
@@ -146,7 +146,7 @@ def readRankFile( teamsDict, options ):
    r = 0
    for line in file:
       line = line.strip()
-      if line[0] == '#':
+      if line.startswith('#'):
          continue
       r += 1
       data = line.split(' ')
@@ -433,7 +433,7 @@ def readSubmissionStatsDir( assembliesList, options ):
          for line in f:
             line = line.strip()
             d = line.split()
-            if d[0] == 'n':
+            if d.startswith('n'):
                scaffold = not scaffold
                continue
             if scaffold:

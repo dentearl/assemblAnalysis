@@ -102,7 +102,7 @@ def checkOptions( options, parser, data ):
    data.chrLengthsByChrom = {}
    if len( data.chrLengths ) != len( data.chrNames ):
       parser.error('number of elemnts in --chrLengths not equal to number of elements in --chrNames.\n')
-   for i in range( 0, len( data.chrLengths )):
+   for i in xrange( 0, len( data.chrLengths )):
       data.chrLengths[ i ] = int( data.chrLengths[ i ] )
       data.chrLengthsByChrom[ data.chrNames[ i ] ] = data.chrLengths[ i ]
    data.genomeLength = 0
@@ -123,7 +123,7 @@ def readGff( options, data ):
    gf = open( options.gff )
    for line in gf:
       line = line.strip()
-      if line[0] == '#':
+      if line.startswith('#'):
          # comments
          continue
       t = line.split('\t')
@@ -177,7 +177,7 @@ def convertDataToWiggle( options, data ):
             annotWigDict[ c ][ t + 'Count' ] = numpy.zeros( shape = ( thisChrNumBins ))
             annotWigDict[ c ][ t + 'Max' ]   = 0
 
-         for i in range( 0, thisChrNumBins ):
+         for i in xrange( 0, thisChrNumBins ):
             annotWigDict[c]['xAxis'][ i ] = ((float( i ) / ( thisChrNumBins - 1.0 )) * 
                                              float( data.chrLengthsByChrom[ c ] ) )
       else:
