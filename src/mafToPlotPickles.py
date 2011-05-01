@@ -387,8 +387,7 @@ def trimDups( options, data ):
 def recordCoverage( options, data ):
    """ walks the mafWigDict and figures out out of the 
    total length of the genome, how much of it is covered
-   by alignments. Stores this under the key 'coverage' as
-   a float.
+   by alignments. Stores this under the key 'coverage'.
    """
    for c in data.chrNames:
       data.mafWigDict[ c ]['columnsInBlocks'] = 0

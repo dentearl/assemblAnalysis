@@ -190,14 +190,14 @@ ${coverageSFDir}/all_hap1BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${ha
 ${coverageSFDir}/hap1StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillBlocksTmp.$$p ${coverageSFDir}/hap1StackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/all_hap1StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*)  ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillBlocksTmp.$$p ${coverageSFDir}/all_hap1StackFillBlocks.$$p ; \
 	done
@@ -220,14 +220,14 @@ ${coverageSFDir}/all_hap1CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap
 ${coverageSFDir}/hap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillContigPathsTmp.$$p ${coverageSFDir}/hap1StackFillContigPaths.$$p ; \
 	done
 ${coverageSFDir}/all_hap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*)  ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigPathsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigPaths.$$p ; \
 	done
@@ -238,7 +238,7 @@ ${coverageSFDir}/hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillContigsTmp.$$p ${coverageSFDir}/hap1StackFillContigs.$$p ; \
 	done
@@ -249,21 +249,21 @@ ${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigs.$$p ; \
 	done
 ${coverageSFDir}/hap1StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillScaffPathsTmp.$$p ${coverageSFDir}/hap1StackFillScaffPaths.$$p ; \
 	done
 ${coverageSFDir}/all_hap1StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap1CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillScaffPathsTmp.$$p ${coverageSFDir}/all_hap1StackFillScaffPaths.$$p ; \
 	done
@@ -313,14 +313,14 @@ ${coverageSFDir}/all_hap2BED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${ha
 ${coverageSFDir}/hap2StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillBlocksTmp.$$p ${coverageSFDir}/hap2StackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/all_hap2StackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillBlocksTmp.$$p ${coverageSFDir}/all_hap2StackFillBlocks.$$p ; \
 	done
@@ -343,14 +343,14 @@ ${coverageSFDir}/all_hap2CP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap
 ${coverageSFDir}/hap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillContigPathsTmp.$$p ${coverageSFDir}/hap2StackFillContigPaths.$$p ; \
 	done
 ${coverageSFDir}/all_hap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigPathsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigPaths.$$p ; \
 	done
@@ -361,7 +361,7 @@ ${coverageSFDir}/hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillContigsTmp.$$p ${coverageSFDir}/hap2StackFillContigs.$$p ; \
 	done
@@ -372,21 +372,21 @@ ${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigs.$$p ; \
 	done
 ${coverageSFDir}/hap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillScaffPathsTmp.$$p ${coverageSFDir}/hap2StackFillScaffPaths.$$p ; \
 	done
 ${coverageSFDir}/all_hap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${hap2CommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillScaffPathsTmp.$$p ${coverageSFDir}/all_hap2StackFillScaffPaths.$$p ; \
 	done
@@ -436,14 +436,14 @@ ${coverageSFDir}/all_bacBED.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bac
 ${coverageSFDir}/bacStackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/bacStackFillBlocksTmp.$$p ${coverageSFDir}/bacStackFillBlocks.$$p ; \
 	done
 ${coverageSFDir}/all_bacStackFillBlocks.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillBlocks 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_bacStackFillBlocksTmp.$$p ${coverageSFDir}/all_bacStackFillBlocks.$$p ; \
 	done
@@ -466,14 +466,14 @@ ${coverageSFDir}/all_bacCP.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacW
 ${coverageSFDir}/bacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgs} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/bacStackFillContigPathsTmp.$$p ${coverageSFDir}/bacStackFillContigPaths.$$p ; \
 	done
 ${coverageSFDir}/all_bacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py ${bacCommonCoverageArgsNoSubset} \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_bacStackFillContigPathsTmp.$$p ${coverageSFDir}/all_bacStackFillContigPaths.$$p ; \
 	done

@@ -69,6 +69,10 @@ def initOptions( parser ):
                       type='string',
                       help='comma separated list (no spaces) of chromosome labels, as the will appear '
                       'in the plot.')
+   parser.add_option( '--sortOn', dest='sortOn', default='l',
+                      type='string',
+                      help=('When plotting a stackFill option, allows you to change the sort '
+                            'order from coverage, c, to length, l. default=%default'))
    parser.add_option( '--gridLinesMajor', dest='gridLinesMajor', default=0,
                       type='int',
                       help='Place thick grid lines on the plot every X many bases. default=%default' )
@@ -98,17 +102,20 @@ def initOptions( parser ):
                       'thresholds in different colors. Thresholds: 1, 1e2, 1e3,...,1e7. default=%default')
    parser.add_option( '--blockEdgeDensity', dest='blockEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on the wiggle track that shows relative density of block edges. default=%default' )
+                      help=('Turns on the wiggle track that shows relative '
+                            'density of block edges. default=%default' ))
    parser.add_option( '--contigPathEdgeDensity', dest='contigPathEdgeDensity', default=False,
                       action='store_true',
-                      help='Turns on the wiggle track that shows relative density of contig path edges. default=%default' )
+                      help=('Turns on the wiggle track that shows relative density of contig path '
+                            'edges. default=%default' ))
    parser.add_option( '--contigPathErrorDensity', dest='contigPathErrorDensity', default=False,
                       action='store_true',
                       help=( 'Turns on the wiggle track that shows relative density of contig '
                              'path segment adjacency errors. default=%default' ))
    parser.add_option( '--relative', dest='relative', default=False,
                       action='store_true',
-                      help='Plots errors as relative to the genome max. Otherwise is to global genomes max. default=%default' )
+                      help=('Plots errors as relative to the genome max. Otherwise '
+                            'is to global genomes max. default=%default' ))
    parser.add_option( '--transform', dest='transform', default=False,
                       action='store_true',
                       help=('Transform the block and contig errors by y^(1/4) to '
@@ -136,7 +143,6 @@ def initOptions( parser ):
    parser.add_option( '--printCoverageNumbers', dest='printCoverageNumbers', default=False,
                       action='store_true',
                       help='Print the coverage values to the left of the assembly ID. default=%default' )
-   
 
 def checkOptions( options, parser, data ):
    if options.ref is None:
@@ -229,6 +235,9 @@ def checkOptions( options, parser, data ):
    data.annotationClippingDict = {} 
    # annotationClippingDict is keyed first on chromosomes, 
    # then on the data type, i.e. CDS, or maf, or whatever
+   options.sortOn = options.sortOn.lower()
+   if options.sortOn not in ('c', 'l'):
+      parser.error('Unrecognized selection --sortOn %s, choose from "c" for coverage or "l" for length' % options.sortOn )
    
 def loadAnnots( options, data ):
    data.annotWigDict = {}
@@ -259,10 +268,14 @@ def loadMafs( options, data ):
       for c in dataByChrom:
          if c not in data.mafWigDict:
             data.mafWigDict[ c ] = {}
-         data.mafWigDict[ c ][ name ] = dataByChrom[ c ] 
+         data.mafWigDict[ c ][ name ] = dataByChrom[ c ]
+   # calculate data used for sorting
    for c in data.chrNames:
       for n in data.mafNamesDict:
-         data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
+         if options.sortOn == 'c':
+            data.mafNamesDict[ n ] += data.mafWigDict[ c ][ n ]['columnsInBlocks']
+         else:
+            data.mafNamesDict[ n ] += lengthData( data.mafWigDict[ c ][ n ], options, data )
    if not options.forceOrder:
       data.orderedMafs = sorted( data.mafNamesDict, key=lambda key: data.mafNamesDict[ key ], reverse=True )
    else:
@@ -302,20 +315,46 @@ def loadMafs( options, data ):
             if sum( data.mafWigDict[ c ][ n ][ key ] ) > 0:
                data.lengthThresholdPresent[ l ] = True
 
+def lengthData( maf, options, data ):
+   """ lengthData() takes a mafWigPic object and needs to return an int.
+   the int is calculated as the sum of the coverage array and, for 
+   the appropriate mode, the weighted sum of all of the length arrays.
+   """
+   labs = {} # keys are labels, values are scaling factors
+   for i in xrange( 2, 7 ):
+      labs[ '1e%d' % i ] = 10 ** i
+   v = sum( maf['maf'] )
+   if not ( options.stackFillBlocks or options.stackFillContigs or 
+            options.stackFillContigPaths or options.stackFillScaffPaths ):
+      return maf['columnsInBlocks'] # default
+   if options.stackFillBlocks:
+      base = 'maf'
+   if options.stackFillContigs:
+      base = 'mafCtg'
+   if options.stackFillContigPaths:
+      base = 'mafCpl'
+   if options.stackFillScaffPaths:
+      base = 'mafSpl'
+   for l in labs:
+      key = base + l
+      v += sum( maf[ key ] ) * labs[l]
+   return v
+
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
    axDict = {}
-   options.axLeft = 0.1
-   options.axWidth = 0.88
-   options.axTop = 0.98
+   options.axLeft  = 0.07
+   options.axRight = 0.98
+   options.axWidth = options.axRight - options.axLeft
+   options.axTop = 0.97
    options.chrMargin = 0.02
-   if ( not options.stackFillBlocks and not options.stackFillContigPaths 
-        and not options.stackFillContigs and not options.stackFillScaffPaths ):
+   if not ( options.stackFillBlocks or options.stackFillContigPaths or
+            options.stackFillContigs or options.stackFillScaffPaths ):
       options.axBottom = 0.02
       options.axHeight = options.axTop - options.axBottom
    else:
-      options.axBottom = 0.08
+      options.axBottom = 0.06
       options.axHeight = options.axTop - options.axBottom
       data.footerAx = fig.add_axes( [ 0.02, 0.01, 0.96, options.axBottom - 0.02] )
       if not options.frames:
