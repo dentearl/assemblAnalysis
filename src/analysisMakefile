@@ -670,14 +670,14 @@ ${rankingsDir}/N50_SPNG50.tab: ${rankingsDir}/N50All.txt
 # The top assembly from each team
 ${rankingsDir}/subsetTeamTopEntry: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py ${rankingsDir}/*tab | ${binDir}/summarizedRankingToTeamTop.py | \
+	${binDir}/summarizeRankings.py ${rankingsDir}/*tab --mode=s | ${binDir}/summarizedRankingToTeamTop.py | \
 		 sed '/^#/d' | sed 's/.contiguousStats.xml//' | awk '{print $$1}' > $@.tmp
 	mv $@.tmp $@
 
 # rankings table, all
 ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/tab2tex.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
+	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
 	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | \
 		sed 's/ (value)//g;' | sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' | \
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \

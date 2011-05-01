@@ -60,6 +60,9 @@ def initOptions( parser ):
                       action='store_true',
                       help=('Stores the second column of the tab and outputs the value in '
                             'parenthesis following the ranking.'))
+   parser.add_option( '--mode', dest='mode', default='s',
+                      type='string',
+                      help=('Mode can be "s" for a sum or "h" for harmonic mean.'))
 
 def checkOptions( args, options, parser ):
    if len( args ) < 1:
@@ -69,6 +72,10 @@ def checkOptions( args, options, parser ):
          parser.error('file "%s" does not exist.\n' % f )
       if not f.endswith('.tab'):
          parser.error('file "%s" does not end in ".tab".\n' % f )
+   options.mode = options.mode.lower()
+   if options.mode not in ('s', 'h'):
+      parser.error( 'Unrecognized --mode %s. Choose either "s" for '
+                    'sum or "h" for harmonic.' % options.mode )
 
 def readFiles( args, options ):
    assemblies = {}
@@ -107,6 +114,7 @@ def printHeader( options ):
 def reportRank( assemblies, options ):
    printHeader( options )
    if options.overall:
+      # ranking is between all assemblies
       overallDict = {}
       for t in assemblies:
          overallDict[t] = 0
@@ -122,6 +130,7 @@ def reportRank( assemblies, options ):
                sys.stdout.write('\t%d' % z.rank )
          sys.stdout.write('\n')
    else:
+      # ranking is within teams
       teams = {}
       for a in assemblies:
          if a[0] not in teams:
@@ -138,15 +147,32 @@ def reportRank( assemblies, options ):
       aemst.sort()
       for t in aemst:
          print ''
-         ranked = sorted( teams[ t ], key=lambda x: sum( x.ranks ))
+         if options.mode == 's':
+            ranked = sorted( teams[ t ], key=lambda x: sum( x.ranks ))
+         else:
+            ranked = sorted( teams[ t ], key=lambda x: harmonic( x.ranks ))
          for r in ranked:
-            sys.stdout.write( '%s\t%d' % ( r.name, sum( r.ranks ) ))
+            if options.mode == 's':
+               sys.stdout.write( '%s\t%d' % ( r.name, sum( r.ranks ) ))
+            else:
+               sys.stdout.write( '%s\t%.2f' % ( r.name, harmonic( r.ranks ) ))
             for j in xrange( 0, len(r.ranks)):
                if options.retainValues:
                   sys.stdout.write('\t%d (%s)' % (r.ranks[j], r.values[j] ))
                else:
                   sys.stdout.write('\t%d' % r.ranks[j] )
             sys.stdout.write('\n')
+
+def harmonic( ranks ):
+   """ returns the harmonic mean of the assembly's ranks
+   """ 
+   h = 0
+   for r in ranks:
+      h += 1.0 / r
+   h = 1.0 / h
+   h *= len( ranks )
+   return h
+   
 
 def main():
    usage = ( 'usage: %prog [options] rankingFile1.tab rankingFile2.tab rankingFile3.tab\n\n'
