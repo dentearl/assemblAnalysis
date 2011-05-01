@@ -215,7 +215,7 @@ def rankings( assembliesList, options ):
    print '#Assembly\tNG50\tContig Path NG50\tScaffold Path NG50'
    for a in assembliesList:
       sys.stdout.write('%s' % a.ID )
-      for e in [ 'contigNG50', 'contigPathNG50', 'scaffoldPathNG50' ]:
+      for e in [ 'scaffoldNG50', 'contigPathNG50', 'scaffoldPathNG50' ]:
          sys.stdout.write('\t%s' % a.valuesDict[ e ])
       sys.stdout.write('\n')
 
