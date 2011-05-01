@@ -215,7 +215,7 @@ def main():
    lpt.initOptions( parser )
    options, args = parser.parse_args()
    checkOptions( args, options, parser )
-   lpt.checkOptions( args, options, parser )
+   lpt.checkOptions( options, parser )
    fig, pdf = lpt.initImage( 11.0, 3.25, options, data )
 
    storedCategories = readFiles( options )

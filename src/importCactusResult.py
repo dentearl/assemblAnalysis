@@ -50,11 +50,12 @@ def initOptions( parser ):
                       type='string',
                       help=('Directory where you want to place the '
                             'data. If it does not exist, it will be created.' ))
-   parser.add_option('--name', dest='name', default='R1',
-                     help=('Sets the name of the input assembly. default=%default'))
    parser.add_option('--type', dest='type',
                      type='string',
                      help=('Type of the alignment, either scaffold or contig.'))
+   parser.add_option('--name', dest='name', default='R1',
+                     help=('Sets the name of the input assembly. default=%default'))
+
 
 def checkOptions( options, parser ):
    opts = { 'inDir'  : options.inDir,
@@ -144,7 +145,7 @@ def main():
    usage = ( 'usage: %prog --inDir=path/to/input --outDir=path/to/out --type=[contig|scaffold] [options]\n\n'
              '%prog takes in a directory created by cactus ( --inDir )\n'
              'and a directory where you are staging the data for analysis ( --outDir )\n'
-             'the type of alignment, either contig or scaffold, and then migrates the\n'
+             'the type of alignment ( --type ), either contig or scaffold, and then migrates the\n'
              'relevant files into the outDir. Use the --name flag to specify the name\n'
              '(e.g. --name R1) of the assembly in the analysis.' )
    parser = OptionParser( usage=usage )
