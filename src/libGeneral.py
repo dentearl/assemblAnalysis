@@ -66,3 +66,14 @@ def prettyFloat( f, n ):
       else:
          s = '%s%s' % ( r[ (len(r) - 1) - j], s )
    return s
+
+##############################
+# idMap provides a mapping between the assemly ID numbers used
+# in the filesystem to the names displayed in figures and tables.
+# If you add your own assembly into the analysis, you should also
+# add your ID code and six letter name into this dict.
+idMap = { 'A':'Astr', 'B':'Wtsi P', 'C':'Ebi', 'D':'Wtsi S',
+          'E':'Cracs', 'F':'Bccgsc', 'G':'Doejgi', 'H':'Irisa',
+          'I':'Cshl', 'J':'Dscisu', 'K':'Cbslug', 'L':'Ucsf', 
+          'M':'Rhul', 'N':'Gacwt', 'O':'Dcsuoc', 'P':'Bgi', 
+          'Q':'Broad', 'V':'Nvelv', 'W':'Nclc', 'X':'Nabyss' }

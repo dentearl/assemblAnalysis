@@ -36,6 +36,7 @@ stats xml file.
 # THE SOFTWARE.
 ##############################
 import libAssemblySubset as las
+import libGeneral as lgn
 from libMafGffPlot import Data
 import libPlotting as lpt
 import matplotlib.lines as lines
@@ -142,16 +143,17 @@ def establishTicks( ax, xData, options, data ):
 def drawLegend( options, data ):
    if len( options.files ) < 2:
       return
+   pltListLabels = []
    if options.legendElements is None:
-      pltListLabels = options.names
+      for n in options.names:
+         pltListLabels.append( lgn.idMap[n[0]] )
    elif len( options.legendElements ) == len( options.files ):
       pltListLabels = options.legendElements
    else:
-      sys.stderr.write('length of items in --legendElements not equal to number of contiguous xml files.\n')
+      sys.stderr.write('Error, length of items in --legendElements not '
+                       'equal to number of contiguous xml files.\n')
       sys.exit( 1 )
-   # data.axDict['main'].add_patch( patches.Rectangle( xy= ( 0.03, 0.0 ), width=0.05, 
-   #                                                    height=0.5, color='r',
-   #                                                    transform=data.axDict['main'].transAxes ))
+   
    leg = plt.legend( data.pltList, pltListLabels, 'lower left' )
    leg._drawFrame=False
 

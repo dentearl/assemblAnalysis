@@ -35,6 +35,7 @@ dent earl, dearl(a) soe ucsc edu
 ##############################
 import glob
 import libAssemblySubset as las
+import libGeneral as lgn
 import libPlotting as lpt
 import matplotlib.backends.backend_pdf as pltBack
 import matplotlib.lines as lines
@@ -152,9 +153,9 @@ def establishAxes( fig, options, data ):
    options.axLeft   = 0.1
    options.axRight  = 0.95
    options.axWidth  = options.axRight - options.axLeft
-   options.margin   = 0.07
-   options.axTop    = 0.95
-   options.axBot    = 0.05
+   options.margin   = 0.10
+   options.axTop    = 0.96
+   options.axBot    = 0.08
    options.axHeight = options.axTop - options.axBot
    axesNames = [ 'all', 'hom', 'het' ]
    numberOfAxes = len( axesNames )
@@ -211,7 +212,7 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
                                               color='#1f77b4',
                                               linewidth= 4.0,
                                               solid_capstyle='round'))
-      xNames.append( aName )
+      xNames.append( lgn.idMap[ aName[0] ] )
    #if not options.normalize:
    axDict[ 'all' ].set_yscale('log')
    if yMin > yMax:
@@ -221,11 +222,11 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    axDict[ 'all' ].set_xlim( 0, len(xNames) + 1 )
    axDict[ 'all' ].set_xticks( range( 1, len(xNames) + 1 ))
    axDict[ 'all' ].set_xticklabels( xNames )
+   for label in axDict[ 'all' ].xaxis.get_ticklabels():
+      label.set_rotation( 45 )
    if not options.subsetFile:
       for tick in axDict[ 'all' ].xaxis.get_major_ticks():
          tick.label1.set_fontsize( 6 )
-      for label in axDict[ 'all' ].xaxis.get_ticklabels():
-         label.set_rotation( 90 )
 
    # all the other plots
    axNames = { 'hom':'totalErrorsInHomozygous', 
@@ -282,11 +283,12 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
          axDict[ key ].set_xticklabels( xNames )
       else:
          axDict[ key ].set_xticklabels( [] )
+      for label in axDict[ key ].xaxis.get_ticklabels():
+         label.set_rotation( 45 )
       if not options.subsetFile:
          for tick in axDict[ key ].xaxis.get_major_ticks():
             tick.label1.set_fontsize( 6 )
-         for label in axDict[ key ].xaxis.get_ticklabels():
-            label.set_rotation( 90 )
+         
 
    if not options.raw:
       suffix = ' / Correct (bits)'

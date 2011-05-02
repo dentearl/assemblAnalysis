@@ -38,7 +38,7 @@ output is latex
 ##############################
 import glob
 import libAssemblySubset as las
-from libGeneral import prettyNumber
+import libGeneral as lgn
 from optparse import OptionParser
 import os
 import re
@@ -162,11 +162,11 @@ ID & Intra chromosomal joins & Inter chromosomal joins & Insertions & Deletions 
    i = 0
    for row in assembliesList:
       i += 1
-      sys.stdout.write( '%s' % ( row.ID ))
-      # sys.stdout.write( ' & %s & %s' % ( prettyNumber(row.valuesDict['totalHomoToHeteroSwitches']),
-      #                                    prettyNumber( row.valuesDict['totalScaffoldGaps'] + 
+      sys.stdout.write( '%s' % ( lgn.idMap[ row.ID[0] ] ))
+      # sys.stdout.write( ' & %s & %s' % ( lgn.prettyNumber(row.valuesDict['totalHomoToHeteroSwitches']),
+      #                                    lgn.prettyNumber( row.valuesDict['totalScaffoldGaps'] + 
       #                                                  row.valuesDict['totalBleedingHeartScaffoldGaps'] ) ))
-      # sys.stdout.write( ' & %s' % ( prettyNumber( row.valuesDict['totalContigEnds'] + 
+      # sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict['totalContigEnds'] + 
       #                                             row.valuesDict['totalContigEndsWithNs'] )))
       #sys.stdout.write( ' & %.4f' % ( row.valuesDict['errorsPerContig']))
       #sys.stdout.write( ' & %.2e' % ( row.valuesDict['errorsPerMappedBase']))
@@ -176,9 +176,9 @@ ID & Intra chromosomal joins & Inter chromosomal joins & Insertions & Deletions 
                  'totalErrorsHaplotypeToDeletion',
                  'totalErrorsHaplotypeToInsertionAndDeletion',
                  'totalErrorsContigEndsWithInsert' ]:
-         sys.stdout.write( ' & %s' % ( prettyNumber( row.valuesDict[v] )))
-      #sys.stdout.write( ' & %s' % ( prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
-      sys.stdout.write( ' & %s \\\\\n' % prettyNumber( row.totalErrors ))
+         sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict[v] )))
+      #sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
+      sys.stdout.write( ' & %s \\\\\n' % lgn.prettyNumber( row.totalErrors ))
       if not i % 10 and i != len( assembliesList ):
          print '\\hline'
    print '''\\hline
@@ -200,7 +200,7 @@ def printRanks( assembliesList, options ):
                  'totalErrorsHaplotypeToInsertionAndDeletion',
                  'totalErrorsContigEndsWithInsert' ]:
          sys.stdout.write( '\t%s' % ( row.valuesDict[v] ))
-      #sys.stdout.write( ' & %s' % ( prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
+      #sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
       sys.stdout.write( '\n' )
 
 def calculateErrors( assembliesList, options ):

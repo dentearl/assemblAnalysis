@@ -33,6 +33,7 @@ dent earl, dearl@soe.ucsc.edu
 ##############################
 import glob
 import libAssemblySubset as las
+import libGeneral as lgn
 import libPlotting as lpt
 from libMafGffPlot import Data
 from libMafGffPlot import MafBlock
@@ -444,7 +445,8 @@ def labelAxes( fig, axDict, options, data ):
    j += data.increment / 2.0 
    for n in data.orderedMafs:
       yPos = options.axTop - j
-      fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = '%s' % n, 
+      # Assembly Labels
+      fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = '%s' % lgn.idMap[ n[0] ], 
                 horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
       if options.printCoverageNumbers:
          fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, 

@@ -37,6 +37,7 @@ from a single copy stats xml file.
 ##############################
 import glob
 import libAssemblySubset as las
+import libGeneral as lgn
 from libMafGffPlot import Data
 import libPlotting as lpt
 import matplotlib.lines as lines
@@ -90,10 +91,10 @@ def establishAxes( fig, options, data ):
    options.axLeft   = 0.09
    options.axRight  = 0.97
    options.axWidth    = options.axRight - options.axLeft 
-   options.axBottom = 0.06
+   options.axBottom = 0.08
    options.axTop    = 0.95
    options.axHeight = options.axTop - options.axBottom
-   margin = 0.07
+   margin = 0.10
    facetHeight = ( options.axHeight - 2.0 * margin) / 3.0
    yPos = 0.0
    for ax in [ 'def', 'exc', 'sum' ]:
@@ -184,7 +185,7 @@ def drawData( axDict, sList, options, data ):
          axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
                                               ydata=[ value(s, '%sLower' % ax), value(s, '%sUpper' % ax) ],
                                               color='#1f77b4', linewidth=4.0, solid_capstyle='round'))
-         xNames.append( s.name )
+         xNames.append( lgn.idMap[ s.name[0] ] )
       axDict[ ax ].set_xlim( 0, len( xNames ) + 1 )
       if ax != 'exc':
          axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
@@ -194,8 +195,8 @@ def drawData( axDict, sList, options, data ):
                tick.label1.set_fontsize( 12 )
             else:
                tick.label1.set_fontsize( 6 )
-         #for label in axDict[ ax ].xaxis.get_ticklabels():
-         #   label.set_rotation( 90 )
+         for label in axDict[ ax ].xaxis.get_ticklabels():
+            label.set_rotation( 45 )
       else:
          axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
          axDict[ ax ].set_xticklabels( [] )

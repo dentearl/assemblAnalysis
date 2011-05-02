@@ -493,19 +493,22 @@ contiguousPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsContiguity/*
 # contiguous individual plots
 ${contiguousPlotsDir}/%.contiguousStats.pdf: ${projectDir}/statsScaffoldsContiguity/%.contiguousStats.xml ${binDir}/createContiguousStatsPlot.py
 	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --title "$* Contiguity Statistics" --out ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf --outFormat pdf $<
+	${binDir}/createContiguousStatsPlot.py --title "$$(echo $* | ${binDir}/replaceIDsWithNames.py --retainNumber ) Contiguity Statistics" \
+		--out ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf --outFormat pdf $<
 	mv ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf $@
 
 # contiguous facet plot
 ${resultsDir}/facets/contiguousStatsFacets.pdf: ${binDir}/createContiguousStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContiguity/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/facets/contiguousStatsFacetsTmp --outFormat pdf --title 'Contiguity Statistics' ${projectDir}/statsScaffoldsContiguity/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
+	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/facets/contiguousStatsFacetsTmp --outFormat pdf \
+		--title 'Contiguity Statistics' ${projectDir}/statsScaffoldsContiguity/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
 	mv ${resultsDir}/facets/contiguousStatsFacetsTmp.pdf $@
 
 # copy number individual plots
 ${copyNumberPlotsDir}/%.pdf: ${projectDir}/statsScaffoldsCopyNumber/%.xml ${binDir}/createCopyNumberStatsPlot.py
 	mkdir -p $(dir $@)
-	${binDir}/createCopyNumberStatsPlot.py --title "$* Copy Number Statistics" --out ${copyNumberPlotsDir}/$*.tmp.pdf --outFormat pdf $<
+	${binDir}/createCopyNumberStatsPlot.py --title "$$(echo $* | perl -ple 's/\.copyNumber\_\d+//' | ${binDir}/replaceIDsWithNames.py --retainNumber ) Copy Number Statistics" \
+		--out ${copyNumberPlotsDir}/$*.tmp.pdf --outFormat pdf $<
 	mv ${copyNumberPlotsDir}/$*.tmp.pdf $@
 # copy number individual plots
 copyNumberPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsCopyNumber/*.xml), $(join ${copyNumberPlotsDir}/, $(subst xml,pdf, $(notdir $f)) ))
@@ -583,7 +586,7 @@ ${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}
 ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	cat ${rankingsDir}/coverageTotal.tab | sed 's/Assembly/ID/;' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 | \
-		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTmp.tex
+		${binDir}/replaceIDsWithNames.py --retainNumber | ${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTmp.tex && latex coverageRankingTableTmp.tex \
 		latex coverageRankingTableTmp.tex && dvips -Ppdf coverageRankingTableTmp.dvi && \
 		ps2pdf coverageRankingTableTmp.ps && popd
@@ -591,9 +594,9 @@ ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir
 # coverage rankings table, subset
 ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${binDir}/subsetTabs.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	cat ${rankingsDir}/coverageTotal.tab | ${binDir}/subsetTabs.py --subsetFile \
+	cat ${rankingsDir}/coverageTotal.tab | perl -ple 's/[ ]\d+\t/\t/' | ${binDir}/subsetTabs.py --subsetFile \
 		${rankingsDir}/subsetTeamTopEntry | sed 's/Assembly/ID/;' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | \
-		${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTeamsTmp.tex
+		${binDir}/replaceIDsWithNames.py | ${binDir}/latexWrapper.py > ${tablesDir}/coverageRankingTableTeamsTmp.tex
 	pushd ${tablesDir} && latex coverageRankingTableTeamsTmp.tex && latex coverageRankingTableTeamsTmp.tex \
 		latex coverageRankingTableTeamsTmp.tex && dvips -Ppdf coverageRankingTableTeamsTmp.dvi && \
 		ps2pdf coverageRankingTableTeamsTmp.ps && popd
@@ -681,7 +684,8 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | \
 		sed 's/ (value)//g;' | sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' | \
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitutions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
+		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py --retainNumber | \
+		${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
 		latex rankingSummaryTableWrapped.tex && dvips -Ppdf rankingSummaryTableWrapped.dvi && \
@@ -694,8 +698,8 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/ (value)//g;'| \
 		sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitutions/' | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 | sed 's/Assembly/ID/' | \
-		sed 's/_/ /g;'  > ${tablesDir}/rankingSummaryTableTeams.tex
+		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 |\
+		sed 's/Assembly/ID/' | sed 's/_/ /g;' > ${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \

@@ -37,6 +37,7 @@ create the N50 stats plots.
 from createContigPathStatsTable import readDirs
 import createSortedCoveragesPlot as cscp
 import libAssemblySubset as las
+import libGeneral as lgn
 import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
@@ -126,9 +127,9 @@ def establishAxis( fig, options, data ):
    options.axLeft    = 0.09
    options.axRight   = 0.98
    options.axWidth   = options.axRight - options.axLeft
-   options.axBottom  = 0.05
-   options.axHeight  = 0.9
-   options.axTop     = options.axBottom + options.axHeight
+   options.axBottom  = 0.08
+   options.axTop     = 0.95
+   options.axHeight  = options.axTop - options.axBottom
    options.margin    = 0.08
    indvHeight = ( options.axHeight - (len( options.columns) - 1.0) * options.margin ) / float( len( options.columns ))
    prevY = options.axTop
@@ -138,15 +139,19 @@ def establishAxis( fig, options, data ):
    return axDict
 
 def getVals( assembliesList, key ):
+   """ returns a list of values given a key and the list of assemblies.
+   """
    v = []
    for a in assembliesList:
       v.append( a.valuesDict[ key ] )
    return v
 
 def getIDs( assembliesList ):
+   """ returns a list of the names of the assemblies
+   """ 
    v = []
    for a in assembliesList:
-      v.append( a.ID )
+      v.append( lgn.idMap[ a.ID[0] ] )
    return v
 
 def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
@@ -183,11 +188,13 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    for tick in axDict['main'].xaxis.get_major_ticks():
       if options.subsetFile:
          tick.label1.set_fontsize( 12 )
+         for label in axDict['main'].xaxis.get_ticklabels():
+            label.set_rotation( 45 )
       else:
          tick.label1.set_fontsize( 6 )
-      if len(assembliesList) > 25:
-         for label in axDict['main'].xaxis.get_ticklabels():
-            label.set_rotation( 90 )
+      # if len(assembliesList) > 25:
+      #    for label in axDict['main'].xaxis.get_ticklabels():
+      #       label.set_rotation( 45 )
       axDict['main'].xaxis.set_ticks_position('bottom')
    axDict['main'].set_yscale( 'log' )
    axDict['main'].set_ylim( [ minsMin *.6, 
