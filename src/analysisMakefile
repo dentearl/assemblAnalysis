@@ -1,6 +1,6 @@
 SHELL:=/bin/bash -e
 export SHELLOPTS=pipefail
-# dent earl dearl (a) soe ucsc edu
+# dent earl, dearl (a) soe ucsc edu
 # 11 April 2011
 ##############################
 # Copyright (C) 2009-2011 by 
@@ -703,7 +703,7 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 # rankings table, subset
 ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py ${binDir}/tab2tex.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | ${binDir}/summarizedRankingToTeamTop.py | \
+	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | ${binDir}/summarizedRankingToTeamTop.py --reRank --subsetFile ${rankingsDir}/subsetTeamTopEntry | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/ (value)//g;'| \
 		sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/Contiguity/' |\
 		sed 's/structuralContigPathErrors/Struct./' | sed 's/copyNumberErrors/Copy Num./' | sed 's/coverageCDS/Cov. CDS/' |\
@@ -714,17 +714,18 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \
 		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
-
+# summary of events in simulation table
 ${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
 	cat $< | ${binDir}/tab2tex.py --partitionEvery 10 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
 	pushd ${tablesDir} && latex simulationSummaryTableWrapped.tex && latex simulationSummaryTableWrapped.tex \
 		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
 		ps2pdf simulationSummaryTableWrapped.ps && popd
 	mv ${tablesDir}/simulationSummaryTableWrapped.pdf $@
-
+# list of participating teams table
 ${tablesDir}/participantsTable.pdf: ${participantsTableTex}
 	cat $< | ${binDir}/replaceIDsWithNames.py | ${binDir}/latexWrapper.py > ${tablesDir}/participantsTableWrapped.tex
 	pushd ${tablesDir} && latex participantsTableWrapped.tex && latex participantsTableWrapped.tex \
 		latex participantsTableWrapped.tex && dvips -Ppdf participantsTableWrapped.dvi && \
 		ps2pdf participantsTableWrapped.ps && popd
 	mv ${tablesDir}/participantsTableWrapped.pdf $@
+

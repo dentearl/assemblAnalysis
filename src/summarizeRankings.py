@@ -83,17 +83,24 @@ def readFiles( args, options ):
    for aFile in args:
       options.fileNames.append( os.path.basename( aFile ) )
       f = open( aFile, 'r' )
-      rank = 0
+      rank  = 0
+      count = 0
+      prevValue = - sys.maxint
       for line in f:
          line = line.strip()
          if line.startswith('#'):
             continue
-         rank += 1
          a = Tab()
          d = line.split()
          a.name  = d[0]
-         a.rank  = rank
          a.value = d[1]
+         if a.value == prevValue:
+            count += 1
+         else:
+            count += 1
+            rank = count
+         a.rank  = rank
+         prevValue = a.value
          if a.name not in assemblies:
             assemblies[ a.name ] = []
          assemblies[ a.name ].append( a )
