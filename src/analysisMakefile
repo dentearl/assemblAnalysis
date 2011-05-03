@@ -58,7 +58,7 @@ bacWPSDir:=${projectDir}/picklesMafsScaffoldsBac
 bacWPCDir:=${projectDir}/picklesMafsContigsBac
 bacAWPDir:=${projectDir}/picklesAnnotsBac
 rankingsDir:=${resultsDir}/rankings
-rankingsFiles:=$(foreach r,N50_CPNG50.tab N50_SPNG50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab,${rankingsDir}/$r)
+rankingsFiles:=$(foreach r,N50_CPNG50.tab N50_SPNG50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab coverageCDS.tab,${rankingsDir}/$r)
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
@@ -585,6 +585,11 @@ ${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}
 		awk 'NR==1; NR>1 {printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.3e\n", $$1, $$2, $$3, $$4, $$5, $$6, $$7}'  > $@.tmp
 	rm ${rankingsDir}/coverageTotalSummary.tab
 	mv $@.tmp $@
+# CDS coverage ranking
+${rankingsDir}/coverageCDS.tab: ${rankingsDir}/coverageTotal.tab
+	cat $< | awk 'NR==1; NR>1{ print $$0 | "sort -rn -k6" }' | awk --field-separator '\t' '{print $$1, $$6}' |\
+		awk --field-separator '\t' '{print $$1 "\t" $$6}' > $@.tmp
+	mv $@.tmp $@
 
 # coverage rankings table, all
 ${tablesDir}/coverageRankingTable.pdf: ${rankingsDir}/coverageTotal.tab ${binDir}/tab2tex.py ${binDir}/latexWrapper.py ${tablesDir}/fltpage.sty
@@ -686,9 +691,9 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
 	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | \
-		sed 's/ (value)//g;' | sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' | \
-		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py --retainNumber | \
+		sed 's/ (value)//g;' | sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/Contiguity/' | \
+		sed 's/structuralContigPathErrors/Struct./' | sed 's/copyNumberErrors/Copy Num./' | \
+		sed 's/substitutionErrors/Subs./' | sed 's/coverageCDS/Cov. CDS/' | ${binDir}/replaceIDsWithNames.py --retainNumber | \
 		${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
 		rankingSummaryTableWrapped.tex && sleep 2 && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
@@ -700,9 +705,9 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | ${binDir}/summarizedRankingToTeamTop.py | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/ (value)//g;'| \
-		sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
-		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
-		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 |\
+		sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/Contiguity/' |\
+		sed 's/structuralContigPathErrors/Struct./' | sed 's/copyNumberErrors/Copy Num./' | sed 's/coverageCDS/Cov. CDS/' |\
+		sed 's/substitutionErrors/Subs./' | ${binDir}/replaceIDsWithNames.py | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 |\
 		sed 's/Assembly/ID/' | sed 's/_/ /g;' > ${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex &&  sleep 2 && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
