@@ -137,15 +137,6 @@ def readSubStatsDir( assembliesDict, options ):
          assembliesDict[ ID ].subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
    return assembliesDict
 
-def sumErrors( assembliesDict, options ):
-   for a in assembliesDict:
-      assembliesDict[ a ].allUp = 0
-      assembliesDict[ a ].allLo = 0
-      for e in [ 'totalErrorsInHomozygous', 'totalErrorsInHeterozygous']: 
-         # 'Total-errors-in-one-haplotype-only' ]:
-         assembliesDict[ a ].allLo += float( assembliesDict[ a ].subStatsLower[ e ] )
-         assembliesDict[ a ].allUp += float( assembliesDict[ a ].subStatsUpper[ e ] )
-
 def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
@@ -303,10 +294,24 @@ def logLower( y ):
    if y is going to be displayed on a log plot
    """
    for i in xrange( 1, 8 ):
-      if y == ( y % float( 10.0 ** i)):
+      if y == ( y % (10.0 ** i)):
          return ( 10.0 ** ( i - 1 ) )
 
+def sumErrors( assembliesDict, options ):
+   for a in assembliesDict:
+      assembliesDict[ a ].allUp = 0
+      assembliesDict[ a ].allLo = 0
+      for e in [ 'totalErrorsInHomozygous', 'totalErrorsInHeterozygous']: 
+         # 'Total-errors-in-one-haplotype-only' ]:
+         assembliesDict[ a ].allLo += float( assembliesDict[ a ].subStatsLower[ e ] )
+         assembliesDict[ a ].allUp += float( assembliesDict[ a ].subStatsUpper[ e ] )
+      assembliesDict[a].allLo /= ( assembliesDict[a].subStatsLower['totalCallsInHomozygous'] + 
+                                   assembliesDict[a].subStatsLower['totalCallsInHeterozygous'])
+      assembliesDict[a].allUp /= ( assembliesDict[a].subStatsUpper['totalCallsInHomozygous'] + 
+                                   assembliesDict[a].subStatsUpper['totalCallsInHeterozygous'])
+
 def normalizeData( assembliesDict, options ):
+   # names is a dict keyed on numerators and valued by denominators
    names = { 'totalErrorsInHomozygous':'totalCorrectInHomozygous',
              'totalErrorsInHeterozygous':'totalCorrectInHeterozygous',
              'totalErrorsInOneHaplotypeOnly':'totalCorrectInOneHaplotypeOnly' }
@@ -322,6 +327,7 @@ def normalizeData( assembliesDict, options ):
                                                       float(assembliesDict[ a ].subStatsLower[ names[ key ] ]) )
          assembliesDict[ a ].subStatsUpper[ key ] = ( float(assembliesDict[ a ].subStatsUpper[ key ]) / 
                                                       float(assembliesDict[ a ].subStatsUpper[ names[ key ] ]) )
+      
 def rankings( assembliesDict, sortOrder, options, data ):
    print ('#Assembly\tAll Lower\tAll Upper\tHomozygous Lower\tHomozygous Upper\t'
           'Heterozygous Lower\tHeterozygous Upper') # \tIndel Lower\tIndel Upper')
@@ -356,9 +362,9 @@ def main():
    assembliesDict = {}
    assembliesDict = readSubStatsDir( assembliesDict, options )
    
-   normalizeData( assembliesDict, options )
-   
    sumErrors( assembliesDict, options )
+   normalizeData( assembliesDict, options )
+
    sortOrder = sorted( assembliesDict, key=lambda key: assembliesDict[ key ].allLo, reverse=False )
 
    if options.outputRanks:

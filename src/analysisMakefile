@@ -525,9 +525,9 @@ ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf: ${binDir}/createCopyNumberStat
 	mv ${resultsDir}/mainFigs/copyNumberFacetLinearTmp.pdf $@
 
 # substitution stats facet plot
-${resultsDir}/mainFigs/subStatsFacets.pdf: ${binDir}/createSubStatsMegaPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/mainFigs/subStatsFacets.pdf: ${binDir}/createSubStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createSubStatsMegaPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --subsetFile \
+	${binDir}/createSubStatsPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --subsetFile \
 		${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/subStatsFacetsTmp --outFormat pdf
 	mv ${resultsDir}/mainFigs/subStatsFacetsTmp.pdf $@
 
@@ -633,9 +633,9 @@ ${rankingsDir}/structuralContigPathErrors.tab: ${binDir}/createContigPathStatsTa
 	mv $@.tmp $@
 
 # base substitution errors rankings
-${rankingsDir}/substitutionErrors.tab: ${binDir}/createSubStatsMegaPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*)
+${rankingsDir}/substitutionErrors.tab: ${binDir}/createSubStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*)
 	mkdir -p $(dir $@)
-	${binDir}/createSubStatsMegaPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --outputRanks | \
+	${binDir}/createSubStatsPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --outputRanks | \
 		awk 'NR==1; NR>1 {printf "%s\t%.2e\t%.2e\t%.2e\t%.2e\t%.2e\t%.2e\t%.2e\t%.2e\n",$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9}' > $@.tmp
 	mv $@.tmp $@
 
