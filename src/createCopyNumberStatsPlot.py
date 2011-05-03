@@ -80,7 +80,7 @@ def establishAxes( fig, categories, options, data ):
    options.axBottom = 0.1
    options.axTop    = 0.85
    options.axHeight = options.axTop - options.axBottom
-   margin = 0.015
+   margin = 0.017
    width  = ( options.width - ( len(categories) - 1 ) * margin ) / len(categories)
    xpos = options.axLeft
    sortedOrder = categories.keys()

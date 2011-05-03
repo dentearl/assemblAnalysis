@@ -100,6 +100,7 @@ def establishAxes( fig, options, data ):
 
 def readFiles( options ):
    # these lists have one item per input file
+   # statsList ends up containing the data that will be plotted.
    statsList = []
    xData = []
    options.names = []
@@ -169,21 +170,21 @@ def drawData( ax, xData, sList, options, data ):
               "#d62728", "#ff9896", # reds
               "#9467bd", "#c5b0d5" ] # lavenders
    styles = { 0:'-', 1:'--' }
+   isDash = 1
    data.pltList = [] # used for legends
-   # grey 0.50 horizontal line:
-   # ax.add_line( lines.Line2D( xdata=[1, xData[0][-1]],
-   #                            ydata=[0.5, 0.5],
-   #                            linewidth=0.25,
-   #                            color=(0.8, 0.8, 0.8)
-   #                            ))
+   colorIndex = -1
+   rankedOrder = rankFiles( options, data )
+   sList = reorderListByRanking( sList, rankedOrder, options )
    for i in xrange( 0, len( sList )):
       yData = []
       for b in sList[ i ]:
-         if ( float(b.correct ) / b.samples ) >= options.yCutOff:
+         if ( float(b.correct) / b.samples ) >= options.yCutOff:
             yData.append( float( b.correct ) / b.samples )
+      isDash = not isDash
+      if not isDash: colorIndex += 1
       p = ax.plot( xData[ i ][ :len(yData) ], yData, 
-                   color=colors[ i % len( colors ) ], 
-                   linestyle=styles[ i >= len( colors )],
+                   color=colors[ colorIndex % len( colors ) ], 
+                   linestyle=styles[ isDash ],
                    linewidth=2.0)
       data.pltList.append( p )
    for loc, spine in ax.spines.iteritems():
@@ -194,14 +195,31 @@ def drawData( ax, xData, sList, options, data ):
       else:
          raise ValueError('unknown spine location: %s' % loc )
 
+def reorderListByRanking( sList, rankedList, options ):
+   rankDict = {}
+   i = -1
+   for n, v in rankedList:
+      i += 1
+      rankDict[n] = i
+   order = []
+   # sList was processed in the order found in options.names,
+   # see readFiles() for details
+   defaultRankDict = {}
+   i = -1
+   for n in options.names:
+      i += 1
+      defaultRankDict[n] = i
+   for n, v in rankedList:
+      order.append( defaultRankDict[n] )
+   reorderedList = [ sList[i] for i in order ]
+   options.names = [ options.names[i] for i in order ]
+   return reorderedList
+
 def rankFiles( options, data ):
+   """ returns a list of the names and 50 values, ranked by 
+   descending 50 values
+   """
    ranks = []
-   if options.legendElements is None:
-      names = []
-      for f in options.files:
-         names.append( os.path.basename( f ) )
-   elif len( options.legendElements ) == len( options.files ):
-      names = options.legendElements
    j = -1
    for sList in data.statsList:
       j += 1
@@ -209,11 +227,13 @@ def rankFiles( options, data ):
       i = -1
       for b in sList:
          i += 1
-         if ( float(b.correct ) / b.samples ) >= options.yCutOff:
+         if ( float(b.correct) / b.samples ) >= options.yCutOff:
             fifty = b.end
-      ranks.append( (names[ j ], fifty) )
-   
+      ranks.append( (options.names[ j ], fifty) )
    ranks = sorted( ranks, key=lambda x: x[1], reverse=True )
+   return ranks
+
+def printRanks( ranks, options, data ):
    print '#Assembly\tvalue at %f (--yCutOff)' % options.yCutOff
    for ( n, v ) in ranks:
       print '%s\t%d' % ( n.split('.')[0], v )
@@ -236,11 +256,13 @@ def main():
       axDict = establishAxes( fig, options, data )
    
    data.statsList, data.xData = readFiles( options )
-   for i in xrange(0, len( data.statsList )):
+   for i in xrange( 0, len( data.statsList )):
+      # ensure that the buckets are all in order by their midpoint.
       data.statsList[i] = sorted( data.statsList[i], key=lambda x: x.mid, reverse=False )
    
    if options.outputRanks:
-      rankFiles( options, data )
+      ranks = rankFiles( options, data )
+      printRanks( ranks, options, data )
       sys.exit(0)
       
    drawData( axDict['main'], data.xData, data.statsList, options, data )

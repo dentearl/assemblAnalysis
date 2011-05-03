@@ -28,12 +28,16 @@ export SHELLOPTS=pipefail
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
+# These two directories can come from the assemblAnalysis project:
 binDir:=~/assemblathon/assemblAnalysis/bin
+extraDir:=~/assemblathon/assemblAnalysis/extra
+#####
 projectDir:=.
 resultsDir:=${projectDir}/publication
-# THESE 2 FILES ARE EXTERNAL DEPENDENCIES
+# THESE 3 FILES ARE EXTERNAL DEPENDENCIES
 fltpage:=~/assemblathon/latexSupplemental/trunk/fltpage.sty
-simulationStatsTab:=${projectDir}/simulationTable.tab
+simulationStatsTab:=${extraDir}/simulationTable.tab
+participantsTableTex:=${extraDir}/participantsTable.tex
 #####
 chrNames:= chr0,chr1,chr2
 hap1ChrLengths:= 76252953,18509915,17699484
@@ -54,7 +58,7 @@ bacWPSDir:=${projectDir}/picklesMafsScaffoldsBac
 bacWPCDir:=${projectDir}/picklesMafsContigsBac
 bacAWPDir:=${projectDir}/picklesAnnotsBac
 rankingsDir:=${resultsDir}/rankings
-rankingsFiles:=$(foreach r,N50_NG50.tab N50_CPNG50.tab N50_SPNG50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab,${rankingsDir}/$r)
+rankingsFiles:=$(foreach r,N50_CPNG50.tab N50_SPNG50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab,${rankingsDir}/$r)
 hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
 hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
@@ -66,7 +70,7 @@ bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${b
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/facets/n50statsFacets.pdf ${resultsDir}/facets/contiguousStatsFacets.pdf ${resultsDir}/facets/copyNumberFacetLinear.pdf ${resultsDir}/facets/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf
 	@echo Work Complete.
 
 clean:
@@ -479,13 +483,13 @@ ${coverageSFDir}/all_bacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py
 	done
 
 # n50 facetPlot
-${resultsDir}/facets/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/mainFigs/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createN50StatsPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
 		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ \
-		--out ${resultsDir}/facets/n50statsFacetsTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
-		--subsetFile ${rankingsDir}/subsetTeamTopEntry --title 'Average size of assembled piece (N50)'
-	mv ${resultsDir}/facets/n50statsFacetsTmp.pdf $@
+		--out ${resultsDir}/mainFigs/n50statsFacetsTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --title 'N50 Statistics'
+	mv ${resultsDir}/mainFigs/n50statsFacetsTmp.pdf $@
 
 # contiguous individual plots
 contiguousPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsContiguity/*.xml),$(join ${contiguousPlotsDir}/, $(subst xml,pdf,$(notdir $f)) ))
@@ -498,11 +502,11 @@ ${contiguousPlotsDir}/%.contiguousStats.pdf: ${projectDir}/statsScaffoldsContigu
 	mv ${contiguousPlotsDir}/$*.contiguousStats.tmp.pdf $@
 
 # contiguous facet plot
-${resultsDir}/facets/contiguousStatsFacets.pdf: ${binDir}/createContiguousStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContiguity/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/mainFigs/contiguousStatsFacets.pdf: ${binDir}/createContiguousStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContiguity/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/facets/contiguousStatsFacetsTmp --outFormat pdf \
+	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/mainFigs/contiguousStatsFacetsTmp --outFormat pdf \
 		--title 'Contiguity Statistics' ${projectDir}/statsScaffoldsContiguity/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
-	mv ${resultsDir}/facets/contiguousStatsFacetsTmp.pdf $@
+	mv ${resultsDir}/mainFigs/contiguousStatsFacetsTmp.pdf $@
 
 # copy number individual plots
 ${copyNumberPlotsDir}/%.pdf: ${projectDir}/statsScaffoldsCopyNumber/%.xml ${binDir}/createCopyNumberStatsPlot.py
@@ -514,18 +518,18 @@ ${copyNumberPlotsDir}/%.pdf: ${projectDir}/statsScaffoldsCopyNumber/%.xml ${binD
 copyNumberPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsCopyNumber/*.xml), $(join ${copyNumberPlotsDir}/, $(subst xml,pdf, $(notdir $f)) ))
 
 # copy number facet plot
-${resultsDir}/facets/copyNumberFacetLinear.pdf: ${binDir}/createCopyNumberStatsFacetedPlot.py $(wildcard ${projectDir}/statsScaffoldsCopyNumber/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/mainFigs/copyNumberFacetLinear.pdf: ${binDir}/createCopyNumberStatsFacetedPlot.py $(wildcard ${projectDir}/statsScaffoldsCopyNumber/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createCopyNumberStatsFacetedPlot.py --dir ${projectDir}/statsScaffoldsCopyNumber/ \
-		--subsetFile ${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/facets/copyNumberFacetLinearTmp --outFormat pdf
-	mv ${resultsDir}/facets/copyNumberFacetLinearTmp.pdf $@
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/copyNumberFacetLinearTmp --outFormat pdf
+	mv ${resultsDir}/mainFigs/copyNumberFacetLinearTmp.pdf $@
 
 # substitution stats facet plot
-${resultsDir}/facets/subStatsFacets.pdf: ${binDir}/createSubStatsMegaPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
+${resultsDir}/mainFigs/subStatsFacets.pdf: ${binDir}/createSubStatsMegaPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createSubStatsMegaPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --subsetFile \
-		${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/facets/subStatsFacetsTmp --outFormat pdf
-	mv ${resultsDir}/facets/subStatsFacetsTmp.pdf $@
+		${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/subStatsFacetsTmp --outFormat pdf
+	mv ${resultsDir}/mainFigs/subStatsFacetsTmp.pdf $@
 
 # hap1 coverage rankings
 ${rankingsDir}/coverageHap1.txt: ${binDir}/extractPlotPickleCounts.py $(wildcard ${hap1WPSDir}/*)  mafWigPicks
@@ -569,16 +573,16 @@ ${rankingsDir}/unmapped.txt: $(wildcard ${projectDir}/statsScaffoldsAggregateCol
 	mv $@.tmp $@
 
 # total coverage ranking
-${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}/coverageHap2.txt ${rankingsDir}/coverageBac.txt ${rankingsDir}/unmapped.txt
+${rankingsDir}/coverageTotal.tab: ${rankingsDir}/coverageHap1.txt ${rankingsDir}/coverageHap2.txt ${rankingsDir}/coverageBac.txt ${rankingsDir}/unmapped.txt ${extraDir}/cdsCoverage.tab
 	mkdir -p $(dir $@)
 	join ${rankingsDir}/coverageHap1.txt ${rankingsDir}/coverageHap2.txt | join - ${rankingsDir}/coverageBac.txt | \
-		join - ${rankingsDir}/unmapped.txt > ${rankingsDir}/coverageTotal.txt
-	echo -e '#Assembly\tHap Total (%)\tHap \(\\alpha_1\) (%)\tHap \(\\alpha_2\) (%)\tBac (%)\tUnmapped' > ${rankingsDir}/coverageTotalSummary.tab
+		join - ${extraDir}/cdsCoverage.tab | join - ${rankingsDir}/unmapped.txt > ${rankingsDir}/coverageTotal.txt
+	echo -e '#Assembly\tHap Total (%)\tHap \(\\alpha_1\) (%)\tHap \(\\alpha_2\) (%)\tBac (%)\tCDS (%)\tUnmapped' > ${rankingsDir}/coverageTotalSummary.tab
 	cat ${rankingsDir}/coverageTotal.txt |\
-		awk '{printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.3e\n", $$1, (($$2+$$4)/2249973.13), $$2/1124623.52, $$4/1125349.61, $$6/47478.19, $$8}' >>\
+		awk '{printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.3e\n", $$1, (($$2+$$4)/2249973.13), $$2/1124623.52, $$4/1125349.61, $$6/47478.19, $$9, $$11}' >>\
 		${rankingsDir}/coverageTotalSummary.tab
 	awk 'NR==1; NR>1 {print $$0 | "sort -rn -k2"}' ${rankingsDir}/coverageTotalSummary.tab | \
-		awk 'NR==1; NR>1 {printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.3e\n", $$1, $$2, $$3, $$4, $$5, $$6}'  > $@.tmp
+		awk 'NR==1; NR>1 {printf "%s\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\t%.3e\n", $$1, $$2, $$3, $$4, $$5, $$6, $$7}'  > $@.tmp
 	rm ${rankingsDir}/coverageTotalSummary.tab
 	mv $@.tmp $@
 
@@ -687,21 +691,21 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py --retainNumber | \
 		${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTable.tex > \
-		rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
+		rankingSummaryTableWrapped.tex && sleep 2 && latex rankingSummaryTableWrapped.tex && latex rankingSummaryTableWrapped.tex \
 		latex rankingSummaryTableWrapped.tex && dvips -Ppdf rankingSummaryTableWrapped.dvi && \
 		ps2pdf rankingSummaryTableWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableWrapped.pdf $@
 # rankings table, subset
 ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rankingsFiles} ${binDir}/summarizedRankingToTeamTop.py ${binDir}/tab2tex.py ${rankingsDir}/subsetTeamTopEntry ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
-	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues | ${binDir}/summarizedRankingToTeamTop.py | \
+	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | ${binDir}/summarizedRankingToTeamTop.py | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/ (value)//g;'| \
 		sed 's/coverageTotal/Coverage/'| sed 's/contiguousRanks/Contiguity/' |\
 		sed 's/structuralContigPathErrors/Structural/' | sed 's/copyNumberErrors/Copy Number/' | \
 		sed 's/substitutionErrors/Substitutions/' | ${binDir}/replaceIDsWithNames.py | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 |\
 		sed 's/Assembly/ID/' | sed 's/_/ /g;' > ${tablesDir}/rankingSummaryTableTeams.tex
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
-		rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
+		rankingSummaryTableTeamsWrapped.tex &&  sleep 2 && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \
 		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
@@ -712,3 +716,10 @@ ${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
 		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
 		ps2pdf simulationSummaryTableWrapped.ps && popd
 	mv ${tablesDir}/simulationSummaryTableWrapped.pdf $@
+
+${tablesDir}/participantsTable.pdf: ${participantsTableTex}
+	cat $< | ${binDir}/replaceIDsWithNames.py | ${binDir}/latexWrapper.py > ${tablesDir}/participantsTableWrapped.tex
+	pushd ${tablesDir} && latex participantsTableWrapped.tex && latex participantsTableWrapped.tex \
+		latex participantsTableWrapped.tex && dvips -Ppdf participantsTableWrapped.dvi && \
+		ps2pdf participantsTableWrapped.ps && popd
+	mv ${tablesDir}/participantsTableWrapped.pdf $@

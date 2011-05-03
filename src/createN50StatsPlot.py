@@ -86,7 +86,7 @@ def checkOptions( options, parser ):
       if not os.path.isdir( dirs[ d ] ):
          parser.error('--%s %s is not a directory!\n' % (d, dirs[ d ]) )
    options.columns = [ 'blockNG50', 'contigPathNG50', 'scaffoldPathNG50', 
-                       'contigNG50', 'contigN50', 'scaffoldN50', 'scaffoldNG50' ]
+                       'contigN50', 'contigNG50', 'scaffoldN50', 'scaffoldNG50' ]
    if options.outputRanks:
       return
    allowedKeys = set([ 'blockNG50', 'contigPathNG50', 'scaffoldPathNG50', 
@@ -102,13 +102,13 @@ def checkOptions( options, parser ):
                             'scaffoldN50':'Scaffold N50',
                             'scaffoldNG50':'Scaffold NG50'
                             }
-   options.colors = { 'blockNG50':'#d62728',        # darker red
+   options.colors = { 'blockNG50':'#CCFFCC',        # light greenish
                       'contigPathNG50':'#ffbb78',   # light orange
                       'scaffoldPathNG50':'#ff7f0e', # darker orange
                       'contigN50':'#aec7e8',        # lighter blue
                       'contigNG50':'#1f77b4',       # darker blue
-                      'scaffoldN50':'gray',
-                      'scaffoldNG50':'k'
+                      'scaffoldN50':(0.8, 0.8, 0.8), # light gray
+                      'scaffoldNG50':(0.3, 0.3, 0.3) # dark gray
                       }
    options.shapes = { 'blockNG50':'.', 
                       'contigPathNG50':'.',
@@ -124,7 +124,7 @@ def establishAxis( fig, options, data ):
    """
    axDict = {}
    # 'totalContigNumber', 'contigN50'
-   options.axLeft    = 0.09
+   options.axLeft    = 0.075
    options.axRight   = 0.98
    options.axWidth   = options.axRight - options.axLeft
    options.axBottom  = 0.08
