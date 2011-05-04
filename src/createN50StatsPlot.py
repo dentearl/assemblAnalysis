@@ -219,10 +219,10 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    leg._drawFrame=False
 
 def rankings( assembliesList, options ):
-   print '#Assembly\tNG50\tContig Path NG50\tScaffold Path NG50'
+   print '#Assembly\tNG50\tContig Path NG50\tScaffold Path NG50\tContig N50\tScaffold N50'
    for a in assembliesList:
       sys.stdout.write('%s' % a.ID )
-      for e in [ 'scaffoldNG50', 'contigPathNG50', 'scaffoldPathNG50' ]:
+      for e in [ 'scaffoldNG50', 'contigPathNG50', 'scaffoldPathNG50', 'contigN50', 'scaffoldN50' ]:
          sys.stdout.write('\t%s' % a.valuesDict[ e ])
       sys.stdout.write('\n')
 
