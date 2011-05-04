@@ -759,6 +759,6 @@ ${correlationsDir}/data.tab: ${binDir}/summarizeRankings.py ${rankingsFiles} ${r
 
 ${correlationsDir}/correlationPlot.pdf: ${correlationsDir}/data.tab ${binDir}/createPairCorrResidPlot.R
 	mkdir -p $(dir $@)
-	${binDir}/createPairCorrResidPlot.R $< ${binDir}/myPairs.R $(dir $@) >> /dev/null
+	${binDir}/createPairCorrResidPlot.R $< ${binDir}/myPairs.R $(dir $@)
 	mv ${correlationsDir}/residuals.pdf ${correlationsDir}/residualsPlot.pdf
 	mv ${correlationsDir}/correlations.pdf $@

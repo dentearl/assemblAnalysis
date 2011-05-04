@@ -103,7 +103,7 @@ panel.cor = function(x, y, digits=2, cex.cor){
 
 pdf(paste( args[3], 'correlations.pdf', sep=''), height=10, width=12)
 pairs(d.raw, lower.panel=panel.lm, upper.panel=panel.cor, diag.panel=panel.hist)
-dev.off()
+out = dev.off()
 pdf(paste( args[3], 'residuals.pdf', sep=''), height=10, width=12)
 pairs(d.raw, lower.panel=panel.residuals, upper.panel=panel.cor, diag.panel=panel.hist, printLabels=FALSE)
-dev.off()
+out = dev.off()
