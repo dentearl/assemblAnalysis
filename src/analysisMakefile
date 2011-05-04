@@ -71,7 +71,7 @@ bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${b
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationPlot.pdf
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationsPlot.pdf
 	@echo Work Complete.
 
 clean:
@@ -757,7 +757,7 @@ ${correlationsDir}/data.tab: ${binDir}/summarizeRankings.py ${rankingsFiles} ${r
 	rm $@.tmpj $@.header.tmp
 	mv $@.tmp $@
 
-${correlationsDir}/correlationPlot.pdf: ${correlationsDir}/data.tab ${binDir}/createPairCorrResidPlot.R
+${correlationsDir}/correlationsPlot.pdf: ${correlationsDir}/data.tab ${binDir}/createPairCorrResidPlot.R
 	mkdir -p $(dir $@)
 	${binDir}/createPairCorrResidPlot.R $< ${binDir}/myPairs.R $(dir $@)
 	mv ${correlationsDir}/residuals.pdf ${correlationsDir}/residualsPlot.pdf
