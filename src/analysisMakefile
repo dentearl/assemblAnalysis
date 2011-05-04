@@ -48,6 +48,7 @@ tablesDir:=${resultsDir}/tables
 copyNumberPlotsDir:=${resultsDir}/copyNumberPlots
 contiguousPlotsDir:=${resultsDir}/contiguousPlots
 coverageSFDir:=${resultsDir}/coverageStackFillPlots
+correlationsDir:=${projectDir}/correlations
 hap1WPSDir:=${projectDir}/picklesMafsScaffoldsHap1
 hap1WPCDir:=${projectDir}/picklesMafsContigsHap1
 hap1AWPDir:=${projectDir}/picklesAnnotsHap1
@@ -70,7 +71,7 @@ bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${b
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationPlot.pdf
 	@echo Work Complete.
 
 clean:
@@ -729,3 +730,35 @@ ${tablesDir}/participantsTable.pdf: ${participantsTableTex}
 		ps2pdf participantsTableWrapped.ps && popd
 	mv ${tablesDir}/participantsTableWrapped.pdf $@
 
+# correlations
+${rankingsDir}/contigN50.txt: ${rankingsDir}/N50All.txt
+	mkdir -p $(dir $@)
+	awk -F'\t' '{print $$1,"\t",$$5}' $< | awk 'NR==1; NR>1 {print $$0 | "sort -k1"}' | \
+		awk 'NR==1; NR>1 {printf "%s\t%.2e\n",$$1, $$2}' > $@.tmp
+	mv $@.tmp $@
+${rankingsDir}/scaffoldN50.txt: ${rankingsDir}/N50All.txt
+	mkdir -p $(dir $@)
+	awk -F'\t' '{print $$1,"\t",$$6}' $< | awk 'NR==1; NR>1 {print $$0 | "sort -k1"}' | \
+		awk 'NR==1; NR>1 {printf "%s\t%.2e\n",$$1, $$2}' > $@.tmp
+	mv $@.tmp $@
+
+# rankings table, subset
+${correlationsDir}/data.tab: ${binDir}/summarizeRankings.py ${rankingsFiles} ${rankingsDir}/scaffoldN50.txt ${rankingsDir}/contigN50.txt
+	mkdir -p $(dir $@)
+	${binDir}/summarizeRankings.py ${rankingsFiles} | head -1 | sed 's/#Assembly\t//' |\
+		sed 's/Overall\t//' > $@.header.tmp
+	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | sed '/^$$/d' | sort -k1 |\
+		grep --invert-match '^#' | awk --field-separator '\t' '{print $$1, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10}' |\
+		perl -ple 's/^(\w\d+\s+)\d+\s+\(/$$1/' | perl -ple 's/\)$$//' | perl -ple 's/\)\s+\d+\s+\(/\t/g' > $@.tmp
+	join ${rankingsDir}/contigN50.txt ${rankingsDir}/scaffoldN50.txt | join - $@.tmp |\
+		awk '{print $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11}' > $@.tmpj
+	cat $@.header.tmp | perl -ple 's/^/C_N50\tS_N50\t/' > $@.tmp
+	cat $@.tmpj >> $@.tmp
+	rm $@.tmpj $@.header.tmp
+	mv $@.tmp $@
+
+${correlationsDir}/correlationPlot.pdf: ${correlationsDir}/data.tab ${binDir}/createPairCorrResidPlot.R
+	mkdir -p $(dir $@)
+	${binDir}/createPairCorrResidPlot.R $< ${binDir}/myPairs.R $(dir $@) >> /dev/null
+	mv ${correlationsDir}/residuals.pdf ${correlationsDir}/residualsPlot.pdf
+	mv ${correlationsDir}/correlations.pdf $@
