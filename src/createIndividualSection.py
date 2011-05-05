@@ -433,7 +433,7 @@ def readSubmissionStatsDir( assembliesList, options ):
          for line in f:
             line = line.strip()
             d = line.split()
-            if d.startswith('n'):
+            if d[0] == 'n':
                scaffold = not scaffold
                continue
             if scaffold:
