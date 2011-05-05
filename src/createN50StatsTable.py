@@ -55,7 +55,7 @@ def printTable( assembliesList, caption, maxes, options ):
 \\centering
 \\begin{tabular}{| r | c | c | c | c | c | c | c |}
 \\hline
-ID & \# Contigs & N50 & NA50 & SPA50 & HPA50 & BNA50 & \(\sum\) Errors\\\\
+ID & \# Contigs & SN50 & CN50 & SPNG50 & CPNG50 & BNG50 & \(\sum\) Errors\\\\
 \\hline
 \\hline''' % caption
    i = 0
@@ -63,8 +63,8 @@ ID & \# Contigs & N50 & NA50 & SPA50 & HPA50 & BNA50 & \(\sum\) Errors\\\\
    for row in assembliesList:
       i += 1
       sys.stdout.write( '%s' % ( row.ID ))
-      for n in [  'totalContigNumber','contigN50', 'contigNA50',
-                  'scaffoldPathN50' , 'haplotypePathN50', 'blockN50' ]:
+      for n in [  'totalContigNumber','scaffoldN50', 'contigN50',
+                  'scaffoldPathNG50' , 'contigPathNG50', 'blockNG50' ]:
          sys.stdout.write( ' & %s' % ( isMaxFormat( row.valuesDict[ n ], maxes[ n ] ) ))
       sys.stdout.write( ' & %s' % isMaxFormat( row.totalErrors, eMin ))
       sys.stdout.write( ' \\\\\n' ) 
@@ -86,11 +86,11 @@ def isMaxFormat( n, m ):
 
 def calculateMaxesDict( assembliesList ):
    maxesDict = { 'totalContigNumber':0,
+                 'scaffoldN50':0,
                  'contigN50':0,
-                 'contigNA50':0,
-                 'scaffoldPathN50':0,
-                 'haplotypePathN50':0,
-                 'blockN50':0 }
+                 'scaffoldPathNG50':0,
+                 'contigPathNG50':0,
+                 'blockNG50':0 }
    for a in assembliesList:
       for m in maxesDict:
          if maxesDict[ m ] < a.valuesDict[ m ]:
