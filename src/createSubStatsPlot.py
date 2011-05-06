@@ -95,7 +95,7 @@ def readSubStatsDir( assembliesDict, options ):
    lowerStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.lower.xml') )
    upperStatsFiles = glob.glob( os.path.join( options.subStatsDir, '*.subStats.upper.xml') )
    namereg = '^([A-Z0-9]{2,3})\.subStats.*'
-   namepat = re.compile( namereg  )
+   namepat = re.compile( namereg )
    for l in lowerStatsFiles:
       m = re.match( namepat, os.path.basename( l ))
       if not m:

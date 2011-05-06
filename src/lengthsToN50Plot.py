@@ -47,6 +47,12 @@ import os
 import sys
 import re
 
+class Data:
+   """Dummy class to hold data to 
+   pass between functions
+   """
+   pass
+
 def initOptions( parser ):
    parser.add_option( '--scaffoldsFile', dest='scaffoldsFile',
                       type='string',
@@ -55,7 +61,7 @@ def initOptions( parser ):
                       type='string',
                       help='Second size file.' )
    parser.add_option( '--size', dest='size',
-                      type='int',
+                      type='float',
                       help='Total size of the genome.' )
    parser.add_option( '--title', dest='title',
                       type='string',
@@ -66,6 +72,10 @@ def initOptions( parser ):
    parser.add_option( '--n50Line', dest='n50Line', default=False,
                       action='store_true',
                       help=('Adds straight lines from the y-axis to the curves. default=%default'))
+   parser.add_option( '--xlabel', dest='xlabel',
+                      type='string', default='Cumulative length proportional to genome size',
+                      help='Label on the x-axis. default=%default' )
+   
    
 def checkOptions( options, parser ):
    if options.scaffoldsFile is None:
@@ -145,7 +155,7 @@ def drawData( scaffolds, contigs, ax, options ):
    # turn off ticks where there is no spine
    ax.xaxis.set_ticks_position('bottom')
    ax.yaxis.set_ticks_position('left')
-   plt.xlabel('Cumulative length proportional to Haplotype 2')
+   plt.xlabel(options.xlabel)
    
    leg = plt.legend([p1, p2], ['Scaffolds', 'Contigs'])
    leg._drawFrame=False
@@ -175,6 +185,7 @@ def main():
              '%prog takes in a scaffolds file ( --scaffoldsFile ), a contigs\n'
              'file ( --contigs ), the size of the genome ( --size ) and a title ( --title )\n'
              'and then produces an N50 style figure.')
+   data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
    lpt.initOptions( parser )
@@ -186,7 +197,6 @@ def main():
    contigs   = readFile( options.contigsFile )
    
    pScaffs, pContigs = processData( scaffolds, contigs, options )
-   
    fig, pdf = lpt.initImage( 8.0, 5.0, options, data )
    ax = establishAxis( fig, options )
    

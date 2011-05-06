@@ -64,6 +64,9 @@ def initOptions( parser ):
    parser.add_option( '--sortOn', dest='sortOn',
                       type='string', default='totalErrors',
                       help=('Column to sort the table on. default=%default'))
+   parser.add_option( '--showAssemblyNumbers', dest='showAssemblyNumbers', default=False,
+                      action='store_true',
+                      help=('Shows the intra-team assembly number next to the name. default=%default'))
    parser.add_option( '--outputRanks', dest='outputRanks',
                       action='store_true', default=False,
                       help=('Prints rankings as tab delimited data to STDOUT.'))
@@ -162,7 +165,11 @@ ID & Intra chromosomal joins & Inter chromosomal joins & Insertions & Deletions 
    i = 0
    for row in assembliesList:
       i += 1
-      sys.stdout.write( '%s' % ( lgn.idMap[ row.ID[0] ] ))
+      if options.showAssemblyNumbers:
+         s = '%s.%s' % (lgn.idMap[row.ID[0]], row.ID[1:])
+      else:
+         s = '%s' % (lgn.idMap[row.ID[0]])
+      sys.stdout.write( '%s' % s )
       # sys.stdout.write( ' & %s & %s' % ( lgn.prettyNumber(row.valuesDict['totalHomoToHeteroSwitches']),
       #                                    lgn.prettyNumber( row.valuesDict['totalScaffoldGaps'] + 
       #                                                  row.valuesDict['totalBleedingHeartScaffoldGaps'] ) ))

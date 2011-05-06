@@ -40,10 +40,12 @@ generally, this script is pretty cool.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
+import libGeneral as lgn
 from optparse import OptionParser
-from libGeneral import prettyFloat, prettyInt
 import os
 import sys
+import xml.etree.ElementTree as ET
+import xml.parsers.expat as expat # exception handling for empty xml
 
 class Team:
    """ Team objects are generated from lines in the infoFile
@@ -98,6 +100,9 @@ def initOptions( parser ):
    parser.add_option( '--placeHolders', dest='placeHolders',
                       action='store_true', default=False,
                       help=('Creates frame boxes in place of missing images. default=%default'))
+   parser.add_option( '--hideAssemblyNumbers', dest='hideAssemblyNumbers', default=False,
+                      action='store_true',
+                      help=('Hides the intra-team assembly number next to the name. default=%default'))
 
 def checkOptions( args, options, parser ):
    if not options.rankFile:
@@ -163,53 +168,29 @@ def readRankFile( teamsDict, options ):
       assembliesList.append( a )
    return assembliesList
 
-def printRankRow( a, gray=False):
+def printRankRow( a, options, gray=False):
+   if options.hideAssemblyNumbers:
+      nameStr = '%s' % (lgn.idMap[a.ID[0]])
+   else:
+      nameStr = '%s.%s' % (lgn.idMap[a.ID[0]], a.ID[1:])
    if gray:
       print ('  \\textcolor{myGray40}{%s} '
-             '& \\textcolor{myGray40}{%.5f} & \\textcolor{myGray40}{%.5f} '
-             '& \\textcolor{myGray40}{%.5f} & \\textcolor{myGray40}{%.5f} \\\\' % ( a.ID, 
-                                                                                    a.total, a.hap1, 
-                                                                                    a.hap2, a.bac ))
+             '& \\textcolor{myGray40}{%.2f} & \\textcolor{myGray40}{%.2f} '
+             '& \\textcolor{myGray40}{%.2f} & \\textcolor{myGray40}{%.2f} \\\\' % ( nameStr, 
+                                                                                    100*a.total, 100*a.hap1, 
+                                                                                    100*a.hap2, 100*a.bac ))
    else:
-      print '  %s & %.5f & %.5f & %.5f & %.5f \\\\' % ( a.ID, a.total, a.hap1, a.hap2, a.bac )
+      print '  %s & %.2f & %.2f & %.2f & %.2f \\\\' % ( nameStr, 100*a.total, 100*a.hap1, 100*a.hap2, 100*a.bac )
 
-def printAssembly( a, assembliesList, captionsDict, options ):
-   print '\\subsubsection{%s}' % a.ID
-   #print '\\noindent Coverage: %d\par' % a.rank
-
-   # print neighbor table
-   print '\\noindent Coverage neighbor table:\par'
-   print '\\vspace{0.25in}'
-   print '\\rowcolors{1}{tableShade}{white}'
-   print '\\begin{tabular}{ | r | c | c | c | c | }'
-   print '\\hline'
-   print 'ID & Total & Hap 1 & Hap 2 & Bac \\\\'
-   print '\\hline \\hline'
-   if  1 < a.rank < len( assembliesList ):
-      printRankRow( assembliesList[ a.rank - 2 ], gray=True)
-      printRankRow( assembliesList[ a.rank - 1 ])
-      printRankRow( assembliesList[ a.rank ], gray=True)
-   elif a.rank == 1:
-      printRankRow( assembliesList[ a.rank - 1 ])
-      printRankRow( assembliesList[ a.rank  ], gray=True)
-      printRankRow( assembliesList[ a.rank + 1], gray=True)
-   elif a.rank == len( assembliesList ):
-      printRankRow( assembliesList[ a.rank - 3 ], gray=True)
-      printRankRow( assembliesList[ a.rank - 2 ], gray=True)
-      printRankRow( assembliesList[ a.rank - 1 ])
-   print '\\hline'
-   print '\\end{tabular}\par'
-   print '\\vspace{0.3in}'
-
-   # print n50 thing
+def showN50Plot( s, options ):
    print '\\noindent Submitted assembly N stats plot\par'
    print '\\vspace{0.25in}'
    print '\\begin{center}'
-   print '\\epsfig{file=images/n50.%s.eps, width=3.5in}' % a.ID
+   print '\\epsfig{file=images/n50.%s.eps, width=3.5in}' % s
    print '\\end{center}'
    print '\\vspace{0.3in}'
 
-   # print submission size stats table
+def showSubmissionSizeStatsTable( a, options ):
    print '\\noindent Submitted assembly size stats table\par'
    print '\\vspace{0.25in}'
    print '\\rowcolors{1}{tableShade}{white}'
@@ -220,35 +201,35 @@ def printAssembly( a, assembliesList, captionsDict, options ):
    print '\\hline \\hline'
    print ( 'Scaffolds & %s & %s & %s '
            '& %s & %s & %s & %s & %s '
-           '& % s \\\\' % ( prettyInt( int( float(a.sizeStatsScaffold[ 0 ]))),
-                            prettyInt(int( float(a.sizeStatsScaffold[ 1 ]))),
-                            prettyFloat(float( a.sizeStatsScaffold[ 2 ]),2),
-                            prettyInt(int( float(a.sizeStatsScaffold[ 3 ]))),
-                            prettyFloat(float( a.sizeStatsScaffold[ 4 ]),2),
-                            prettyFloat(float( a.sizeStatsScaffold[ 5 ]),2),
-                            prettyInt(int( float(a.sizeStatsScaffold[ 6 ]))),
-                            prettyFloat(float( a.sizeStatsScaffold[ 7 ]),2),
-                            prettyInt(int( float(a.sizeStatsScaffold[ 8 ])))
+           '& % s \\\\' % ( lgn.prettyInt( int( float(a.sizeStatsScaffold[ 0 ]))),
+                            lgn.prettyInt(int( float(a.sizeStatsScaffold[ 1 ]))),
+                            lgn.prettyFloat(float( a.sizeStatsScaffold[ 2 ]),2),
+                            lgn.prettyInt(int( float(a.sizeStatsScaffold[ 3 ]))),
+                            lgn.prettyFloat(float( a.sizeStatsScaffold[ 4 ]),2),
+                            lgn.prettyFloat(float( a.sizeStatsScaffold[ 5 ]),2),
+                            lgn.prettyInt(int( float(a.sizeStatsScaffold[ 6 ]))),
+                            lgn.prettyFloat(float( a.sizeStatsScaffold[ 7 ]),2),
+                            lgn.prettyInt(int( float(a.sizeStatsScaffold[ 8 ])))
                             ))
    
    print ( 'Contigs & %s & %s & %s '
            '& %s & %s & %s & %s & %s '
-           '& %s \\\\' % ( prettyInt(int( float(a.sizeStatsContigs[ 0 ]))),
-                           prettyInt(int( float(a.sizeStatsContigs[ 1 ]))),
-                           prettyFloat(float( a.sizeStatsContigs[ 2 ]),2),
-                           prettyInt(int( float(a.sizeStatsContigs[ 3 ]))),
-                           prettyFloat(float( a.sizeStatsContigs[ 4 ]),2),
-                           prettyFloat(float( a.sizeStatsContigs[ 5 ]),2),
-                           prettyInt(int( float(a.sizeStatsContigs[ 6 ]))),
-                           prettyFloat(float( a.sizeStatsContigs[ 7 ]),2),
-                           prettyInt(int( float(a.sizeStatsContigs[ 8 ]))),
+           '& %s \\\\' % ( lgn.prettyInt(int( float(a.sizeStatsContigs[ 0 ]))),
+                           lgn.prettyInt(int( float(a.sizeStatsContigs[ 1 ]))),
+                           lgn.prettyFloat(float( a.sizeStatsContigs[ 2 ]),2),
+                           lgn.prettyInt(int( float(a.sizeStatsContigs[ 3 ]))),
+                           lgn.prettyFloat(float( a.sizeStatsContigs[ 4 ]),2),
+                           lgn.prettyFloat(float( a.sizeStatsContigs[ 5 ]),2),
+                           lgn.prettyInt(int( float(a.sizeStatsContigs[ 6 ]))),
+                           lgn.prettyFloat(float( a.sizeStatsContigs[ 7 ]),2),
+                           lgn.prettyInt(int( float(a.sizeStatsContigs[ 8 ]))),
                            ))
    print '\\hline'
    print '\\end{tabular}\par'
    print '\\normalsize'
    print '\\vspace{0.3in}'
-   
-   # print subStats table
+
+def showSubstitutionStatsTable( a, options ):
    print '\\noindent SNP stats table\par'
    print '\\vspace{0.25in}'
    print '\\rowcolors{1}{tableShade}{white}'
@@ -257,28 +238,46 @@ def printAssembly( a, assembliesList, captionsDict, options ):
    print '\\hline'
    print 'Category & Total & Calls & Correct (bits) & Errors \\\\'
    print '\\hline \\hline'
-   if len( a.subStatsLower ) > 0 and len( a.subStatsUpper ) > 0:
+   if len( a.subStatsLower ) >= 0 and len( a.subStatsUpper ) >= 0:
       lower = a.subStatsLower
       upper = a.subStatsUpper
-      print 'Homozygous & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % ( prettyInt(int( lower[ 'Total-homozygous' ])), prettyInt(int( upper[ 'Total-homozygous' ])),
-                                                                                  prettyInt(int( lower[ 'Total-calls-in-homozygous' ])), prettyInt(int( upper[ 'Total-calls-in-homozygous' ])),
-                                                                                  prettyFloat(float( lower[ 'Total-correct-in-homozygous' ]),1), prettyFloat(float( upper[ 'Total-correct-in-homozygous' ]),1),
-                                                                                  prettyInt(int( lower[ 'Total-errors-in-homozygous' ])), prettyInt(int( upper[ 'Total-errors-in-homozygous' ])))
-      print 'Heterozygous & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % ( prettyInt(int(lower[ 'Total-heterozygous' ])), prettyInt(int(upper[ 'Total-heterozygous' ])),
-                                                                                    prettyInt(int(lower[ 'Total-calls-in-heterozygous' ])), prettyInt(int(upper[ 'Total-calls-in-heterozygous' ])),
-                                                                                    prettyFloat(float(lower[ 'Total-correct-in-heterozygous' ]),1), prettyFloat(float(upper[ 'Total-correct-in-heterozygous' ]),1),
-                                                                                    prettyInt(int(lower[ 'Total-errors-in-heterozygous' ])), prettyInt(int(upper[ 'Total-errors-in-heterozygous' ])))
-      print 'Indel & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % ( prettyInt(int(lower[ 'Total-in-one-haplotype-only' ])), prettyInt(int(upper[ 'Total-in-one-haplotype-only' ])),
-                                                                           prettyInt(int(lower[ 'Total-calls-in-one-haplotype-only' ])), prettyInt(int(upper[ 'Total-calls-in-one-haplotype-only' ])),
-                                                                           prettyFloat(float(lower[ 'Total-correct-in-one-haplotype-only' ]),1), prettyFloat(float(upper[ 'Total-correct-in-one-haplotype-only' ]),1),
-                                                                           prettyInt(int(lower[ 'Total-errors-in-one-haplotype-only' ])), prettyInt(int(upper[ 'Total-errors-in-one-haplotype-only' ])))
-      
+      print ( 'Homozygous & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % 
+              (lgn.prettyInt(int( lower[ 'totalHomozygous' ])), 
+               lgn.prettyInt(int( upper[ 'totalHomozygous' ])),
+               lgn.prettyInt(int( lower[ 'totalCallsInHomozygous' ])), 
+               lgn.prettyInt(int( upper[ 'totalCallsInHomozygous' ])),
+               lgn.prettyFloat(float( lower[ 'totalCorrectInHomozygous' ]),1), 
+               lgn.prettyFloat(float( upper[ 'totalCorrectInHomozygous' ]),1),
+               lgn.prettyInt(int( lower[ 'totalErrorsInHomozygous' ])), 
+               lgn.prettyInt(int( upper[ 'totalErrorsInHomozygous' ]))))
+      print ( 'Heterozygous & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % 
+              (lgn.prettyInt(int(lower[ 'totalHeterozygous' ])), 
+               lgn.prettyInt(int(upper[ 'totalHeterozygous' ])),
+               lgn.prettyInt(int(lower[ 'totalCallsInHeterozygous' ])), 
+               lgn.prettyInt(int(upper[ 'totalCallsInHeterozygous' ])),
+               lgn.prettyFloat(float(lower[ 'totalCorrectInHeterozygous' ]),1), 
+               lgn.prettyFloat(float(upper[ 'totalCorrectInHeterozygous' ]),1),
+               lgn.prettyInt(int(lower[ 'totalErrorsInHeterozygous' ])), 
+               lgn.prettyInt(int(upper[ 'totalErrorsInHeterozygous' ]))))
+      print ( 'Indel & %s -- %s & %s -- %s & %s -- %s & %s -- %s \\\\' % 
+              (lgn.prettyInt(int(lower[ 'totalInOneHaplotypeOnly' ])), 
+               lgn.prettyInt(int(upper[ 'totalInOneHaplotypeOnly' ])),
+               lgn.prettyInt(int(lower[ 'totalCallsInOneHaplotypeOnly' ])), 
+               lgn.prettyInt(int(upper[ 'totalCallsInOneHaplotypeOnly' ])),
+               lgn.prettyFloat(float(lower[ 'totalCorrectInOneHaplotypeOnly' ]),1), 
+               lgn.prettyFloat(float(upper[ 'totalCorrectInOneHaplotypeOnly' ]),1),
+               lgn.prettyInt(int(lower[ 'totalErrorsInOneHaplotypeOnly' ])), 
+               lgn.prettyInt(int(upper[ 'totalErrorsInOneHaplotypeOnly' ]))))
    print '\\hline'
    print '\\end{tabular}\par'
    print '\\normalsize'
    print '\\vspace{0.3in}'
-   
-   # print aggregate plots   
+
+def showAggregatePlots( a, captionsDict, options ):
+   if options.hideAssemblyNumbers:
+      nameStr = '%s' % (lgn.idMap[a.ID[0]])
+   else:
+      nameStr = '%s.%s' % (lgn.idMap[a.ID[0]], a.ID[1:])
    if os.path.exists( os.path.join( options.imagesDir , a.ID+ '.contigs.eps') ):
       if options.placeHolders:
          print '\\begin{figure}[htc]'
@@ -287,14 +286,14 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\hspace{1in}'
          print '\\vspace{6in}'
          print '\\end{minipage}}'
-         print '\\caption[%s contig length cumulative plot.]{%s contig length cumulative plot. %s}' % ( a.ID, a.ID, captionsDict['contigs'] )
+         print '\\caption[%s contig length cumulative plot.]{%s contig length cumulative plot. %s}' % ( nameStr, nameStr, captionsDict['contigs'] )
          print '\\label{fig:%sContigs}' % a.ID
          print '\\end{figure}'
       else:
          print '\\begin{figure}[htc]'
          print '\\centering'
          print '\\epsfig{file=images/%s.contigs.eps, height=6in}' % a.ID
-         print '\\caption[%s contig length cumulative plot.]{%s contig length cumulative plot. %s}' % ( a.ID, a.ID, captionsDict['contigs'] )
+         print '\\caption[%s contig length cumulative plot.]{%s contig length cumulative plot. %s}' % ( nameStr, nameStr, captionsDict['contigs'] )
          print '\\label{fig:%sContigs}' % a.ID
          print '\\end{figure}'
          print '\\clearpage'
@@ -307,14 +306,14 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\hspace{1in}'
          print '\\vspace{6in}'
          print '\\end{minipage}}'
-         print '\\caption[%s scaffold path length cumulative plot.]{%s scaffold path length cumulative plot. %s}' % ( a.ID, a.ID, captionsDict['scaffolds'] )
+         print '\\caption[%s scaffold path length cumulative plot.]{%s scaffold path length cumulative plot. %s}' % ( nameStr, nameStr, captionsDict['scaffolds'] )
          print '\\label{fig:%sScaffolds}' % a.ID
          print '\\end{figure}'
       else:
          print '\\begin{figure}[htc]'
          print '\\centering'
          print '\\epsfig{file=images/%s.scaffPaths.eps, height=6in}' % a.ID
-         print '\\caption[%s scaffold path length cumulative plot.]{%s scaffold path length cumulative plot. %s}' % ( a.ID, a.ID, captionsDict['scaffolds'] )
+         print '\\caption[%s scaffold path length cumulative plot.]{%s scaffold path length cumulative plot. %s}' % ( nameStr, nameStr, captionsDict['scaffolds'] )
          print '\\label{fig:%sScaffolds}' % a.ID
          print '\\end{figure}'
          print '\\clearpage'
@@ -327,14 +326,14 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\hspace{1in}'
          print '\\vspace{6in}'
          print '\\end{minipage}}'
-         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['contigPaths'] )
+         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( nameStr, nameStr, captionsDict['contigPaths'] )
          print '\\label{fig:%sContigPaths}' % a.ID
          print '\\end{figure}'
       else:
          print '\\begin{figure}[htc]'
          print '\\centering'
          print '\\epsfig{file=images/%s.contigPaths.eps, height=6in}' % a.ID
-         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['contigPaths'] )
+         print '\\caption[%s contig path cumulative length plot.]{%s contig path cumulative length plot. %s}' % ( nameStr, nameStr, captionsDict['contigPaths'] )
          print '\\label{fig:%sContigPaths}' % a.ID
          print '\\end{figure}'
          print '\\clearpage'
@@ -347,17 +346,61 @@ def printAssembly( a, assembliesList, captionsDict, options ):
          print '\\hspace{1in}'
          print '\\vspace{6in}'
          print '\\end{minipage}}'
-         print '\\caption[%s block cumulative length plot.]{%s block cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['blocks'] )
+         print '\\caption[%s block cumulative length plot.]{%s block cumulative length plot. %s}' % ( nameStr, nameStr, captionsDict['blocks'] )
          print '\\label{fig:%sBlocks}' % a.ID
          print '\\end{figure}'
       else:
          print '\\begin{figure}[htc]'
          print '\\centering'
          print '\\epsfig{file=images/%s.blocks.eps, height=6in}' % a.ID
-         print '\\caption[%s block cumulative length plot.]{%s block cumulative length plot. %s}' % ( a.ID, a.ID, captionsDict['blocks'] )
+         print '\\caption[%s block cumulative length plot.]{%s block cumulative length plot. %s}' % ( nameStr, nameStr, captionsDict['blocks'] )
          print '\\label{fig:%sBlocks}' % a.ID
          print '\\end{figure}'
          print '\\clearpage'
+
+def printAssembly( a, assembliesList, captionsDict, options ):
+   if options.hideAssemblyNumbers:
+      nameStr = '%s' % (lgn.idMap[a.ID[0]])
+   else:
+      nameStr = '%s.%s' % (lgn.idMap[a.ID[0]], a.ID[1:])
+   print '\\subsubsection{%s}' % nameStr
+   #print '\\noindent Coverage: %d\par' % a.rank
+
+   # print neighbor table
+   print '\\noindent Coverage neighbor table:\par'
+   print '\\vspace{0.25in}'
+   print '\\rowcolors{1}{tableShade}{white}'
+   print '\\begin{tabular}{ | r | c | c | c | c | }'
+   print '\\hline'
+   print 'ID & Total & Hap 1 & Hap 2 & Bac \\\\'
+   print '\\hline \\hline'
+   if  1 < a.rank < len( assembliesList ):
+      printRankRow( assembliesList[ a.rank - 2 ], options, gray=True)
+      printRankRow( assembliesList[ a.rank - 1 ], options)
+      printRankRow( assembliesList[ a.rank ], options, gray=True)
+   elif a.rank == 1:
+      printRankRow( assembliesList[ a.rank - 1 ], options)
+      printRankRow( assembliesList[ a.rank  ], options, gray=True)
+      printRankRow( assembliesList[ a.rank + 1], options, gray=True)
+   elif a.rank == len( assembliesList ):
+      printRankRow( assembliesList[ a.rank - 3 ], options, gray=True)
+      printRankRow( assembliesList[ a.rank - 2 ], options, gray=True)
+      printRankRow( assembliesList[ a.rank - 1 ], options)
+   print '\\hline'
+   print '\\end{tabular}\par'
+   print '\\vspace{0.3in}'
+
+   # print n50 thing
+   showN50Plot( a.ID, options )
+
+   # print submission size stats table
+   showSubmissionSizeStatsTable( a, options )
+   
+   # print subStats table
+   showSubstitutionStatsTable( a, options )
+   
+   # print aggregate plots   
+   #showAggregatePlots( a, captionsDict, options )
 
 def extractRanksString( team ):
    s = ''
@@ -373,7 +416,7 @@ def extractRanksString( team ):
    return s
    
 def printTeam( team, assembliesList, captionsDict, options ):
-   print '\\subsection{%s, %s}' % ( team.ID, team.name )
+   print '\\subsection{%s, %s, %s}' % ( team.ID, lgn.idMap[team.ID], team.name )
    print '\\noindent Affiliation: %s\\par' % team.affiliations
    print '\\noindent Contact: %s\\par' % team.contact
    print '\\noindent Software: \\textbf{%s}\\par' % team.software
@@ -386,7 +429,7 @@ def printTeam( team, assembliesList, captionsDict, options ):
    print '\\hline \\hline'
    orderedByRank = sorted( team.entries, key=lambda x: x.rank, reverse=False )
    for a in orderedByRank:
-      printRankRow( a )
+      printRankRow( a, options )
    print '\\hline'
    print '\\end{tabular}\par'
    
@@ -410,20 +453,26 @@ def sortEntriesLists( teamsDict ):
 
 def readSubStatsDir( assembliesList, options ):
    for a in assembliesList:
-      if os.path.exists( os.path.join( options.subStatsDir, a.ID+'.subStats.lower.txt')):
-         f = open( os.path.join( options.subStatsDir, a.ID+'.subStats.lower.txt'), 'r' )
-         for line in f:
-            line = line.strip()
-            d = line.split('\t')
-            a.subStatsLower[ d[0] ] = d[ 1 ]
-         f.close()
-      if os.path.exists( os.path.join( options.subStatsDir, a.ID+'.subStats.upper.txt')):
-         f = open( os.path.join( options.subStatsDir, a.ID+'.subStats.upper.txt'), 'r' )
-         for line in f:
-            line = line.strip()
-            d = line.split('\t')
-            a.subStatsUpper[ d[0] ] = d[ 1 ]
-         f.close()
+      # lower
+      if os.path.exists( os.path.join( options.subStatsDir, a.ID+'.subStats.lower.xml')):
+         try:
+            xmlTree = ET.parse( os.path.join( options.subStatsDir, a.ID+'.subStats.lower.xml') )
+         except expat.ExpatError: # broken xml file
+            continue
+         xmlTree = ET.parse( os.path.join( options.subStatsDir, a.ID+'.subStats.lower.xml') )
+         root=xmlTree.getroot()
+         for elm in root.attrib.keys():
+            a.subStatsLower[ elm ] = int(float( root.attrib[ elm ]))
+      # upper
+      if os.path.exists( os.path.join( options.subStatsDir, a.ID+'.subStats.upper.xml')):
+         try:
+            xmlTree = ET.parse( os.path.join( options.subStatsDir, a.ID+'.subStats.upper.xml') )
+         except expat.ExpatError: # broken xml file
+            continue
+         xmlTree = ET.parse( os.path.join( options.subStatsDir, a.ID+'.subStats.upper.xml') )
+         root=xmlTree.getroot()
+         for elm in root.attrib.keys():
+            a.subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
 
 def readSubmissionStatsDir( assembliesList, options ):
    for a in assembliesList:

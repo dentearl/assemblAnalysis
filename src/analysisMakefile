@@ -60,18 +60,18 @@ bacWPCDir:=${projectDir}/picklesMafsContigsBac
 bacAWPDir:=${projectDir}/picklesAnnotsBac
 rankingsDir:=${resultsDir}/rankings
 rankingsFiles:=$(foreach r,N50_CPNG50.tab N50_SPNG50.tab structuralContigPathErrors.tab contiguousRanks.tab substitutionErrors.tab copyNumberErrors.tab coverageTotal.tab coverageCDS.tab,${rankingsDir}/$r)
-hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
-hap1CommonCoverageArgsNoSubset:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
-hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry
-hap2CommonCoverageArgsNoSubset:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,8500
+hap1CommonCoverageArgs:= --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+hap1CommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${hap1AWPDir} --mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} --chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,9000
+hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+hap2CommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,9000
 bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50 --subsetFile ${rankingsDir}/subsetTeamTopEntry
-bacCommonCoverageArgsNoSubset:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50
+bacCommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50
 ##############################
 
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationsPlot.pdf
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationsPlot.pdf ${projectDir}/nNGDiffs/scaffoldNNGAbsDiffBp.txt ${projectDir}/nNGDiffs/scaffoldNNGAbsDiffPercent.txt ${projectDir}/nNGDiffs/contigNNGAbsDiffBp.txt ${projectDir}/nNGDiffs/contigNNGAbsDiffPercent.txt 
 	@echo Work Complete.
 
 clean:
@@ -242,7 +242,7 @@ ${coverageSFDir}/hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 		--mafPickleDir ${hap1WPCDir} --chrNames ${chrNames} \
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
-		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillContigsTmp.$$p ${coverageSFDir}/hap1StackFillContigs.$$p ; \
@@ -253,7 +253,7 @@ ${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--mafPickleDir ${hap1WPCDir} --chrNames ${chrNames} \
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
-		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigs.$$p ; \
@@ -365,7 +365,7 @@ ${coverageSFDir}/hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 		--mafPickleDir ${hap2WPCDir} --chrNames ${chrNames} \
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
-		--annotationCeilings 2000,2000,4000,4200,2000,8500 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillContigsTmp.$$p ${coverageSFDir}/hap2StackFillContigs.$$p ; \
@@ -376,7 +376,7 @@ ${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--mafPickleDir ${hap2WPCDir} --chrNames ${chrNames} \
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
-		--annotationCeilings 2000,2000,4000,4200,2000,8500 \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigs.$$p ; \
@@ -762,3 +762,33 @@ ${correlationsDir}/correlationsPlot.pdf: ${correlationsDir}/data.tab ${binDir}/c
 	${binDir}/createPairCorrResidPlot.R $< ${binDir}/myPairs.R $(dir $@)
 	mv ${correlationsDir}/residuals.pdf ${correlationsDir}/residualsPlot.pdf
 	mv ${correlationsDir}/correlations.pdf $@
+
+# absolute median differences of N50 and NG50
+${projectDir}/nNGDiffs/contigNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	for f in statsContigsContigPath/*.xml; do  \
+		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+	perl -ple 's/-//g;' -i $@.tmp
+	mv $@.tmp $@
+${projectDir}/nNGDiffs/contigNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	for f in statsContigsContigPath/*.xml; do  \
+		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
+	mv $@.tmp $@
+${projectDir}/nNGDiffs/scaffoldNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	for f in statsScaffoldsContigPath/*.xml; do  \
+		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+	perl -ple 's/-//g;' -i $@.tmp
+	mv $@.tmp $@
+${projectDir}/nNGDiffs/scaffoldNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	for f in statsScaffoldsContigPath/*.xml; do  \
+		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
+	mv $@.tmp $@

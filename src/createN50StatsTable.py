@@ -36,9 +36,9 @@ output is latex
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
-from libGeneral import prettyNumber
 import createContigPathStatsTable as ccpst
 import createN50StatsPlot as cnfsp
+import libGeneral as lgn
 import xml.etree.ElementTree as ET
 import glob
 from optparse import OptionParser
@@ -62,7 +62,7 @@ ID & \# Contigs & SN50 & CN50 & SPNG50 & CPNG50 & BNG50 & \(\sum\) Errors\\\\
    eMin = calculateMinError( assembliesList )
    for row in assembliesList:
       i += 1
-      sys.stdout.write( '%s' % ( row.ID ))
+      sys.stdout.write( '%s' % ( lgn.idMap[row.ID[0]] + '.' + row.ID[1:] ))
       for n in [  'totalContigNumber','scaffoldN50', 'contigN50',
                   'scaffoldPathNG50' , 'contigPathNG50', 'blockNG50' ]:
          sys.stdout.write( ' & %s' % ( isMaxFormat( row.valuesDict[ n ], maxes[ n ] ) ))
@@ -80,9 +80,9 @@ ID & \# Contigs & SN50 & CN50 & SPNG50 & CPNG50 & BNG50 & \(\sum\) Errors\\\\
 
 def isMaxFormat( n, m ):
    if n == m:
-      return '\\textbf{ %s }' % prettyNumber( n )
+      return '\\textbf{ %s }' % lgn.prettyNumber( n )
    else:
-      return '%s' % prettyNumber( n )
+      return '%s' % lgn.prettyNumber( n )
 
 def calculateMaxesDict( assembliesList ):
    maxesDict = { 'totalContigNumber':0,

@@ -188,13 +188,10 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    for tick in axDict['main'].xaxis.get_major_ticks():
       if options.subsetFile:
          tick.label1.set_fontsize( 12 )
-         for label in axDict['main'].xaxis.get_ticklabels():
-            label.set_rotation( 45 )
       else:
          tick.label1.set_fontsize( 6 )
-      # if len(assembliesList) > 25:
-      #    for label in axDict['main'].xaxis.get_ticklabels():
-      #       label.set_rotation( 45 )
+      for label in axDict['main'].xaxis.get_ticklabels():
+            label.set_rotation( 45 )
       axDict['main'].xaxis.set_ticks_position('bottom')
    axDict['main'].set_yscale( 'log' )
    axDict['main'].set_ylim( [ minsMin *.6, 

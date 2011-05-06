@@ -27,8 +27,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
-from libGeneral import prettyNumber
 import glob
+import libGeneral as lgn
 from optparse import OptionParser
 import os
 import re
@@ -53,6 +53,9 @@ def initOptions( parser ):
                       type='string',
                       help=('Order (left-right, top-bottom) of plots, comma '
                             'separated. Names must match file prefixes in the --dir.' ))
+   parser.add_option( '--showAssemblyNumbers', dest='showAssemblyNumbers', default=False,
+                      action='store_true',
+                      help=('Shows the intra-team assembly number next to the name. default=%default'))
 
 def checkOptions( args, options, parser ):
    dirs = { 'subStatsDir' : options.subStatsDir }
@@ -111,24 +114,26 @@ def readSubStatsDir( assembliesDict, options ):
          assembliesDict[ ID ].subStatsUpper[ elm ] = int(float( root.attrib[ elm ]))
    return assembliesDict
 
-
-
-def printLine( a, kind ):
-   sys.stdout.write( '%s' % a.ID )
+def printLine( a, kind, options ):
+   if options.showAssemblyNumbers:
+      s = '%s.%s' % (lgn.idMap[a.ID[0]], a.ID[1:])
+   else:
+      s = '%s' % (lgn.idMap[a.ID[0]])
+   sys.stdout.write( '%s' % s )
    if kind == 'hom':
       for k in [ 'totalCallsInHomozygous', 
                  'totalCorrectInHomozygous', 'totalErrorsInHomozygous' ]:
-         sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
+         sys.stdout.write( ' & %s -- %s' % ( lgn.prettyNumber( a.subStatsLower[ k ]), lgn.prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
    elif kind == 'het':
       for k in [ 'totalCallsInHeterozygous', 
                  'totalCorrectInHeterozygous', 'totalErrorsInHeterozygous' ]:
-         sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
+         sys.stdout.write( ' & %s -- %s' % ( lgn.prettyNumber( a.subStatsLower[ k ]), lgn.prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
    elif kind == 'indel':
       for k in [ 'totalCallsInOneHaplotypeOnly', 
                  'totalCorrectInOneHaplotypeOnly', 'totalErrorsInOneHaplotypeOnly' ]:
-         sys.stdout.write( ' & %s -- %s' % ( prettyNumber( a.subStatsLower[ k ]), prettyNumber( a.subStatsUpper[ k ])))
+         sys.stdout.write( ' & %s -- %s' % ( lgn.prettyNumber( a.subStatsLower[ k ]), lgn.prettyNumber( a.subStatsUpper[ k ])))
       sys.stdout.write( ' \\\\\n' )
 
 def printTables( assembliesDict, options ):
@@ -160,7 +165,7 @@ Assembly & Calls & Correct (bits) & Errors \\\\
    i = 0
    for a in options.order:
       i += 1
-      printLine( assembliesDict[ a ], key )
+      printLine( assembliesDict[ a ], key, options )
       if not i % 10:
          print '\\hline'
    print '''\\hline

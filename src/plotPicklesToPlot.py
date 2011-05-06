@@ -74,6 +74,9 @@ def initOptions( parser ):
                       type='string',
                       help=('When plotting a stackFill option, allows you to change the sort '
                             'order from coverage, c, to length, l. default=%default'))
+   parser.add_option( '--showAssemblyNumbers', dest='showAssemblyNumbers', default=False,
+                      action='store_true',
+                      help=('Shows the intra-team assembly number next to the name. default=%default'))
    parser.add_option( '--gridLinesMajor', dest='gridLinesMajor', default=0,
                       type='int',
                       help='Place thick grid lines on the plot every X many bases. default=%default' )
@@ -345,7 +348,7 @@ def establishAxes( fig, options, data ):
    """ create one axes per chromosome
    """
    axDict = {}
-   options.axLeft  = 0.07
+   options.axLeft  = 0.08
    options.axRight = 0.98
    options.axWidth = options.axRight - options.axLeft
    options.axTop = 0.97
@@ -446,7 +449,11 @@ def labelAxes( fig, axDict, options, data ):
    for n in data.orderedMafs:
       yPos = options.axTop - j
       # Assembly Labels
-      fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = '%s' % lgn.idMap[ n[0] ], 
+      if options.showAssemblyNumbers:
+         s = '%s.%s' % (lgn.idMap[ n[0] ], n[1:])
+      else:
+         s = '%s' % (lgn.idMap[ n[0] ])
+      fig.text( x= options.axLeft - 0.018, y= yPos + data.increment/4.0, s = s, 
                 horizontalalignment='right', verticalalignment='bottom', fontsize=7 )
       if options.printCoverageNumbers:
          fig.text( x= options.axLeft - 0.05, y= yPos + data.increment/4.0, 
