@@ -145,10 +145,8 @@ def drawData( scaffolds, contigs, ax, options ):
 
    if options.log:
       ax.set_yscale('log')
-      plt.ylabel('log Length')
       ax.yaxis.set_minor_locator( LogLocator( base=10, subs = range(1,10) ) )
-   else:
-      plt.ylabel('Length')
+   plt.ylabel('Length')
 
    ax.set_xticks( [ 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ] )
    ax.xaxis.set_ticklabels( [ 0, '', '', '', '', 0.5, '', '', '', '', 1.0 ] )
