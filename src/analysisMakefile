@@ -692,7 +692,7 @@ ${tablesDir}/rankingSummaryTable.pdf: ${binDir}/summarizeRankings.py ${rankingsF
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | \
 	 	sed 's/N50_//g;' | sed '/^$$/d' | sed 's/Assembly/ID/' | sed 's/_/ /g;' | \
-		sed 's/ (value)//g;' | sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/Contiguity/' | \
+		sed 's/ (value)//g;' | sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/CC50/' | \
 		sed 's/structuralContigPathErrors/Struct./' | sed 's/copyNumberErrors/Copy Num./' | \
 		sed 's/substitutionErrors/Subs./' | sed 's/coverageCDS/Cov. CDS/' | ${binDir}/replaceIDsWithNames.py --retainNumber | \
 		${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 10 > ${tablesDir}/rankingSummaryTable.tex
@@ -706,7 +706,7 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	mkdir -p $(dir $@)
 	${binDir}/summarizeRankings.py ${rankingsFiles} --retainValues --mode=s | ${binDir}/summarizedRankingToTeamTop.py --reRank --subsetFile ${rankingsDir}/subsetTeamTopEntry | \
 		awk 'NR==1; NR>1 {print $$0 | "sort -n -k2"}' | sed '/^$$/d' | sed 's/N50_//g;' | sed 's/ (value)//g;'| \
-		sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/Contiguity/' |\
+		sed 's/coverageTotal/Cov. Tot./'| sed 's/contiguousRanks/CC50/' |\
 		sed 's/structuralContigPathErrors/Struct./' | sed 's/copyNumberErrors/Copy Num./' | sed 's/coverageCDS/Cov. CDS/' |\
 		sed 's/substitutionErrors/Subs./' | ${binDir}/replaceIDsWithNames.py | ${binDir}/tab2tex.py --columnTitleCharLimit 20 --partitionEvery 5 |\
 		sed 's/Assembly/ID/' | sed 's/_/ /g;' > ${tablesDir}/rankingSummaryTableTeams.tex
