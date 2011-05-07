@@ -152,9 +152,9 @@ def getIDs( assembliesList, options ):
    v = []
    for a in assembliesList:
       if options.subsetFile:
-         v.append( lgn.idMap[ a.ID[0] ]+'.'+a.ID[1:] )
-      else:
          v.append( lgn.idMap[ a.ID[0] ] )
+      else:
+         v.append( lgn.idMap[ a.ID[0] ]+'.'+a.ID[1:] )
    return v
 
 def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
