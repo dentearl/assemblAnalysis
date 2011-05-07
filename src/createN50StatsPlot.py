@@ -124,7 +124,7 @@ def establishAxis( fig, options, data ):
    """
    axDict = {}
    # 'totalContigNumber', 'contigN50'
-   options.axLeft    = 0.075
+   options.axLeft    = 0.09
    options.axRight   = 0.98
    options.axWidth   = options.axRight - options.axLeft
    options.axBottom  = 0.08
@@ -146,12 +146,15 @@ def getVals( assembliesList, key ):
       v.append( a.valuesDict[ key ] )
    return v
 
-def getIDs( assembliesList ):
+def getIDs( assembliesList, options ):
    """ returns a list of the names of the assemblies
    """ 
    v = []
    for a in assembliesList:
-      v.append( lgn.idMap[ a.ID[0] ] )
+      if options.subsetFile:
+         v.append( lgn.idMap[ a.ID[0] ]+'.'+a.ID[1:] )
+      else:
+         v.append( lgn.idMap[ a.ID[0] ] )
    return v
 
 def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
@@ -184,7 +187,7 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
       else:
          raise ValueError('unknown spine location: %s' % loc )
    axDict['main'].set_xticks( range( 0, len( assembliesList ) ))
-   axDict['main'].set_xticklabels( getIDs( assembliesList )  )
+   axDict['main'].set_xticklabels( getIDs( assembliesList, options )  )
    for tick in axDict['main'].xaxis.get_major_ticks():
       if options.subsetFile:
          tick.label1.set_fontsize( 12 )
@@ -214,6 +217,7 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    plots.reverse()
    leg = plt.legend( plots, legendLabels, 'upper right', numpoints=1 )
    leg._drawFrame=False
+   plt.ylabel('Bases')
 
 def rankings( assembliesList, options ):
    print '#Assembly\tNG50\tContig Path NG50\tScaffold Path NG50\tContig N50\tScaffold N50'
@@ -259,7 +263,7 @@ def main():
       rankings( assembliesList, options )
       return
 
-   fig, pdf = lpt.initImage( 8.0, 8.0, options, data )
+   fig, pdf = lpt.initImage( 10.0, 8.0, options, data )
    axDict = establishAxis( fig, options, data )
 
    drawData( assembliesList, maxesMax, minsMin, axDict, options )
