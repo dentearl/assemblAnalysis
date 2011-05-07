@@ -114,8 +114,8 @@ def newMafWigDict( numBins ):
     import numpy
     import sys
     if numBins < 1:
-        sys.stderr.write('libMafGffPlot.py, numBins=%s is less than one\n' % str(numBins))
-        sys.exit( 1 )
+        sys.stderr.write('Error: libMafGffPlot.py, numBins=%s is less than one.\n' % str(numBins))
+        sys.exit(1)
     return { 'maf'       : numpy.zeros( shape = ( numBins )),
              'maf1e2'    : numpy.zeros( shape = ( numBins )),
              'maf1e3'    : numpy.zeros( shape = ( numBins )),
@@ -186,7 +186,7 @@ def objListToBinnedWiggle( objList, featLen, numBins, filename ):
             sys.stderr.write( 'libMafGffPlot.py: file %s has annotation on chr %s '
                               'with bounds [%d - %d] which are beyond featLen (%d)\n' %
                               ( filename, a.chr, a.start, a.end, featLen ))
-            sys.exit( 1 )
+            sys.exit(1)
          # index position in a 'numBins' length array.
          pos = objListUtility_rangeToPos( a.start, a.end, featLen, numBins )
             
@@ -325,7 +325,7 @@ def objListUtility_normalizeCategories( data, featLen, numBins ):
                start = math.floor( i * ( float( featLen ) / numBins ))
                end   = math.floor( (i + 1) * ( float( featLen ) / numBins ))
                sys.stderr.write('   i=%d [%d,%d] count %d\n' % ( i, start, end, d ))
-               sys.exit( 1 )
+               sys.exit(1)
 
       # normalize
       data[ r ] /= float( maxPossibleCount )
@@ -342,7 +342,7 @@ def objListUtility_addBlockEdges( data, mb, featLen, numBins ):
          sys.stderr.write('libMafGffPlot.py: Error in block edge step, a position is '
                           'greater than the feature length, %d > %d.\n' 
                           % (r, featLen))
-         sys.exit( 1 )
+         sys.exit(1)
 
       p = objListUtility_indexToPos( r, featLen, numBins )
       if p < 0:
@@ -453,7 +453,7 @@ def unpackData( filename, options, data ):
    import os
    if not os.path.exists( filename ):
       sys.stderr.write( 'Error, %s does not exist.\n' % filename )
-      sys.exit( 1 )
+      sys.exit(1)
    f = open( filename, 'rb' )
    d = cPickle.load( f )
    f.close()
