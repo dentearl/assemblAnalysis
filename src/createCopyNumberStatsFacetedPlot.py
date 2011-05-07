@@ -92,9 +92,9 @@ def establishAxes( fig, options, data ):
    options.axRight  = 0.97
    options.axWidth    = options.axRight - options.axLeft 
    options.axBottom = 0.08
-   options.axTop    = 0.95
+   options.axTop    = 0.96
    options.axHeight = options.axTop - options.axBottom
-   margin = 0.10
+   margin = 0.11
    facetHeight = ( options.axHeight - 2.0 * margin) / 3.0
    yPos = 0.0
    for ax in [ 'def', 'exc', 'sum' ]:
