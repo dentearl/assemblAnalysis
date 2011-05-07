@@ -203,7 +203,10 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
                                               color='#1f77b4',
                                               linewidth= 4.0,
                                               solid_capstyle='round'))
-      xNames.append( lgn.idMap[ aName[0] ] )
+      if options.subsetFile:
+         xNames.append( lgn.idMap[ aName[0] ] )
+      else:
+         xNames.append( lgn.idMap[ aName[0] ]+'.'+aName[1:] )
    #if not options.normalize:
    axDict[ 'all' ].set_yscale('log')
    if yMin > yMax:

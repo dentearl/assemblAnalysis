@@ -185,7 +185,10 @@ def drawData( axDict, sList, options, data ):
          axDict[ ax ].add_line( lines.Line2D( xdata=[ i, i ],
                                               ydata=[ value(s, '%sLower' % ax), value(s, '%sUpper' % ax) ],
                                               color='#1f77b4', linewidth=4.0, solid_capstyle='round'))
-         xNames.append( lgn.idMap[ s.name[0] ] )
+         if options.subsetFile:
+            xNames.append( lgn.idMap[ s.name[0] ] )
+         else:
+            xNames.append( lgn.idMap[ s.name[0] ] + '.'+s.name[1:] )
       axDict[ ax ].set_xlim( 0, len( xNames ) + 1 )
       if ax != 'exc':
          axDict[ ax ].set_xticks( range( 1, len(xNames) + 1 ))
