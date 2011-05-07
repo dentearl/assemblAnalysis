@@ -72,13 +72,8 @@ def prettyFloat( f, n ):
 # in the filesystem to the names displayed in figures and tables.
 # If you add your own assembly into the analysis, you should also
 # add your ID code and six letter name into this dict.
-idMapSentence = { 'A':'Astr', 'B':'Wtsi P', 'C':'Ebi', 'D':'Wtsi S',
-                  'E':'Cracs', 'F':'Bccgsc', 'G':'Doejgi', 'H':'Irisa',
-                  'I':'Cshl', 'J':'Dcsisu', 'K':'Csblug', 'L':'Ucsf', 
-                  'M':'Rhul', 'N':'Gacwt', 'O':'Dcsuoc', 'P':'Bgi', 
-                  'Q':'Broad', 'V':'Nvelv', 'W':'Nclc', 'X':'Nabyss' }
 idMap = { 'A':'ASTR', 'B':'WTSI P', 'C':'EBI', 'D':'WTSI S',
           'E':'CRACS', 'F':'BCCGSC', 'G':'DOEJGI', 'H':'IRISA',
           'I':'CSHL', 'J':'DCSISU', 'K':'CSBLUG', 'L':'UCSF', 
           'M':'RHUL', 'N':'GACWT', 'O':'DCSUoC', 'P':'BGI', 
-          'Q':'Broad', 'V':'NVelv', 'W':'NCLC', 'X':'NABySS' }
+          'Q':'Broad', 'V':'nVelv', 'W':'nCLC', 'X':'nABySS' }
