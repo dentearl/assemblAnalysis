@@ -160,8 +160,8 @@ Assembly & Calls & Correct (bits) & Errors \\\\
 \\hline
 \\hline''' % ( name, name, caption )
    if len( options.order ) == 0:
-      options.order = sorted( assembliesDict.keys(), key=lambda x: x[0], reverse=False )
       options.order = sorted( options.order, key=lambda x: int( x[1:] ), reverse=False )
+      options.order = sorted( assembliesDict.keys(), key=lambda x: x, reverse=False )
    i = 0
    for a in options.order:
       i += 1
