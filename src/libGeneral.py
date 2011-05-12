@@ -74,6 +74,6 @@ def prettyFloat( f, n ):
 # add your ID code and six letter name into this dict.
 idMap = { 'A':'ASTR', 'B':'WTSI P', 'C':'EBI', 'D':'WTSI S',
           'E':'CRACS', 'F':'BCCGSC', 'G':'DOEJGI', 'H':'IRISA',
-          'I':'CSHL', 'J':'DCSISU', 'K':'CSBLUG', 'L':'UCSF', 
+          'I':'CSHL', 'J':'DCSISU', 'K':'IOBUGA', 'L':'UCSF', 
           'M':'RHUL', 'N':'GACWT', 'O':'DCSUoC', 'P':'BGI', 
           'Q':'Broad', 'V':'nVelv', 'W':'nCLC', 'X':'nABySS' }
