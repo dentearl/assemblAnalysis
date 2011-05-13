@@ -49,6 +49,8 @@ copyNumberPlotsDir:=${resultsDir}/copyNumberPlots
 contiguousPlotsDir:=${resultsDir}/contiguousPlots
 coverageSFDir:=${resultsDir}/coverageStackFillPlots
 correlationsDir:=${projectDir}/correlations
+indelDir:=${projectDir}/indelDist
+nNGDiffsDir:=${projectDir}/nNGDiffs
 hap1WPSDir:=${projectDir}/picklesMafsScaffoldsHap1
 hap1WPCDir:=${projectDir}/picklesMafsContigsHap1
 hap1AWPDir:=${projectDir}/picklesAnnotsHap1
@@ -66,16 +68,20 @@ hap2CommonCoverageArgs:= --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPS
 hap2CommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${hap2AWPDir} --mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} --chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all --annotationOrder CDS,UTR,NXE,NGE,island,repeat --annotationCeilings 2000,2000,4000,4200,2000,9000
 bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50 --subsetFile ${rankingsDir}/subsetTeamTopEntry
 bacCommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50
+indelDistFiles:=${indelDir}/indelDist.pdf ${indelDir}/indelDistAllSelf.pdf ${indelDir}/indelDistAllGlobal.pdf ${indelDir}/indelDistAllMax.pdf ${indelDir}/indelDistAllLog2.pdf ${indelDir}/indelDistLog2.pdf
+nNGDiffFiles:=${nNGDiffsDir}/scaffoldNNGAbsDiffBp.txt ${nNGDiffsDir}/scaffoldNNGAbsDiffPercent.txt ${nNGDiffsDir}/contigNNGAbsDiffBp.txt ${nNGDiffsDir}/contigNNGAbsDiffPercent.txt
+tableFiles:=${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf
+mainFigFiles:=${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf
 ##############################
 
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf ${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf ${correlationsDir}/correlationsPlot.pdf ${projectDir}/nNGDiffs/scaffoldNNGAbsDiffBp.txt ${projectDir}/nNGDiffs/scaffoldNNGAbsDiffPercent.txt ${projectDir}/nNGDiffs/contigNNGAbsDiffBp.txt ${projectDir}/nNGDiffs/contigNNGAbsDiffPercent.txt 
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${mainFigFiles} ${tableFiles} ${correlationsDir}/correlationsPlot.pdf ${nNGDiffFiles} ${indelDistFiles}
 	@echo Work Complete.
 
 clean:
-	rm -rf ${resultsDir}
+	rm -rf ${resultsDir} ${indelDir} ${correlationsDir} ${nNGDiffsDir}
 
 # outside dependency, fltpage.sty must be supplied
 ${tablesDir}/fltpage.sty: ${fltpage}
@@ -764,31 +770,64 @@ ${correlationsDir}/correlationsPlot.pdf: ${correlationsDir}/data.tab ${binDir}/c
 	mv ${correlationsDir}/correlations.pdf $@
 
 # absolute median differences of N50 and NG50
-${projectDir}/nNGDiffs/contigNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
+${nNGDiffsDir}/contigNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsContigsContigPath/*.xml; do  \
 		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
 		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
 	perl -ple 's/-//g;' -i $@.tmp
 	mv $@.tmp $@
-${projectDir}/nNGDiffs/contigNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
+${nNGDiffsDir}/contigNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsContigsContigPath/*.xml; do  \
 		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
 		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
 	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
 	mv $@.tmp $@
-${projectDir}/nNGDiffs/scaffoldNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+${nNGDiffsDir}/scaffoldNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsScaffoldsContigPath/*.xml; do  \
 		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
 		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
 	perl -ple 's/-//g;' -i $@.tmp
 	mv $@.tmp $@
-${projectDir}/nNGDiffs/scaffoldNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+${nNGDiffsDir}/scaffoldNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsScaffoldsContigPath/*.xml; do  \
 		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
 		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
 	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
 	mv $@.tmp $@
+${indelDir}/indelDist.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml) ${rankingsDir}/subsetTeamTopEntry
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistTmp.pdf --outFormat pdf --normalize self --subsetFile ${rankingsDir}/subsetTeamTopEntry
+	mv ${indelDir}/indelDistTmp.pdf $@
+${indelDir}/indelDistLog2.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml) ${rankingsDir}/subsetTeamTopEntry
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistLog2Tmp.pdf --outFormat pdf --normalize log2 --subsetFile ${rankingsDir}/subsetTeamTopEntry
+	mv ${indelDir}/indelDistLog2Tmp.pdf $@
+${indelDir}/indelDistAllSelf.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistAllSelfTmp.pdf --outFormat pdf --normalize self
+	mv ${indelDir}/indelDistAllSelfTmp.pdf $@
+
+${indelDir}/indelDistAllGlobal.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistAllGlobalTmp.pdf --outFormat pdf --normalize global
+	mv ${indelDir}/indelDistAllGlobalTmp.pdf $@
+
+${indelDir}/indelDistAllMax.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistAllMaxTmp.pdf --outFormat pdf --normalize global
+	mv ${indelDir}/indelDistAllMaxTmp.pdf $@
+
+${indelDir}/indelDistAllLog2.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
+	mkdir -p $(dir $@)
+	${binDir}/createIndelDistributionPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--out ${indelDir}/indelDistAllLog2Tmp.pdf --outFormat pdf --normalize log2
+	mv ${indelDir}/indelDistAllLog2Tmp.pdf $@
