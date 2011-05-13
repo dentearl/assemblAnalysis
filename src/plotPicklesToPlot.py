@@ -416,6 +416,7 @@ def labelAxes( fig, axDict, options, data ):
       # chromosome names
       fs = scaleFont(c, data.chrLengthsByChrom[ c ], data.genomeLength, options.axWidth, options, data )
       # get_position() returns a BBox object, and we can get out the bounding points with get_points()
+      # this lets us see where on the page the axis exists.
       xPos = ((( axDict[ c ].get_position().get_points()[1][0] -
                  axDict[ c ].get_position().get_points()[0][0] ) / 2.0 ) + 
               axDict[ c ].get_position().get_points()[0][0])
