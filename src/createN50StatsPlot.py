@@ -66,8 +66,7 @@ def initOptions( parser ):
    parser.add_option('--title', dest='title',
                      type='string',
                      default=( 'N50 Statistics'),
-                     help=('Lables of the facets, comma separated, from top '
-                           'to bottom: default=%default'))
+                     help=('Title of the plot. default=%default'))
    parser.add_option( '--sortOn', dest='sortOn',
                       type='string', default='contigNG50',
                       help=('Allows a different sort order. default=%default'))
@@ -158,26 +157,27 @@ def getIDs( assembliesList, options ):
    return v
 
 def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
+   ax = axDict['main']
    # partition
    for i in xrange(1, len( assembliesList )+1):
       if not i % 5:
-         axDict['main'].add_line( lines.Line2D( xdata=[ i-1, i-1 ],
+         ax.add_line( lines.Line2D( xdata=[ i-1, i-1 ],
                                                 ydata=[ 1, maxesMax * 1.6 ],
                                                 linewidth=1.0,
                                                 linestyle='dotted',
                                                 color=(0.8, 0.8, 0.8) ))
    plots = []
-   # jitter the odd numbered points 0.1 to the 
+   # nudge the odd numbered points 0.1 to the 
    # left and the even numbered points 0.1 to the right
-   jitter = 0.1
+   nudge = 0.1
    side = 1
    for c in options.columns:
       side = -side
-      plots.append( axDict['main'].plot( numpy.arange(0, len( assembliesList )) + jitter*side,
+      plots.append( ax.plot( numpy.arange(0, len( assembliesList )) + nudge*side,
                                          getVals( assembliesList, c ), 
                                          marker=options.shapes[c], color=options.colors[c], markersize=18.0,
                                          linestyle='none', markeredgecolor='w'))
-   for loc, spine in axDict['main'].spines.iteritems():
+   for loc, spine in ax.spines.iteritems():
       if loc in [ 'left'  ]:
          spine.set_position(('outward',10)) # outward by 10 points
       elif loc in [ 'top',  'right' ]:
@@ -186,29 +186,29 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
          pass
       else:
          raise ValueError('unknown spine location: %s' % loc )
-   axDict['main'].set_xticks( range( 0, len( assembliesList ) ))
-   axDict['main'].set_xticklabels( getIDs( assembliesList, options )  )
-   for tick in axDict['main'].xaxis.get_major_ticks():
+   ax.set_xticks( range( 0, len( assembliesList ) ))
+   ax.set_xticklabels( getIDs( assembliesList, options )  )
+   for tick in ax.xaxis.get_major_ticks():
       if options.subsetFile:
          tick.label1.set_fontsize( 12 )
       else:
          tick.label1.set_fontsize( 6 )
-      for label in axDict['main'].xaxis.get_ticklabels():
+      for label in ax.xaxis.get_ticklabels():
             label.set_rotation( 45 )
-      axDict['main'].xaxis.set_ticks_position('bottom')
-   axDict['main'].set_yscale( 'log' )
-   axDict['main'].set_ylim( [ minsMin *.6, 
+      ax.xaxis.set_ticks_position('bottom')
+   ax.set_yscale( 'log' )
+   ax.set_ylim( [ minsMin *.6, 
                               maxesMax * 1.6] )
   # grid
-   mts = axDict['main'].yaxis.get_majorticklocs()
+   mts = ax.yaxis.get_majorticklocs()
    for m in mts:
-      axDict['main'].add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
+      ax.add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
                                              ydata=[ m, m ],
                                              linewidth=1,
                                              color=(0.8, 0.8, 0.8),
                                              linestyle='dotted'))
-   axDict['main'].set_xlim( [ -0.5, len( assembliesList )] )
-   axDict['main'].set_title( options.title )
+   ax.set_xlim( [ -0.5, len( assembliesList )] )
+   ax.set_title( options.title )
    legendLabels = []
    for c in options.columns:
       legendLabels.append( options.columnLabels[c] )
@@ -269,7 +269,6 @@ def main():
    drawData( assembliesList, maxesMax, minsMin, axDict, options )
    
    lpt.writeImage( fig, pdf, options )
-   
 
 if __name__ == '__main__':
    main()
