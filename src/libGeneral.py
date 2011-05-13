@@ -72,8 +72,8 @@ def prettyFloat( f, n ):
 # in the filesystem to the names displayed in figures and tables.
 # If you add your own assembly into the analysis, you should also
 # add your ID code and six letter name into this dict.
-idMap = { 'A':'ASTR', 'B':'WTSI P', 'C':'EBI', 'D':'WTSI S',
+idMap = { 'A':'ASTR', 'B':'WTSI-P', 'C':'EBI', 'D':'WTSI-S',
           'E':'CRACS', 'F':'BCCGSC', 'G':'DOEJGI', 'H':'IRISA',
-          'I':'CSHL', 'J':'DCSISU', 'K':'IOBUGA', 'L':'UCSF', 
-          'M':'RHUL', 'N':'GACWT', 'O':'DCSUoC', 'P':'BGI', 
+          'I':'CSHL', 'J':'DCSISU', 'K':'IoBUGA', 'L':'UCSF', 
+          'M':'RHUL', 'N':'GACWT', 'O':'CIUoC', 'P':'BGI', 
           'Q':'Broad', 'V':'nVelv', 'W':'nCLC', 'X':'nABySS' }
