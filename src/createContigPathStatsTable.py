@@ -103,9 +103,28 @@ def checkOptions( args, options, parser ):
       parser.error( '--sortOn %s is not in dict of allowed keys:\n %s.' % ( options.sortOn, allowedKeys ))
 
 def readDirs( options ):
-   sFiles = glob.glob( os.path.join( options.statsScaffoldsContigPathDir, '*.pathStats.xml'))
+   """ readDirs reads two directories, the scaffolds contigPath dir and the contigns
+   contigPath dir and creates a single dict that is keyed on assembly IDs. it combines
+   the data from the two directories with a preference for the scaffolds data.
+   The only data from the contigs dir is the contigN50 and contigNG50. Those same keys
+   from the scaffolds dir are mapped to scaffoldN50 and scaffoldNG50, respectively.
+   """
+   # scaffolds
+   assembliesDict = readDir( options.statsScaffoldsContigPathDir, options )
+   # contigs
+   assembliesDict = readDir( options.statsContigsContigPathDir, options, 
+                             isScaffolds=False, assembliesDict=assembliesDict )
+   return assembliesDict.values()
+
+def readDir( theDir, options, isScaffolds=True, assembliesDict=None ):
+   """ This is not a symmetric function! If isScaffolds is True, then everything
+   is read out of the xml files, however, if isScaffolds is False, then only
+   'contigN50' and 'contigNG50' are read out of the xml.
+   """
+   sFiles = glob.glob( os.path.join( theDir, '*.pathStats.xml'))
    namepat = re.compile( '^(\S{2,3})\.pathStats.xml' )
-   assembliesDict = {}
+   if assembliesDict is None:
+      assembliesDict = {}
    for f in sFiles:
       name = re.match( namepat, os.path.basename( f )).group( 1 )
       if 'subsetFile' in vars( options ):
@@ -118,37 +137,29 @@ def readDirs( options ):
          continue
       xmlTree = ET.parse( f )
       root=xmlTree.getroot()
-      a = Assembly()
-      a.ID = name
-      for elm in root.attrib.keys():
-         if elm in ('errorsPerContig', 'errorsPerMappedBase', 'coverage'):
-            a.valuesDict[ elm ] = float( root.attrib[ elm ] )            
-         elif elm in ( 'insertionErrorSizeDistribution', 'deletionErrorSizeDistribution' ):
-            a.valuesDict[ elm ] = root.attrib[ elm ].split()
-         else:
-            a.valuesDict[ elm ] = int( root.attrib[ elm ] )
-      a.valuesDict[ 'scaffoldN50' ] = int( root.attrib[ 'contigN50' ])
-      a.valuesDict[ 'scaffoldNG50' ] = int( root.attrib[ 'contigNG50' ])
-      assembliesDict[ name ] = a
-   cFiles = glob.glob( os.path.join( options.statsContigsContigPathDir, '*.pathStats.xml'))
-   for f in cFiles:
-      name = re.match( namepat, os.path.basename( f )).group( 1 )
-      if 'subsetFile' in vars( options ):
-         if options.subsetFile:
-            if name not in options.assemblySubset:
-               continue
       if name not in assembliesDict:
-         sys.stderr.write('Error, %s found in Scaffolds but not in Contigs' % name)
-         sys.exit(1)
-      try:
-         xmlTree = ET.parse( f )
-      except expat.ExpatError: # broken xml file
-         continue
-      xmlTree = ET.parse( f )
-      root=xmlTree.getroot()
-      assembliesDict[ name ].valuesDict[ 'contigN50' ] = int( root.attrib[ 'contigN50' ])
-      assembliesDict[ name ].valuesDict[ 'contigNG50' ] = int( root.attrib[ 'contigNG50' ])
-   return assembliesDict.values()
+         a = Assembly()
+         a.ID = name
+      else:
+         a = assembliesDict[ name ]
+      if isScaffolds:
+         for elm in root.attrib.keys():
+            if elm in ('errorsPerContig', 'errorsPerMappedBase', 'coverage'):
+               a.valuesDict[ elm ] = float( root.attrib[ elm ] )            
+            elif elm in ( 'insertionErrorSizeDistribution', 'deletionErrorSizeDistribution' ):
+               a.valuesDict[ elm ] = root.attrib[ elm ].split()
+               for i in xrange( 0, len(a.valuesDict[ elm ])):
+                  a.valuesDict[ elm ][i] = int(a.valuesDict[ elm ][i])
+            else:
+               a.valuesDict[ elm ] = int( root.attrib[ elm ] )
+         a.valuesDict[ 'scaffoldN50' ] = int( root.attrib[ 'contigN50' ])
+         a.valuesDict[ 'scaffoldNG50' ] = int( root.attrib[ 'contigNG50' ])
+      else:
+         a.valuesDict[ 'contigN50' ] = int( root.attrib[ 'contigN50' ])
+         a.valuesDict[ 'contigNG50' ] = int( root.attrib[ 'contigNG50' ])
+      if name not in assembliesDict:
+         assembliesDict[ name ] = a
+   return assembliesDict
 
 def printTable( assembliesList, caption, options ):
    print '''
