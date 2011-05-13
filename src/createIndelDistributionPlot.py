@@ -42,7 +42,7 @@ import matplotlib.patches as patches
 import matplotlib.pylab  as pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, LogLocator, LogFormatter # minor tick marks
-import numpyxo
+import numpy
 from optparse import OptionParser
 import os
 import sys
