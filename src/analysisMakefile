@@ -719,21 +719,21 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	pushd ${tablesDir} && ${binDir}/latexWrapper.py < rankingSummaryTableTeams.tex > \
 		rankingSummaryTableTeamsWrapped.tex &&  sleep 2 && latex rankingSummaryTableTeamsWrapped.tex && latex rankingSummaryTableTeamsWrapped.tex \
 		latex rankingSummaryTableTeamsWrapped.tex && dvips -Ppdf rankingSummaryTableTeamsWrapped.dvi && \
-		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd
+		ps2pdf rankingSummaryTableTeamsWrapped.ps && popd && sleep 2
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
 # summary of events in simulation table
 ${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
 	cat $< | ${binDir}/tab2tex.py --partitionEvery 10 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
 	pushd ${tablesDir} && latex simulationSummaryTableWrapped.tex && latex simulationSummaryTableWrapped.tex \
 		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
-		ps2pdf simulationSummaryTableWrapped.ps && popd
+		ps2pdf simulationSummaryTableWrapped.ps && popd && sleep 2
 	mv ${tablesDir}/simulationSummaryTableWrapped.pdf $@
 # list of participating teams table
 ${tablesDir}/participantsTable.pdf: ${participantsTableTex}
 	cat $< | ${binDir}/replaceIDsWithNames.py | ${binDir}/latexWrapper.py > ${tablesDir}/participantsTableWrapped.tex
 	pushd ${tablesDir} && latex participantsTableWrapped.tex && latex participantsTableWrapped.tex \
 		latex participantsTableWrapped.tex && dvips -Ppdf participantsTableWrapped.dvi && \
-		ps2pdf participantsTableWrapped.ps && popd
+		ps2pdf participantsTableWrapped.ps && popd && sleep 2
 	mv ${tablesDir}/participantsTableWrapped.pdf $@
 
 # correlations
