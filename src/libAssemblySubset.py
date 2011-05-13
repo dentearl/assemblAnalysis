@@ -58,6 +58,8 @@ def checkOptions( options, parser ):
       line = line.strip()
       if line.startswith('#'):
          continue
+      if line == '':
+         continue
       d = line.split()
       assembly = d[0]
       options.assemblySubset.add( assembly )
