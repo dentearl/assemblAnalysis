@@ -59,10 +59,10 @@ class Data:
 def initOptions( parser ):
    parser.add_option( '--statsScaffoldsContigPathDir', dest='statsScaffoldsContigPathDir',
                       type='string',
-                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
+                      help=('Directory with contigPathStats. Names: A1.pathStats.xml .'))
    parser.add_option( '--statsContigsContigPathDir', dest='statsContigsContigPathDir',
                       type='string',
-                      help=('Directory with contigPathStats. Names: A1.contigPathStats.xml .'))
+                      help=('Directory with contigPathStats. Names: A1.pathStats.xml .'))
    parser.add_option('--title', dest='title',
                      type='string',
                      default=( 'N50 Statistics'),
@@ -122,7 +122,6 @@ def establishAxis( fig, options, data ):
    """ 
    """
    axDict = {}
-   # 'totalContigNumber', 'contigN50'
    options.axLeft    = 0.09
    options.axRight   = 0.98
    options.axWidth   = options.axRight - options.axLeft
@@ -130,9 +129,6 @@ def establishAxis( fig, options, data ):
    options.axTop     = 0.95
    options.axHeight  = options.axTop - options.axBottom
    options.margin    = 0.08
-   indvHeight = ( options.axHeight - (len( options.columns) - 1.0) * options.margin ) / float( len( options.columns ))
-   prevY = options.axTop
-   i = -1
    axDict['main'] = fig.add_axes( [options.axLeft, options.axBottom,
                                    options.axWidth, options.axHeight ] )
    return axDict
@@ -239,9 +235,12 @@ def findMaxMin( assembliesList, options ):
    return ( theMax, theMin )
 
 def main():
-   usage = ( 'usage: %prog --statsScaffoldsContigPathDir=path/to/dir/ [options]\n\n'
-             '%prog takes a directory of contig path stats xml files\n'
-             '( --statsScaffoldsContigPathDir ) named as NAME.contigPathStats.xml and creates a plot.')
+   usage = ( 'usage: %prog --statsScaffoldsContigPathDir=path/to/dir/ '
+             '--statsContigssContigPathDir=path/to/dir/ [options]\n\n'
+             '%prog takes a directory of scaffold-alignment contig path stats xml files\n'
+             '( --statsScaffoldsContigPathDir ) named as NAME.pathStats.xml, contig-alignment '
+             'contig path stats xml files ( --statsContigsContigPathDir ) named as NAME.pathStats.xml,'
+             ' and creates a plot.\n')
    data = Data()
    parser = OptionParser( usage=usage )
    initOptions( parser )
