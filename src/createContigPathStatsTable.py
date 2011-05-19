@@ -114,6 +114,10 @@ def readDirs( options ):
    # contigs
    assembliesDict = readDir( options.statsContigsContigPathDir, options, 
                              isScaffolds=False, assembliesDict=assembliesDict )
+   if len(assembliesDict) > 20:
+      options.mod = 10
+   else:
+      options.mod = 5
    return assembliesDict.values()
 
 def readDir( theDir, options, isScaffolds=True, assembliesDict=None ):
@@ -122,7 +126,7 @@ def readDir( theDir, options, isScaffolds=True, assembliesDict=None ):
    'contigN50' and 'contigNG50' are read out of the xml.
    """
    sFiles = glob.glob( os.path.join( theDir, '*.pathStats.xml'))
-   namepat = re.compile( '^(\S{2,3})\.pathStats.xml' )
+   namepat = re.compile( r'^(\S{2,3})\.pathStats\.xml' )
    if assembliesDict is None:
       assembliesDict = {}
    for f in sFiles:
@@ -158,7 +162,7 @@ def readDir( theDir, options, isScaffolds=True, assembliesDict=None ):
          a.valuesDict[ 'contigN50' ] = int( root.attrib[ 'contigN50' ])
          a.valuesDict[ 'contigNG50' ] = int( root.attrib[ 'contigNG50' ])
       if name not in assembliesDict:
-         assembliesDict[ name ] = a
+         assembliesDict[name] = a
    return assembliesDict
 
 def printTable( assembliesList, caption, options ):
@@ -197,7 +201,7 @@ ID & Intra chromosomal joins & Inter chromosomal joins & Insertions & Deletions 
          sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict[v] )))
       #sys.stdout.write( ' & %s' % ( lgn.prettyNumber( row.valuesDict['totalErrorsNonSpecific'])))
       sys.stdout.write( ' & %s \\\\\n' % lgn.prettyNumber( row.totalErrors ))
-      if not i % 10 and i != len( assembliesList ):
+      if not i % options.mod and i != len( assembliesList ):
          print '\\hline'
    print '''\\hline
 \\end{tabular}
