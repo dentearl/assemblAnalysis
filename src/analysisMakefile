@@ -51,6 +51,7 @@ coverageSFDir:=${resultsDir}/coverageStackFillPlots
 correlationsDir:=${projectDir}/correlations
 indelDir:=${projectDir}/indelDist
 nNGDiffsDir:=${projectDir}/nNGDiffs
+phasingDir:=${projectDir}/phasingAnalysis
 hap1WPSDir:=${projectDir}/picklesMafsScaffoldsHap1
 hap1WPCDir:=${projectDir}/picklesMafsContigsHap1
 hap1AWPDir:=${projectDir}/picklesAnnotsHap1
@@ -70,14 +71,15 @@ bacCommonCoverageArgs:= --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir
 bacCommonCoverageArgsNoSubset:= --showAssemblyNumbers --annotPickleDir ${bacAWPDir} --mafPickleDir ${bacWPSDir} --chrNames bac --chrLengths ${bacChrLength} --referenceGenome bac --outFormat all --annotationOrder repeat --annotationCeilings 50
 indelDistFiles:=${indelDir}/indelDist.pdf ${indelDir}/indelDistAllSelf.pdf ${indelDir}/indelDistAllGlobal.pdf ${indelDir}/indelDistAllMax.pdf ${indelDir}/indelDistAllLog2.pdf ${indelDir}/indelDistLog2.pdf
 nNGDiffFiles:=${nNGDiffsDir}/scaffoldNNGAbsDiffBp.txt ${nNGDiffsDir}/scaffoldNNGAbsDiffPercent.txt ${nNGDiffsDir}/contigNNGAbsDiffBp.txt ${nNGDiffsDir}/contigNNGAbsDiffPercent.txt
-tableFiles:=${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf
-mainFigFiles:=${resultsDir}/mainFigs/n50statsFacets.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf
+tableFiles:=${tablesDir}/rankingSummaryTable.pdf ${tablesDir}/rankingSummaryTableTeams.pdf ${tablesDir}/contigPathStatsTableTeams.pdf ${tablesDir}/contigPathStatsTable.pdf ${tablesDir}/coverageRankingTableTeams.pdf ${tablesDir}/coverageRankingTable.pdf ${tablesDir}/fltpage.sty ${tablesDir}/simulationSummaryTable.pdf ${tablesDir}/participantsTable.pdf
+phasingFiles:=${phasingDir}/n50statsPhasing.pdf ${phasingDir}/n50statsPhasingAll.pdf ${phasingDir}/subsPhasing.pdf ${phasingDir}/subsPhasingAll.pdf
+mainFigFiles:=${resultsDir}/mainFigs/n50stats.pdf ${resultsDir}/mainFigs/contiguousStatsFacets.pdf ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf ${resultsDir}/mainFigs/subStatsFacets.pdf
 ##############################
 
 .SECONDARY: # leave this blank to force make to keep intermediate files
 .PHONY: all clean
 
-all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${mainFigFiles} ${tableFiles} ${correlationsDir}/correlationsPlot.pdf ${nNGDiffFiles} ${indelDistFiles}
+all: mafWigPicks annotationWigPicks ${rankingsDir}/subsetTeamTopEntry copyNumberPlots contiguousPlots covStackFillPlots ${mainFigFiles} ${tableFiles} ${correlationsDir}/correlationsPlot.pdf ${nNGDiffFiles} ${indelDistFiles} ${phasingFiles}
 	@echo Work Complete.
 
 clean:
@@ -152,8 +154,8 @@ ${bacAWPDir}/bac.annots.pickle: ${projectDir}/annotations/bac.annots.trf.repmask
 
 # coverage stack fill plots:
 covStackFillPlots: covSFPHap1 covSFPHap2 covSFPBac
-covSFPHap1: $(foreach p,hap1 hap1Fill hap1BED hap1StackFillBlocks hap1CP hap1StackFillContigPaths hap1StackFillContigs hap1StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
-covSFPHap2: $(foreach p,hap2 hap2Fill hap2BED hap2StackFillBlocks hap2CP hap2StackFillContigPaths hap2StackFillContigs hap2StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
+covSFPHap1: $(foreach p,hap1 hap1Fill hap1BED hap1StackFillBlocks hap1CP hap1StackFillContigPaths hap1StackFillContigs hap1StackFillScaffolds hap1StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
+covSFPHap2: $(foreach p,hap2 hap2Fill hap2BED hap2StackFillBlocks hap2CP hap2StackFillContigPaths hap2StackFillContigs hap2StackFillScaffolds hap2StackFillScaffPaths, ${coverageSFDir}/$p.pdf)
 covSFPBac: $(foreach p,bac bacFill bacBED bacStackFillBlocks bacCP bacStackFillContigPaths, ${coverageSFDir}/$p.pdf)
 # haplotype 1
 ${coverageSFDir}/hap1.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
@@ -242,7 +244,7 @@ ${coverageSFDir}/all_hap1StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.p
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigPathsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigPaths.$$p ; \
 	done
-${coverageSFDir}/hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
+${coverageSFDir}/hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPCDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
 		--mafPickleDir ${hap1WPCDir} --chrNames ${chrNames} \
@@ -253,7 +255,7 @@ ${coverageSFDir}/hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap1StackFillContigsTmp.$$p ${coverageSFDir}/hap1StackFillContigs.$$p ; \
 	done
-${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
+${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPCDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
 		--mafPickleDir ${hap1WPCDir} --chrNames ${chrNames} \
@@ -263,6 +265,17 @@ ${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigs.$$p ; \
+	done
+${coverageSFDir}/hap1StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
+		--mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} \
+		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/hap1StackFillScaffoldsTmp.$$p ${coverageSFDir}/hap1StackFillScaffolds.$$p ; \
 	done
 ${coverageSFDir}/hap1StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
@@ -365,7 +378,7 @@ ${coverageSFDir}/all_hap2StackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.p
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigPathsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigPaths.$$p ; \
 	done
-${coverageSFDir}/hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
+${coverageSFDir}/hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPCDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
 		--mafPickleDir ${hap2WPCDir} --chrNames ${chrNames} \
@@ -376,7 +389,7 @@ ${coverageSFDir}/hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wild
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillContigsTmp.$$p ${coverageSFDir}/hap2StackFillContigs.$$p ; \
 	done
-${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
+${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPCDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
 		--mafPickleDir ${hap2WPCDir} --chrNames ${chrNames} \
@@ -386,6 +399,17 @@ ${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigs.$$p ; \
+	done
+${coverageSFDir}/hap2StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
+		--mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} \
+		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/hap2StackFillScaffoldsTmp.$$p ${coverageSFDir}/hap2StackFillScaffolds.$$p ; \
 	done
 ${coverageSFDir}/hap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
@@ -489,14 +513,46 @@ ${coverageSFDir}/all_bacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py
 		mv ${coverageSFDir}/all_bacStackFillContigPathsTmp.$$p ${coverageSFDir}/all_bacStackFillContigPaths.$$p ; \
 	done
 
-# n50 facetPlot
-${resultsDir}/mainFigs/n50statsFacets.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${rankingsDir}/subsetTeamTopEntry
+# n50 Plot
+${resultsDir}/mainFigs/n50stats.pdf: ${binDir}/createN50StatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) $(wildcard ${projectDir}/statsContigssContigPath/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createN50StatsPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
 		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ \
-		--out ${resultsDir}/mainFigs/n50statsFacetsTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
+		--out ${resultsDir}/mainFigs/n50statsTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
 		--subsetFile ${rankingsDir}/subsetTeamTopEntry --title 'N50 Statistics'
-	mv ${resultsDir}/mainFigs/n50statsFacetsTmp.pdf $@
+	mv ${resultsDir}/mainFigs/n50statsTmp.pdf $@
+
+# n50 Phasing plot
+${phasingDir}/n50statsPhasing.pdf: ${binDir}/createPhasingN50Plot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) $(wildcard ${projectDir}/statsContigsContigPath/*) $(wildcard ${projectDir}/statsScaffoldsContigPathPhasing/*) ${rankingsDir}/subsetTeamTopEntry
+	mkdir -p $(dir $@)
+	${binDir}/createPhasingN50Plot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ \
+		--statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--statsScaffoldsContigPathPhasingDir ${projectDir}/statsScaffoldsContigPathPhasing/ \
+		--out ${phasingDir}/n50statsPhasingTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --title 'Phasing N50 Statistics'
+	mv ${phasingDir}/n50statsPhasingTmp.pdf $@
+# n50 Phasing All plot
+${phasingDir}/n50statsPhasingAll.pdf: ${binDir}/createPhasingN50Plot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) $(wildcard ${projectDir}/statsContigsContigPath/*)
+	mkdir -p $(dir $@)
+	${binDir}/createPhasingN50Plot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ \
+		--statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--statsScaffoldsContigPathPhasingDir ${projectDir}/statsScaffoldsContigPathPhasing/ \
+		--out ${phasingDir}/n50statsPhasingAllTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
+		--title 'Phasing N50 Statistics'
+	mv ${phasingDir}/n50statsPhasingAllTmp.pdf $@
+# substitions Phasing plot
+${phasingDir}/subsPhasingAll.pdf: ${binDir}/createPhasingSubstitutionPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*)
+	mkdir -p $(dir $@)
+	$< --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ \
+		--outFormat pdf --out ${phasingDir}/subsPhasingAllTmp.pdf
+	mv ${phasingDir}/subsPhasingAllTmp.pdf $@
+${phasingDir}/subsPhasing.pdf: ${binDir}/createPhasingSubstitutionPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
+	mkdir -p $(dir $@)
+	$< --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ \
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --outFormat pdf --out ${phasingDir}/subsPhasingTmp.pdf
+	mv ${phasingDir}/subsPhasingTmp.pdf $@
 
 # contiguous individual plots
 contiguousPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsContiguity/*.xml),$(join ${contiguousPlotsDir}/, $(subst xml,pdf,$(notdir $f)) ))
@@ -619,9 +675,19 @@ ${tablesDir}/coverageRankingTableTeams.pdf: ${rankingsDir}/coverageTotal.tab ${b
 	mv ${tablesDir}/coverageRankingTableTeamsTmp.pdf $@
 
 # Contig Path (haplotype path) / structural error table
-${tablesDir}/contigPathStatsTable.pdf: ${binDir}/createContigPathStatsTable.py ${binDir}/latexWrapper.py ${rankingsDir}/subsetTeamTopEntry $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${tablesDir}/fltpage.sty
+${tablesDir}/contigPathStatsTableTeams.pdf: ${binDir}/createContigPathStatsTable.py ${binDir}/latexWrapper.py ${rankingsDir}/subsetTeamTopEntry $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${tablesDir}/fltpage.sty
 	mkdir -p $(dir $@)
 	${binDir}/createContigPathStatsTable.py --subsetFile ${rankingsDir}/subsetTeamTopEntry \
+		--statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
+		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ | ${binDir}/latexWrapper.py > \
+		${tablesDir}/contigPathStatsTableTeamsTmp.tex
+	pushd ${tablesDir} && latex contigPathStatsTableTeamsTmp.tex && latex contigPathStatsTableTeamsTmp.tex \
+		latex contigPathStatsTableTeamsTmp.tex && dvips -Ppdf contigPathStatsTableTeamsTmp.dvi && \
+		ps2pdf contigPathStatsTableTeamsTmp.ps && popd
+	mv ${tablesDir}/contigPathStatsTableTeamsTmp.pdf $@
+${tablesDir}/contigPathStatsTable.pdf: ${binDir}/createContigPathStatsTable.py ${binDir}/latexWrapper.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) ${tablesDir}/fltpage.sty
+	mkdir -p $(dir $@)
+	${binDir}/createContigPathStatsTable.py --showAssemblyNumbers \
 		--statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
 		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ | ${binDir}/latexWrapper.py > \
 		${tablesDir}/contigPathStatsTableTmp.tex
