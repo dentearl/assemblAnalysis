@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-createSubStatsMegaPlot.py
+createSubStatsPlot.py
 migrated from cactusAssemblathonSubErrorPlotter.py
 16 March 2011
 ( 10 March 2011 )
@@ -177,9 +177,7 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
    yMax = 0
    yMin = sys.maxint
    xNames = []
-   i = 0
    for aName in sortOrder:
-      i += 1
       a = assembliesDict[ aName ]
       if yMax < float( a.allUp ):
          yMax = float( a.allUp )
