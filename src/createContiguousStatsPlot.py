@@ -90,8 +90,8 @@ def checkOptions( args, options, parser ):
 
 def establishAxes( fig, options, data ):
    axDict = {}
-   options.axLeft = 0.12
-   options.axWidth = 0.83
+   options.axLeft = 0.1
+   options.axWidth = 0.85
    axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.1,
                                       options.axWidth , 0.85 ] )
    #plt.box( on=False )
@@ -252,7 +252,7 @@ def main():
    las.checkOptions( options, parser )
    lpt.checkOptions( options, parser )
    if not options.outputRanks:
-      fig, pdf = lpt.initImage( 8.0, 10.0, options, data )
+      fig, pdf = lpt.initImage( 11., 8.0, options, data ) # 8
       axDict = establishAxes( fig, options, data )
    
    data.statsList, data.xData = readFiles( options )
