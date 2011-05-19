@@ -8,6 +8,16 @@ Script to import a cactus result directory into an assemblathon
 analysis project. See the usage string in the main() function
 for details.
 
+Example calls:
+$ for f in assemblaScripts/output/assemblathon1/scaffolds/*; do 
+   importCactusResult.py --inDir $f --outDir analysis/ \
+      --type scaffold --name $(basename $f | sed 's/_scaffolds.trf.repmask.fa//'); 
+done
+$ for f in assemblaScripts/output/assemblathon1/contigs/*; do 
+   importCactusResult.py --inDir $f --outDir analysis/ \
+      --type contig --name $(basename $f | sed 's/_contigs.trf.repmask.fa//'); 
+done
+
 """
 ##############################
 # Copyright (C) 2009-2011 by 
@@ -106,7 +116,7 @@ def populateDirectoryStructure( options ):
    for d in [ 'mafsContigs', 'mafsScaffolds', 'statsScaffoldsAggregateColumns', 
               'statsScaffoldsContigPath', 'statsScaffoldsCopyNumber',
               'statsScaffoldsContiguity', 'statsScaffoldsSubstitutions',
-              'statsContigsContigPath']:
+              'statsContigsContigPath', 'statsScaffoldsContigPathPhasing' ]:
       d = os.path.join( options.outDir, d )
       if os.path.exists( d ) and not os.path.isdir( d ):
          sys.stderr.write('%s exists but is not a directory!\n' % d )
@@ -129,6 +139,8 @@ def migrate( options ):
                    os.path.join(options.inDir, 'substitutionStats_0_0_0.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.upper.xml' % options.name),
                    os.path.join( options.inDir, 'substitutionStats_1000_98_5.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.lower.xml' % options.name),
                    os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPath', '%s.pathStats.xml' % options.name),
+                   os.path.join( options.inDir, 'pathStats_hap1Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap1.pathStats.xml' % options.name),
+                   os.path.join( options.inDir, 'pathStats_hap2Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap2.pathStats.xml' % options.name),
                    os.path.join( options.inDir, 'coveragePlots', 'blockLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.blocks_haplotypes_agg.txt' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'contigPathLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contig_path_haplotypes_agg.txt' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'contigLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contigs_haplotypes_agg.txt' % options.name ),
