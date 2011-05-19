@@ -85,7 +85,7 @@ def fullProcessStream( options ):
       sys.exit(1)
    headerList = []
    assembliesList = []
-   pat = re.compile('\s+\((\S+)\)')
+   pat = re.compile(r'\s+\((\S+)\)')
    for line in sys.stdin:
       line = line.strip()
       if line.startswith('#'):
@@ -98,6 +98,10 @@ def fullProcessStream( options ):
       a.name = d[0]
       if a.name not in options.assemblySubset:
          continue
+      if len(d) != len(headerList):
+         sys.stderr.write('Error, len(d) < 2, headerList:\n  '
+                          '%s\noffending list:\n   %s\n' % ( str(headerList), str(d)))
+         sys.exit(1)
       # [0] is the name, [1] is the overall rank
       for i in xrange(2, len(headerList)):
          m = re.search(pat, d[i])
