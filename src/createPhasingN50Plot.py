@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-createN50StatsPlot.py
-14 March 2011
+createPhasingN50Plot.py
+18 May 2011
 dent earl dearl(a) soe ucsc edu
 
 used in the assemblathon report project to 
-create the N50 stats plots.
+create the phasing N50 stats plots.
 
 """
 ##############################
@@ -225,11 +225,11 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    nudge = -0.25
    span = abs(2.0 * nudge)
    for c in options.columns:
-      nudge +=  span / 6.0
       plots.append( ax.plot( numpy.arange(0, len( assembliesList )) + nudge,
                                          getVals( assembliesList, c ), 
                                          marker=options.shapes[c], color=options.colors[c], markersize=18.0,
                                          linestyle='none', markeredgecolor='w'))
+      nudge +=  span / float(len(options.columns))
    for loc, spine in ax.spines.iteritems():
       if loc in [ 'left'  ]:
          spine.set_position(('outward',10)) # outward by 10 points
@@ -256,10 +256,10 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    mts = ax.yaxis.get_majorticklocs()
    for m in mts:
       ax.add_line( lines.Line2D( xdata=[ 0, len(assembliesList) - 1 ],
-                                             ydata=[ m, m ],
-                                             linewidth=1,
-                                             color=(0.8, 0.8, 0.8),
-                                             linestyle='dotted'))
+                                 ydata=[ m, m ],
+                                 linewidth=1,
+                                 color=(0.8, 0.8, 0.8),
+                                 linestyle='dotted'))
    ax.set_xlim( [ -0.5, len( assembliesList )] )
    ax.set_title( options.title )
    legendLabels = []
