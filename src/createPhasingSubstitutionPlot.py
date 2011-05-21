@@ -74,7 +74,7 @@ def checkOptions( options, parser ):
    options.columns = [ 'totalCallsInHeterozygous'
                        'totalCorrectHap1InHeterozygous',
                        'totalCorrectHap2InHeterozygous' ]
-   options.columnLabels = { 'totalCallsInHeterozygous':'Total Correct Hets / 2.0',
+   options.columnLabels = { 'totalCallsInHeterozygous':'Total Correct Hets',
                             'totalCorrectHap1InHeterozygous':'Total Correct Hets Hap 1',
                             'totalCorrectHap2InHeterozygous':'Total Correct Hets Hap 2'
                             }
@@ -169,8 +169,8 @@ def drawData( aList, axDict, options, data ):
                                     linewidth=1.0,
                                     linestyle='dotted',
                                     color=(0.8, 0.8, 0.8) ))
-   plt.ylabel('log Ratio Haplotype 1 : Haplotype 2')
-   plt.title('Ratios of substitutions in haplotypes')
+   plt.ylabel('Ratio')
+   plt.title(r'correct calls (bits) $\alpha_1$ / correct calls (bits) $\alpha_2$')
    leg = plt.legend( plots, ['Lower', 'Upper'], 'upper left', numpoints=1 )
    leg._drawFrame=False
  
