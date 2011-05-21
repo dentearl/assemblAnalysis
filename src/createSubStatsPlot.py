@@ -181,6 +181,8 @@ def drawData( assembliesDict, sortOrder, axDict, options, data ):
       a = assembliesDict[ aName ]
       if yMax < float( a.allUp ):
          yMax = float( a.allUp )
+      if float(a.allLo) == 0.0:
+         continue
       if yMin > float( a.allLo ): 
          yMin = float( a.allLo )
    if options.raw:
