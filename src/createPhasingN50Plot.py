@@ -229,6 +229,26 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
                                          getVals( assembliesList, c ), 
                                          marker=options.shapes[c], color=options.colors[c], markersize=18.0,
                                          linestyle='none', markeredgecolor='w'))
+      if c == 'hap1ScaffoldPathN50':
+         vals = getVals( assembliesList, c )
+         nextVals = getVals( assembliesList, 'hap2ScaffoldPathN50' )
+         i = -1
+         for v in vals:
+            i += 1
+            ax.add_line( lines.Line2D( xdata=[i + nudge, i + nudge + (span / float(len(options.columns)))],
+                                        ydata=[v, nextVals[i]],
+                                        linewidth=.75,
+                                        color='k'))
+      elif c == 'hap1ContigPathN50':
+         vals = getVals( assembliesList, c )
+         nextVals = getVals( assembliesList, 'hap2ContigPathN50' )
+         i = -1
+         for v in vals:
+            i += 1
+            ax.add_line( lines.Line2D( xdata=[i + nudge, i + nudge + (span / float(len(options.columns)))],
+                                        ydata=[v, nextVals[i]],
+                                        linewidth=.75,
+                                        color='k'))
       nudge +=  span / float(len(options.columns))
    for loc, spine in ax.spines.iteritems():
       if loc in [ 'left'  ]:
