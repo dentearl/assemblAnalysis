@@ -262,11 +262,22 @@ ${coverageSFDir}/all_hap1StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap1StackFillContigsTmp.$$p ${coverageSFDir}/all_hap1StackFillContigs.$$p ; \
 	done
-${coverageSFDir}/hap1StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ContigMafWigPicks
+${coverageSFDir}/all_hap1StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
+		--mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} \
+		--chrLengths ${hap1ChrLengths} --referenceGenome hap1 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_hap1StackFillScaffoldsTmp.$$p ${coverageSFDir}/all_hap1StackFillScaffolds.$$p ; \
+	done
+${coverageSFDir}/hap1StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap1WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${hap1AWPDir}/hap1.annots.pickle hap1ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap1AWPDir}/ \
 		--mafPickleDir ${hap1WPSDir} --chrNames ${chrNames} \
@@ -396,18 +407,18 @@ ${coverageSFDir}/all_hap2StackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillContigsTmp.$$p ${coverageSFDir}/all_hap2StackFillContigs.$$p ; \
 	done
-${coverageSFDir}/hap2StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ContigMafWigPicks
+${coverageSFDir}/hap2StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${rankingsDir}/subsetTeamTopEntry  ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
 	mkdir -p $(dir $@)
 	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
 		--mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} \
 		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
 		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
 		--annotationCeilings 2000,2000,4000,4200,2000,9000 --subsetFile ${rankingsDir}/subsetTeamTopEntry \
-		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs 
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/hap2StackFillScaffoldsTmp.$$p ${coverageSFDir}/hap2StackFillScaffolds.$$p ; \
 	done
@@ -424,6 +435,17 @@ ${coverageSFDir}/all_hap2StackFillScaffPaths.pdf: ${binDir}/plotPicklesToPlot.py
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillScaffPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_hap2StackFillScaffPathsTmp.$$p ${coverageSFDir}/all_hap2StackFillScaffPaths.$$p ; \
+	done
+${coverageSFDir}/all_hap2StackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${hap2WPSDir}/*) ${hap2AWPDir}/hap2.annots.pickle hap2ScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${hap2AWPDir}/ \
+		--mafPickleDir ${hap2WPSDir} --chrNames ${chrNames} \
+		--chrLengths ${hap2ChrLengths} --referenceGenome hap2 --outFormat all \
+		--annotationOrder CDS,UTR,NXE,NGE,island,repeat \
+		--annotationCeilings 2000,2000,4000,4200,2000,9000 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_hap2StackFillScaffoldsTmp.$$p ${coverageSFDir}/all_hap2StackFillScaffolds.$$p ; \
 	done
 # bacterial
 ${coverageSFDir}/bac.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${rankingsDir}/subsetTeamTopEntry ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
@@ -511,6 +533,28 @@ ${coverageSFDir}/all_bacStackFillContigPaths.pdf: ${binDir}/plotPicklesToPlot.py
 		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigPaths 
 	for p in png eps pdf; do \
 		mv ${coverageSFDir}/all_bacStackFillContigPathsTmp.$$p ${coverageSFDir}/all_bacStackFillContigPaths.$$p ; \
+	done
+${coverageSFDir}/all_bacStackFillContigs.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacContigMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${bacAWPDir}/ \
+		--mafPickleDir ${bacWPCDir} --chrNames bac \
+		--chrLengths ${bacChrLength} --referenceGenome bac --outFormat all \
+		--annotationOrder repeat \
+		--annotationCeilings 50 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_bacStackFillContigsTmp.$$p ${coverageSFDir}/all_bacStackFillContigs.$$p ; \
+	done
+${coverageSFDir}/all_bacStackFillScaffolds.pdf: ${binDir}/plotPicklesToPlot.py $(wildcard ${bacWPSDir}/*) ${bacAWPDir}/bac.annots.pickle bacScaffoldMafWigPicks
+	mkdir -p $(dir $@)
+	${binDir}/plotPicklesToPlot.py --annotPickleDir ${bacAWPDir}/ \
+		--mafPickleDir ${bacWPSDir} --chrNames bac \
+		--chrLengths ${bacChrLength} --referenceGenome bac --outFormat all \
+		--annotationOrder repeat \
+		--annotationCeilings 50 \
+		--out $(subst .pdf,Tmp.pdf,$@) --stackFillContigs --showAssemblyNumbers
+	for p in png eps pdf; do \
+		mv ${coverageSFDir}/all_bacStackFillScaffoldsTmp.$$p ${coverageSFDir}/all_bacStackFillScaffolds.$$p ; \
 	done
 
 # n50 Plot
