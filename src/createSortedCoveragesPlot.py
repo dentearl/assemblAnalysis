@@ -34,6 +34,7 @@ a pretty picture.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
+import libGeneral as lgn
 import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
@@ -141,12 +142,12 @@ def drawData( values, ax, options ):
    for tick in ax.xaxis.get_major_ticks():    
       tick.label1.set_fontsize( 6 )                        
    for label in ax.xaxis.get_ticklabels():    
-      label.set_rotation( 90 )
+      label.set_rotation( 45 )
 
 def extractNames( values ):
    a = []
    for v in values:
-      a.append( v.name )
+      a.append( lgn.idMap[ v.name[0] ]+'.'+v.name[1:] )
    return a
 
 def extractAllValues( values ):
