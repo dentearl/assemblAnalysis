@@ -31,5 +31,5 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 pr
 12. <code>cp</code> the <code>analysisMakefile</code> into the new directory.
 13. Edit <code>analysisMakefile</code> to set the variables for <code>binDir</code>, <code>fltpage</code> and <code>simulationStatsTab</code>. The <code>binDir</code> should be the relative path to this repo's <code>bin/</code>. The <code>simulationStatsTab</code> should point to the file in <code>extra/</code>.
 14. Run <code>make -f analysisMakefile</code>. **Pro tip**: The makefile was written to use <code>-j</code> for a speedup.
-15. Once the make finishes, all of the results are stored in <code>publication/</code>
+15. Once the make finishes, most of the results are stored in <code>publication/</code> with some other results being in <code>correlations/</code> , <code>indelDist/</code> , <code>nNGDiffs/</code> and <code>phasingAnalysis/</code>.
 16. _There is no step sixteen!_
