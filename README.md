@@ -17,8 +17,8 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 pr
 3. Type <code>make</code>.
 
 ##Use
-1. Run your assembler on the assemblathon dataset and produce a fasta file. Pick a letter to be your ID from {R, S, T, U, Y, Z}. I'll assume you use R for the rest of this list. Edit the <code>idMap</code> dict in <code>src/libGeneral.py</code> to add your ID and your name code. This is used throughout the code to place names on figures and in tables.
-2. Create a sequence name map using </code>$ fastaContigHeaderMapper.py --prefix R1 --createMap R1.map < R1.rawAssembly.fa</code> .
+1. Run your assembler on the assemblathon dataset and produce a fasta file. Pick a letter to be your ID from {R, S, T, U, Y, Z}. I'll assume you use R for the rest of this list. Edit the <code>idMap</code> dict in <code>src/libGeneral.py</code> to add your ID and your name code. This is used throughout the code to place names on figures and tables, and to map filenames to assemblies.
+2. Create a sequence name map using <code>$ fastaContigHeaderMapper.py --prefix R1 --createMap R1.map < R1.rawAssembly.fa</code> .
 3. Use the name map to transform all of the sequence names using <code>$ fastaContigHeaderMapper.py --map R1.map --goForward < R1.rawAssembly.fa > R1.fa</code>
 4. Standardize the number of Ns in your sequences to be no greater than 25. For Assemblathon 1 25 Ns marked the difference between contigs within a scaffold. <code>$ standardizeNumNs.py --expandAt 25 < R1.fa > R1_scaffolds.fa</code> . So if your assembler used 4 Ns as a scaffold gap then you would use <code>--expandAt 4</code>, and then if there were 4 or more Ns in a row they were made to have 25 Ns. If you looked at the distribution of Ns in the resulting fasta you'd see runs of Ns of length 1, 2, 3 and 25.
 5. Run RepeatMasker on the sequence using the simulated mobile element library available at http://compbio.soe.ucsc.edu/assemblathon1/ . We used <code>$ RepeatMasker -lib MELib.fa -parallel 10 -qq -xsmall -dir tempRepMaskDir/ seq.fa</code> . We used RepeatMasker v1.25.
