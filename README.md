@@ -21,9 +21,9 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 pr
 2. Create a sequence name map using <code>$ fastaContigHeaderMapper.py --prefix R1 --createMap R1.map < R1.rawAssembly.fa</code> .
 3. Use the name map to transform all of the sequence names using <code>$ fastaContigHeaderMapper.py --map R1.map --goForward < R1.rawAssembly.fa > R1.fa</code>
 4. Standardize the number of Ns in your sequences to be no greater than 25. For Assemblathon 1 25 Ns marked the difference between contigs within a scaffold. <code>$ standardizeNumNs.py --expandAt 25 < R1.fa > R1_scaffolds.fa</code> . So if your assembler used 4 Ns as a scaffold gap then you would use <code>--expandAt 4</code>, and then if there were 4 or more Ns in a row they were made to have 25 Ns. If you looked at the distribution of Ns in the resulting fasta you'd see runs of Ns of length 1, 2, 3 and 25.
-5. Run RepeatMasker on the sequence using the simulated mobile element library available at http://compbio.soe.ucsc.edu/assemblathon1/ . We used <code>$ RepeatMasker -lib MELib.fa -parallel 10 -qq -xsmall -dir tempRepMaskDir/ seq.fa</code> . We used RepeatMasker v1.25.
-6. Run trf on the sequence: <code>$ trf fasta.fa 2 7 7 80 10 50 2000 -m -d -h</code>. We used trf v4.00.
-7. Soft mask the assembly with the union of the RepeatMasker and trf outputs.
+5. Run RepeatMasker on the sequence using the simulated mobile element library available at http://compbio.soe.ucsc.edu/assemblathon1/ . We used <code>$ RepeatMasker -lib MELib.fa -parallel 10 -qq -xsmall -dir tempRepMaskDir/ R1.fa</code> . We used RepeatMasker v1.25.
+6. Run trf on the sequence: <code>$ trf R1.fa 2 7 7 80 10 50 2000 -m -d -h</code>. We used trf v4.00.
+7. Soft mask the assembly with the union of the RepeatMasker and trf outputs, here I'll call the resulting file <code>R1_scaffolds.trf.repmask.fa</code>.
 8. Split the assembly into contigs using <code>$ splitSequenceAtNs.py --splitAt 25 < R1_scaffolds.trf.repmask.fa  > R1_contigs.trf.repmask.fa</code> . You now have two fasta files for your assembly, a scaffold and a contig file. You're now ready to run the Cactus aligner.
 9. Run <code>assemblaScripts</code> on your data.
 10. Create a new directory where you'd like to create perform an analysis.
