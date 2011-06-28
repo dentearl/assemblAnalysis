@@ -883,29 +883,29 @@ ${correlationsDir}/correlationsPlot.pdf: ${correlationsDir}/data.tab ${binDir}/c
 ${nNGDiffsDir}/contigNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsContigsContigPath/*.xml; do  \
-		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
-		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+		echo $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) | bc -l >> $@.tmp; done
 	perl -ple 's/-//g;' -i $@.tmp
 	mv $@.tmp $@
 ${nNGDiffsDir}/contigNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsContigsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsContigsContigPath/*.xml; do  \
-		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
-		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+		echo $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) | bc -l >> $@.tmp; done
 	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
 	mv $@.tmp $@
 ${nNGDiffsDir}/scaffoldNNGAbsDiffBp.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsScaffoldsContigPath/*.xml; do  \
-		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
-		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+		echo $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)- \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) | bc -l >> $@.tmp; done
 	perl -ple 's/-//g;' -i $@.tmp
 	mv $@.tmp $@
 ${nNGDiffsDir}/scaffoldNNGAbsDiffPercent.txt: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml)
 	mkdir -p $(dir $@)
 	for f in statsScaffoldsContigPath/*.xml; do  \
-		calc $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
-		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) >> $@.tmp; done
+		echo $$( perl -ple 's/.*contigNG50="(\d+)".*/$$1/' < $$f)/ \
+		$$( perl -ple 's/.*contigN50="(\d+)".*/$$1/' < $$f) | bc -l >> $@.tmp; done
 	perl -ple 'if ($$_ < 1.0){ $$_ = 1.0 - $$_;}else{ $$_ -= 1.0;}' -i $@.tmp
 	mv $@.tmp $@
 ${indelDir}/indelDist.pdf: $(wildcard ${projectDir}/statsScaffoldsContigPath/*.xml) ${rankingsDir}/subsetTeamTopEntry
