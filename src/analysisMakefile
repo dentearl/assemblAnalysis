@@ -562,9 +562,11 @@ ${resultsDir}/mainFigs/n50stats.pdf: ${binDir}/createN50StatsPlot.py $(wildcard 
 	mkdir -p $(dir $@)
 	${binDir}/createN50StatsPlot.py --statsScaffoldsContigPathDir ${projectDir}/statsScaffoldsContigPath/ \
 		--statsContigsContigPathDir ${projectDir}/statsContigsContigPath/ \
-		--out ${resultsDir}/mainFigs/n50statsTmp.pdf --outFormat pdf --sortOn scaffoldPathNG50 \
+		--out ${resultsDir}/mainFigs/n50statsTmp.pdf --outFormat all --sortOn scaffoldPathNG50 \
 		--subsetFile ${rankingsDir}/subsetTeamTopEntry --title 'N50 Statistics'
-	mv ${resultsDir}/mainFigs/n50statsTmp.pdf $@
+	for p in png eps pdf; do \
+		mv ${resultsDir}/mainFigs/n50statsTmp.$$p ${resultsDir}/mainFigs/n50stats.$$p ; \
+	done
 
 # n50 Phasing plot
 ${phasingDir}/n50statsPhasing.pdf: ${binDir}/createPhasingN50Plot.py $(wildcard ${projectDir}/statsScaffoldsContigPath/*) $(wildcard ${projectDir}/statsContigsContigPath/*) $(wildcard ${projectDir}/statsScaffoldsContigPathPhasing/*) ${rankingsDir}/subsetTeamTopEntry
@@ -611,9 +613,11 @@ ${contiguousPlotsDir}/%.contiguousStats.pdf: ${projectDir}/statsScaffoldsContigu
 # contiguous facet plot
 ${resultsDir}/mainFigs/contiguousStatsFacets.pdf: ${binDir}/createContiguousStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsContiguity/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
-	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/mainFigs/contiguousStatsFacetsTmp --outFormat pdf \
+	${binDir}/createContiguousStatsPlot.py --out ${resultsDir}/mainFigs/contiguousStatsFacetsTmp --outFormat all \
 		--title 'Contiguity Statistics' ${projectDir}/statsScaffoldsContiguity/* --subsetFile ${rankingsDir}/subsetTeamTopEntry
-	mv ${resultsDir}/mainFigs/contiguousStatsFacetsTmp.pdf $@
+	for p in png eps pdf; do \
+		mv ${resultsDir}/mainFigs/contiguousStatsFacetsTmp.$$p ${resultsDir}/mainFigs/contiguousStatsFacets.$$p ; \
+	done
 
 # copy number individual plots
 ${copyNumberPlotsDir}/%.pdf: ${projectDir}/statsScaffoldsCopyNumber/%.xml ${binDir}/createCopyNumberStatsPlot.py
@@ -628,15 +632,19 @@ copyNumberPlots: $(foreach f,$(wildcard ${projectDir}/statsScaffoldsCopyNumber/*
 ${resultsDir}/mainFigs/copyNumberFacetLinear.pdf: ${binDir}/createCopyNumberStatsFacetedPlot.py $(wildcard ${projectDir}/statsScaffoldsCopyNumber/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createCopyNumberStatsFacetedPlot.py --dir ${projectDir}/statsScaffoldsCopyNumber/ \
-		--subsetFile ${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/copyNumberFacetLinearTmp --outFormat pdf
-	mv ${resultsDir}/mainFigs/copyNumberFacetLinearTmp.pdf $@
+		--subsetFile ${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/copyNumberFacetLinearTmp --outFormat all
+	for p in png eps pdf; do \
+		mv ${resultsDir}/mainFigs/copyNumberFacetLinearTmp.$$p ${resultsDir}/mainFigs/copyNumberFacetLinear.$$p ; \
+	done
 
 # substitution stats facet plot
 ${resultsDir}/mainFigs/subStatsFacets.pdf: ${binDir}/createSubStatsPlot.py $(wildcard ${projectDir}/statsScaffoldsSubstitutions/*) ${rankingsDir}/subsetTeamTopEntry
 	mkdir -p $(dir $@)
 	${binDir}/createSubStatsPlot.py --subStatsDir ${projectDir}/statsScaffoldsSubstitutions/ --subsetFile \
-		${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/subStatsFacetsTmp --outFormat pdf
-	mv ${resultsDir}/mainFigs/subStatsFacetsTmp.pdf $@
+		${rankingsDir}/subsetTeamTopEntry --out ${resultsDir}/mainFigs/subStatsFacetsTmp --outFormat all
+	for p in png eps pdf; do \
+		mv ${resultsDir}/mainFigs/subStatsFacetsTmp.$$p ${resultsDir}/mainFigs/subStatsFacets.$$p ; \
+	done
 
 # hap1 coverage rankings
 ${rankingsDir}/coverageHap1.txt: ${binDir}/extractPlotPickleCounts.py $(wildcard ${hap1WPSDir}/*)  mafWigPicks
