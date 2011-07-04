@@ -1,7 +1,11 @@
 #Assemblathon Analysis Scripts
-[Dent Earl](https://github.com/dentearl/), [Benedict Paten](https://github.com/benedictpaten/)
 
 Scripts to automate the creation of Tables and Figures for the Assemblathon 1 project analysis.
+
+##Authors
+[Dent Earl](https://github.com/dentearl/), [Benedict Paten](https://github.com/benedictpaten/)
+
+Keith Bradnam and Ian Korf wrote and retain rights the files extra/cds_coverage.pl and extra/FALite.pm
 
 ##Dependencies
 * assemblaScripts: https://github.com/benedictpaten/assemblaScripts which has its own dependencies
