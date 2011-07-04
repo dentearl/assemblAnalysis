@@ -1,4 +1,4 @@
-#Genome	Mb	GC (%)	Reps (%)	Chr	Subs	Dels	Ins	Moves	Copy	Tandem	Chr Split	Chr Fuse
+#Genome	Mb	GC (%)	Reps (%)	Chr	Subs	Dels	Inv	Moves	Copy	Tandem	Chr Split	Chr Fuse
 Input	95.6	38.8	7.1 / 42.3\(^*\)	4	--	--	--	--	--	--	--	--
 MRCA	109.4	39.9	6.9	2	35.9e+06	2.47e+06	11,701	4,714	14,644	1.16e+06	2	4
 \(\alpha\)	112.4	40.0	7.5	3	9.70e+06	6.72e+05	3,325	1,369	4,151	3.13e+05	1	0
