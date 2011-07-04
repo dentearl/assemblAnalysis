@@ -114,7 +114,10 @@ def establishAxes( fig, options, data ):
             raise ValueError('unknown spine location: %s' % loc )
       # turn off ticks where there is no spine
       axDict[ ax ].xaxis.set_ticks_position('bottom')
-      axDict[ ax ].yaxis.set_ticks_position('both')
+      if options.log:
+         axDict[ ax ].yaxis.set_ticks_position('both')
+      else:
+         axDict[ ax ].yaxis.set_ticks_position('left')
    data.axDict = axDict
    return ( axDict )
 
