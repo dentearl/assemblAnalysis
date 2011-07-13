@@ -238,7 +238,7 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
             ax.add_line( lines.Line2D( xdata=[i + nudge, i + nudge + (span / float(len(options.columns)))],
                                         ydata=[v, nextVals[i]],
                                         linewidth=.75,
-                                        color='k'))
+                                        color='red'))
       elif c == 'hap1ContigPathN50':
          vals = getVals( assembliesList, c )
          nextVals = getVals( assembliesList, 'hap2ContigPathN50' )
@@ -248,7 +248,7 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
             ax.add_line( lines.Line2D( xdata=[i + nudge, i + nudge + (span / float(len(options.columns)))],
                                         ydata=[v, nextVals[i]],
                                         linewidth=.75,
-                                        color='k'))
+                                        color='red'))
       nudge +=  span / float(len(options.columns))
    for loc, spine in ax.spines.iteritems():
       if loc in [ 'left'  ]:
