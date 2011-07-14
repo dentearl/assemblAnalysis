@@ -124,34 +124,32 @@ def populateDirectoryStructure( options ):
       if not os.path.exists( d ):
          os.makedirs( d )
 
-def myCopy( src, dst ):
-   if not os.path.exists( src ):
-      sys.stderr.write('Error, %s does not exist!\n' % src)
-      sys.exit(1)
-   shutil.copy( src, dst )
-
 def migrate( options ):
    if options.type == 'scaffold':
       template = { os.path.join( options.inDir, 'annotatedPaths.maf' ): os.path.join( options.outDir, 'mafsScaffolds', options.name+'.maf' ),
                    os.path.join( options.inDir, 'copyNumberStats_0.xml' ): os.path.join( options.outDir, 'statsScaffoldsCopyNumber', '%s.copyNumber_0.xml' % options.name ),
                    os.path.join( options.inDir, 'copyNumberStats_1000.xml' ): os.path.join( options.outDir, 'statsScaffoldsCopyNumber', '%s.copyNumber_1000.xml' % options.name ),
-                   os.path.join( options.inDir, 'linkageStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContiguity', '%s.contiguousStats.xml' % options.name),
-                   os.path.join(options.inDir, 'substitutionStats_0_0_0.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.upper.xml' % options.name),
-                   os.path.join( options.inDir, 'substitutionStats_1000_98_5.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.lower.xml' % options.name),
-                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPath', '%s.pathStats.xml' % options.name),
-                   os.path.join( options.inDir, 'pathStats_hap1Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap1.pathStats.xml' % options.name),
-                   os.path.join( options.inDir, 'pathStats_hap2Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap2.pathStats.xml' % options.name),
+                   os.path.join( options.inDir, 'linkageStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContiguity', '%s.contiguousStats.xml' % options.name ),
+                   os.path.join( options.inDir, 'substitutionStats_0_0_0.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.upper.xml' % options.name ),
+                   os.path.join( options.inDir, 'substitutionStats_1000_98_5.xml'): os.path.join( options.outDir, 'statsScaffoldsSubstitutions', '%s.subStats.lower.xml' % options.name ),
+                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPath', '%s.pathStats.xml' % options.name ),
+                   os.path.join( options.inDir, 'pathStats_hap1Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap1.pathStats.xml' % options.name ),
+                   os.path.join( options.inDir, 'pathStats_hap2Phasing.xml'): os.path.join( options.outDir, 'statsScaffoldsContigPathPhasing', '%s.hap2.pathStats.xml' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'blockLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.blocks_haplotypes_agg.txt' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'contigPathLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contig_path_haplotypes_agg.txt' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'contigLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.contigs_haplotypes_agg.txt' % options.name ),
                    os.path.join( options.inDir, 'coveragePlots', 'blockLengthsVsCoverageOfAssemblyAndHaplotypes.txt'): os.path.join( options.outDir, 'statsScaffoldsAggregateColumns', '%s.blocks_haplotypes_agg.txt' % options.name )
+                   os.path.join( options.inDir, 'scaffoldPathsFeatureGeneOverlap.xml': os.path.join( options.outDir, 'statsScaffoldsFeatureOverlap', '%s.scaffoldsOverlapGene.xml' % options.name ))
+                   os.path.join( options.inDir, 'scaffoldPathsFeatureOverlap.xml': os.path.join( options.outDir, 'statsScaffoldsFeatureOverlap', '%s.scaffoldsOverlap.xml' % options.name ))
+                   os.path.join( options.inDir, 'contigPathsFeatureGeneOverlap.xml': os.path.join( options.outDir, 'statsContigsFeatureOverlap', '%s.contigsOverlapGene.xml' % options.name ))
+                   os.path.join( options.inDir, 'contigPathsFeatureOverlap.xml': os.path.join( options.outDir, 'statsContigsFeatureOverlap', '%s.contigsOverlap.xml' % options.name ))
          }
    elif options.type == 'contig':
       template = { os.path.join( options.inDir, 'annotatedPaths.maf' ): os.path.join( options.outDir, 'mafsContigs', options.name+'.maf' ),
-                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsContigsContigPath', '%s.pathStats.xml' % options.name)}
+                   os.path.join( options.inDir, 'pathStats.xml'): os.path.join( options.outDir, 'statsContigsContigPath', '%s.pathStats.xml' % options.name )}
 
    for src in template:
-      myCopy( src, template[src] )
+      shutil.copy( src, template[src] )
 
 def main():
    usage = ( 'usage: %prog --inDir=path/to/input --outDir=path/to/out --type=[contig|scaffold] [options]\n\n'
