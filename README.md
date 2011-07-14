@@ -8,6 +8,7 @@ Scripts to automate the creation of Tables and Figures for the Assemblathon 1 pr
 Keith Bradnam and Ian Korf wrote and retain rights the files extra/cds_blast.pl and extra/FAlite.pm
 
 ##Dependencies
+* python >= 2.5 but less than 3.0.
 * assemblaScripts: https://github.com/benedictpaten/assemblaScripts
 * matplotlib: http://matplotlib.sourceforge.net/ for plots
 * latex: http://www.latex-project.org/ for latex tables
