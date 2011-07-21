@@ -40,3 +40,19 @@ Keith Bradnam and Ian Korf wrote and retain rights the files extra/cds_blast.pl 
 15. Run <code>make -f analysisMakefile</code>. **Pro tip**: The makefile was written to use <code>-j</code> for a speedup.
 16. Once the make finishes, most of the results are stored in <code>publication/</code> with some other results being in <code>correlations/</code> , <code>indelDist/</code> , <code>nNGDiffs/</code> and <code>phasingAnalysis/</code>.
 17. _There is no step seventeen!_
+
+##FAQ
+* **Q** _I'm getting an error in the make when running my own new assembly through the process_: 
+ 
+   '''shell
+Traceback (most recent call last):  
+File "/cluster/home/dearl/assemblathon/assemblAnalysis/bin/summarizedRankingToTeamTop.py", line 181, in <module>    main()  
+File "/cluster/home/dearl/assemblathon/assemblAnalysis/bin/summarizedRankingToTeamTop.py", line 178, in main    fullProcessStream( options )
+File "/cluster/home/dearl/assemblathon/assemblAnalysis/bin/summarizedRankingToTeamTop.py", line 103, in fullProcessStream    
+  '%s\noffending list:\n   %s\n' % ( str(headerList), str(d)))
+RuntimeError: Error, len(d) != headerList:  
+['#Assembly', 'Overall', 'N50_CPNG50 (value)', 'N50_SPNG50 (value)', 'structuralContigPathErrors (value)', 'contiguousRanks (value)', 'substitutionErrors (value)', 'copyNumberErrors (value)', 'coverageTotal (value)', 'coverageCDS (value)']
+offending list:
+...
+'''
+   **A** This is usually the result of different orderings between the assemblies in the ranking files. Make sure the order of assemblies in publication/rankings/N50_SPN5G0.tab and extra/cDnaAlignment.tab is the same.
