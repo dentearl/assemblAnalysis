@@ -99,17 +99,15 @@ def fullProcessStream( options ):
       if a.name not in options.assemblySubset:
          continue
       if len(d) != len(headerList):
-         sys.stderr.write('Error, len(d) < 2, headerList:\n  '
-                          '%s\noffending list:\n   %s\n' % ( str(headerList), str(d)))
-         sys.exit(1)
+         raise RuntimeError('Error, len(d) != headerList:\n  '
+                            '%s\noffending list:\n   %s\n' % ( str(headerList), str(d)))
       # [0] is the name, [1] is the overall rank
       for i in xrange(2, len(headerList)):
          m = re.search(pat, d[i])
          if not m:
-            sys.stderr.write('Error, unable to locate pattern in %s for assembly %s. '
-                             'Be sure to use --retainValue in summarizeRankings.py\n' % 
-                             (d[i], a.name))
-            sys.exit(1)
+            raise RuntimeError('Error, unable to locate pattern in %s for assembly %s. '
+                               'Be sure to use --retainValue in summarizeRankings.py\n' % 
+                               (d[i], a.name))
          a.values[ headerList[i] ] = float( m.group(1) )
       assembliesList.append( a )
    rankAssemblies( assembliesList, headerList[2:] )
@@ -132,7 +130,7 @@ def formattedValue( header, value ):
       return '%.2e' % value
    elif header == 'copyNumberErrors (value)':
       return '%.2e' % value
-   elif header == 'coverageCDS (value)':
+   elif header == 'coverageGenic (value)':
       return '%.1f' % value
    elif header == 'coverageTotal (value)':
       return '%.1f' % value
@@ -145,7 +143,7 @@ def rankAssemblies( assembliesList, columns ):
    # for sortDir, key is the header, value is the boolean "Larger is better"
    sortDir = { 'N50_CPNG50 (value)':True, 'N50_SPNG50 (value)':True,
                'contiguousRanks (value)':True, 'copyNumberErrors (value)':False,
-               'coverageCDS (value)':True, 'coverageTotal (value)':True,
+               'coverageGenic (value)':True, 'coverageTotal (value)':True,
                'structuralContigPathErrors (value)':False, 'substitutionErrors (value)':False }
    for c in columns:
       rankedCol = sorted( assembliesList, key = lambda x: x.values[c], reverse=sortDir[c] )
