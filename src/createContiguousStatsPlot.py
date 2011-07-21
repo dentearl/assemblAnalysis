@@ -91,7 +91,7 @@ def checkOptions( args, options, parser ):
 def establishAxes( fig, options, data ):
    axDict = {}
    options.axLeft = 0.1
-   options.axWidth = 0.85
+   options.axWidth = 0.8
    axDict[ 'main' ] = fig.add_axes( [ options.axLeft, 0.1,
                                       options.axWidth , 0.85 ] )
    #plt.box( on=False )
@@ -155,7 +155,9 @@ def drawLegend( options, data ):
                        'equal to number of contiguous xml files.\n')
       sys.exit( 1 )
    
-   leg = plt.legend( data.pltList, pltListLabels, 'lower left' )
+   leg = plt.legend( data.pltList, pltListLabels, 
+                     loc = 'upper left', bbox_to_anchor = (0.9, 0.95) )
+   
    leg._drawFrame=False
 
 def drawAxisLabels( fig, options, data ):
