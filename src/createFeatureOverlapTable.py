@@ -99,6 +99,8 @@ def checkOptions( args, options, parser ):
          parser.error('--%s %s does not exist!\n' % ( d, dirs[ d ] ))
       if not os.path.isdir( dirs[ d ] ):
          parser.error('--%s %s is not a directory!\n' % ( d, dirs[ d ]) )
+   if options.subsetFile:
+      options.hideAssemblyNumbers = True
 
 def processDirectory( options ):
    filenames = glob.glob(os.path.join(options.statsScaffoldsFeatureOverlapDir, '*.xml'))
@@ -108,6 +110,10 @@ def processDirectory( options ):
    for f in filenames:
       m = re.match(assemblyPat, os.path.basename( f ))
       assemblyName = m.group(1)
+      if 'subsetFile' in vars( options ):
+         if options.subsetFile:
+            if assemblyName not in options.assemblySubset:
+               continue
       filetype = m.group(2)
       # if m.group(2) != 'contigsOverlapGene':
       #    continue
@@ -173,6 +179,9 @@ def outputDict( assembliesDict, options ):
 
    annotOrderGenes = ['transcripts'] # 'cds'
    annotOrder = ['cds', 'utr', 'nxe+nge', 'repeat'] # 'island'
+   fileNameMap = {'contigsOverlapGene':'COG', 'contigsOverlap':'CO'}
+   annotNameMap = {'transcripts':'xcript', 'cds':'cds', 'utr':'utr',
+                   'nxe+nge':'nxe+nge', 'repeat':'repeat'}
    
    # print the header
    sys.stdout.write('#ID')
@@ -198,7 +207,7 @@ def outputDict( assembliesDict, options ):
             else:
                totalStr = '%s, %s' % ( lgn.prettyNumber(assembliesDict[sortOrder[0]].valuesDict[f][a][1].samples),
                                        lgn.prettyNumber(assembliesDict[sortOrder[0]].valuesDict[f][a][2].samples) )
-         sys.stdout.write('\t%s-%s (%s)' % (f, a, totalStr))
+         sys.stdout.write('\t%s-%s (%s)' % (fileNameMap[f], annotNameMap[a], totalStr))
    sys.stdout.write('\n')
    
    for assembly in sortOrder:
@@ -260,7 +269,6 @@ def main():
    assembliesDict = processDirectory(options)
    
    outputDict(assembliesDict, options)
-
 
 if __name__ == '__main__':
    main()
