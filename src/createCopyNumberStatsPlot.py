@@ -8,6 +8,13 @@ used in the assemblathon report project to
 create a plot from a single copy number
 stats xml file.
 
+Description:
+the column headers are the range of minimum haplotype copy number and
+maximum haplotype copy number. The columns are comprised of relative
+frequency plots showing the copy number of the assembly. Values within
+the specified range are colored black. Values outside the range are red.
+The total number of columns within the column are shown at the bottom.
+
 """
 ##############################
 # Copyright (C) 2009-2011 by 
