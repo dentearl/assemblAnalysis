@@ -37,6 +37,7 @@ resultsDir:=${projectDir}/publication
 # THESE 3 FILES ARE EXTERNAL DEPENDENCIES
 fltpage:=~/assemblathon/latexSupplemental/trunk/fltpage.sty
 simulationStatsTab:=${extraDir}/simulationTable.tab
+simulationStatsSNPsTab:=${extraDir}/table2b.tab
 participantsTableTex:=${extraDir}/participantsTable.tex
 #####
 chrNames:= chr0,chr1,chr2
@@ -862,11 +863,17 @@ ${tablesDir}/rankingSummaryTableTeams.pdf: ${binDir}/summarizeRankings.py ${rank
 	mv ${tablesDir}/rankingSummaryTableTeamsWrapped.pdf $@
 # summary of events in simulation table
 ${tablesDir}/simulationSummaryTable.pdf: ${simulationStatsTab}
-	cat $< | ${binDir}/tab2tex.py --partitionEvery 10 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
+	cat $< | ${binDir}/tab2tex.py --partitionEvery 10 --columnTitleCharLimit 17 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummaryTableWrapped.tex
 	pushd ${tablesDir} && latex simulationSummaryTableWrapped.tex && latex simulationSummaryTableWrapped.tex \
 		latex simulationSummaryTableWrapped.tex && dvips -Ppdf simulationSummaryTableWrapped.dvi && \
 		ps2pdf simulationSummaryTableWrapped.ps && popd && sleep 2
 	mv ${tablesDir}/simulationSummaryTableWrapped.pdf $@
+${tablesDir}/simulationSummarySNPsTable.pdf: ${simulationStatsSNPsTab}
+	cat $< | ${binDir}/tab2tex.py --columnTitleCharLimit 17 | ${binDir}/latexWrapper.py > ${tablesDir}/simulationSummarySNPsTableWrapped.tex
+	pushd ${tablesDir} && latex simulationSummarySNPsTableWrapped.tex && latex simulationSummarySNPsTableWrapped.tex \
+		latex simulationSummarySNPsTableWrapped.tex && dvips -Ppdf simulationSummarySNPsTableWrapped.dvi && \
+		ps2pdf simulationSummarySNPsTableWrapped.ps && popd && sleep 2
+	mv ${tablesDir}/simulationSummarySNPsTableWrapped.pdf $@
 # list of participating teams table
 ${tablesDir}/participantsTable.pdf: ${participantsTableTex}
 	cat $< | ${binDir}/replaceIDsWithNames.py | ${binDir}/latexWrapper.py > ${tablesDir}/participantsTableWrapped.tex

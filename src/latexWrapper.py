@@ -65,14 +65,14 @@ def main():
    NSFMargins = '''
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NSF margins                                       %
-\\setlength{\\oddsidemargin}{0.5in}                    %
-\\setlength{\\evensidemargin}{0.5in}                   %
+\\setlength{\\oddsidemargin}{-0.5in}                   %
+\\setlength{\\evensidemargin}{-0.5in}                  %
 \\setlength{\\topmargin}{0.0in}                        %
 \\setlength{\\headheight}{0.1in}                       %
 \\setlength{\\headsep}{0.1in}                          %
 \\setlength{\\footskip}{0.5in}                         %
 \\setlength{\\textheight}{8.75in}                      %
-\\setlength{\\textwidth}{5.5in}                        %
+\\setlength{\\textwidth}{7.0in}                        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 '''
    if options.noMargins:
