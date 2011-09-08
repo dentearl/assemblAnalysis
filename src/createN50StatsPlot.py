@@ -101,21 +101,29 @@ def checkOptions( options, parser ):
                             'scaffoldN50':'Scaffold N50',
                             'scaffoldNG50':'Scaffold NG50'
                             }
-   options.colors = { 'blockNG50':'#CCFFCC',        # light greenish
-                      'contigPathNG50':'#ffbb78',   # light orange
-                      'scaffoldPathNG50':'#ff7f0e', # darker orange
-                      'contigN50':'#aec7e8',        # lighter blue
-                      'contigNG50':'#1f77b4',       # darker blue
+   options.colors = { 'blockNG50':(0.3, 0.3, 0.3), # dark gray
+                      'contigPathNG50':(0.8, 0.8, 0.8), # light gray
+                      'scaffoldPathNG50':(0.3, 0.3, 0.3), # dark gray
+                      'contigN50':(0.8, 0.8, 0.8), # light gray
+                      'contigNG50':(0.3, 0.3, 0.3), # dark gray
                       'scaffoldN50':(0.8, 0.8, 0.8), # light gray
                       'scaffoldNG50':(0.3, 0.3, 0.3) # dark gray
                       }
-   options.shapes = { 'blockNG50':'.', 
-                      'contigPathNG50':'.',
-                      'scaffoldPathNG50':'.',
-                      'contigN50':'.',
-                      'contigNG50':'.',
+   options.shapes = { 'blockNG50':'v', 
+                      'contigPathNG50':'^',
+                      'scaffoldPathNG50':'^',
+                      'contigN50':'s',
+                      'contigNG50':'s',
                       'scaffoldN50':'.',
                       'scaffoldNG50':'.'
+                      }
+   options.sizes = { 'blockNG50':10., 
+                      'contigPathNG50':10.,
+                      'scaffoldPathNG50':10.,
+                      'contigN50':8.5,
+                      'contigNG50':8.5,
+                      'scaffoldN50':18.,
+                      'scaffoldNG50':18.
                       }
 
 def establishAxis( fig, options, data ):
@@ -170,9 +178,10 @@ def drawData( assembliesList, maxesMax, minsMin, axDict, options ):
    for c in options.columns:
       side = -side
       plots.append( ax.plot( numpy.arange(0, len( assembliesList )) + nudge*side,
-                                         getVals( assembliesList, c ), 
-                                         marker=options.shapes[c], color=options.colors[c], markersize=18.0,
-                                         linestyle='none', markeredgecolor='w'))
+                             getVals( assembliesList, c ), 
+                             marker=options.shapes[c], color=options.colors[c], 
+                             markersize=options.sizes[c],
+                             linestyle='none', markeredgecolor='w'))
    for loc, spine in ax.spines.iteritems():
       if loc in [ 'left'  ]:
          spine.set_position(('outward',10)) # outward by 10 points
