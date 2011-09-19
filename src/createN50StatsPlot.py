@@ -73,6 +73,9 @@ def initOptions( parser ):
    parser.add_option( '--outputRanks', dest='outputRanks', action='store_true',
                       default=False, help=('Outputs rankings as tab delimited '
                                            'stream to STDOUT. default=%default'))
+   parser.add_option('--cheapskates', dest = 'cheapskateMode', default = False, 
+                     action = 'store_true',
+                     help = 'Turns on garbage mode.')
 
 def checkOptions( options, parser ):
    dirs = { 'statsScaffoldsContigPathDir' : options.statsScaffoldsContigPathDir,
@@ -101,30 +104,56 @@ def checkOptions( options, parser ):
                             'scaffoldN50':'Scaffold N50',
                             'scaffoldNG50':'Scaffold NG50'
                             }
-   options.colors = { 'blockNG50':(0.3, 0.3, 0.3), # dark gray
-                      'contigPathNG50':(0.8, 0.8, 0.8), # light gray
-                      'scaffoldPathNG50':(0.3, 0.3, 0.3), # dark gray
-                      'contigN50':(0.8, 0.8, 0.8), # light gray
-                      'contigNG50':(0.3, 0.3, 0.3), # dark gray
-                      'scaffoldN50':(0.8, 0.8, 0.8), # light gray
-                      'scaffoldNG50':(0.3, 0.3, 0.3) # dark gray
-                      }
-   options.shapes = { 'blockNG50':'v', 
-                      'contigPathNG50':'^',
-                      'scaffoldPathNG50':'^',
-                      'contigN50':'s',
-                      'contigNG50':'s',
-                      'scaffoldN50':'.',
-                      'scaffoldNG50':'.'
-                      }
-   options.sizes = { 'blockNG50':10., 
-                      'contigPathNG50':10.,
-                      'scaffoldPathNG50':10.,
-                      'contigN50':8.5,
-                      'contigNG50':8.5,
-                      'scaffoldN50':18.,
-                      'scaffoldNG50':18.
-                      }
+   if options.cheapskateMode:
+      options.colors = { 'blockNG50':(0.3, 0.3, 0.3), # dark gray
+                         'contigPathNG50':(0.8, 0.8, 0.8), # light gray
+                         'scaffoldPathNG50':(0.3, 0.3, 0.3), # dark gray
+                         'contigN50':(0.8, 0.8, 0.8), # light gray
+                         'contigNG50':(0.3, 0.3, 0.3), # dark gray
+                         'scaffoldN50':(0.8, 0.8, 0.8), # light gray
+                         'scaffoldNG50':(0.3, 0.3, 0.3) # dark gray
+                         }
+      options.shapes = { 'blockNG50':'v', 
+                         'contigPathNG50':'^',
+                         'scaffoldPathNG50':'^',
+                         'contigN50':'s',
+                         'contigNG50':'s',
+                         'scaffoldN50':'.',
+                         'scaffoldNG50':'.'
+                         }
+      options.sizes = { 'blockNG50':10., 
+                        'contigPathNG50':10.,
+                        'scaffoldPathNG50':10.,
+                        'contigN50':8.5,
+                        'contigNG50':8.5,
+                        'scaffoldN50':18.,
+                        'scaffoldNG50':18.
+                        }
+   else:
+      options.colors = { 'blockNG50':'#CCFFCC',        # light greenish
+                         'contigPathNG50':'#ffbb78',   # light orange
+                         'scaffoldPathNG50':'#ff7f0e', # darker orange
+                         'contigN50':'#aec7e8',        # lighter blue
+                         'contigNG50':'#1f77b4',       # darker blue
+                         'scaffoldN50':(0.8, 0.8, 0.8), # light gray
+                         'scaffoldNG50':(0.3, 0.3, 0.3) # dark gray
+                         }
+      options.shapes = { 'blockNG50':'.', 
+                         'contigPathNG50':'.',
+                         'scaffoldPathNG50':'.',
+                         'contigN50':'.',
+                         'contigNG50':'.',
+                         'scaffoldN50':'.',
+                         'scaffoldNG50':'.'
+                         }
+      options.sizes = { 'blockNG50':18., 
+                        'contigPathNG50':18.,
+                        'scaffoldPathNG50':18.,
+                        'contigN50':18.,
+                        'contigNG50':18.,
+                        'scaffoldN50':18.,
+                        'scaffoldNG50':18.
+                        }
 
 def establishAxis( fig, options, data ):
    """ 
