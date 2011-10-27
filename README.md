@@ -55,4 +55,5 @@ RuntimeError: Error, len(d) != headerList:
 offending list:
 ...
 '''
+
    **A** This is usually the result of different orderings between the assemblies in the ranking files. Make sure the order of assemblies in publication/rankings/N50_SPN5G0.tab and extra/cDnaAlignment.tab is the same.
