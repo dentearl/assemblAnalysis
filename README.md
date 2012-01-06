@@ -59,4 +59,4 @@ offending list:
    **A** This is usually the result of different orderings between the assemblies in the ranking files. Make sure the order of assemblies in publication/rankings/N50_SPN5G0.tab and extra/cDnaAlignment.tab is the same.
 
 ##References
-1. Earl et al. Assemblathon 1: A competitive assessment of de novo short read assembly methods. Genome Res (2011) pp. http://genome.cshlp.org/content/21/12/2224
+1. Earl et al. Assemblathon 1: A competitive assessment of de novo short read assembly methods. Genome Res (2011) vol. 21 (12) pp. 2224-41 http://genome.cshlp.org/content/21/12/2224
