@@ -75,6 +75,9 @@ def initOptions(parser):
    parser.add_option('--xlabel', dest='xlabel',
                       type='string', default='Cumulative length proportional to genome size',
                       help='Label on the x-axis. default=%default')
+   parser.add_option('--reportN50Values', dest = 'reportN50Values',
+                     default = False, action = 'store_true',
+                     help = 'prints n50 values to stdout. default=%default')
    
    
 def checkOptions(options, parser):
@@ -128,10 +131,12 @@ def drawData(scaffolds, contigs, ax, options):
          # horizontal lines
          ax.add_line(lines.Line2D(xdata=[0.0, 0.5],
                                     ydata=[d['values'][- sum(numpy.array(d['xData']) > 0.5)],
-                                            d['values'][- sum(numpy.array(d['xData']) > 0.5)]],
+                                           d['values'][- sum(numpy.array(d['xData']) > 0.5)]],
                                     color=color50,
                                     linewidth= 0.75,
                                     linestyle= ':'))
+         if options.reportN50Values:
+            print '%9s n50: %d' % (d['name'], d['values'][- sum(numpy.array(d['xData']) > 0.5)])
    
    p1 = ax.plot(scaffolds['xData'], scaffolds['values'], color='#1f77b4')
    p2 = ax.plot(contigs['xData'], contigs['values'], color='#aec7e8')
@@ -161,9 +166,11 @@ def drawData(scaffolds, contigs, ax, options):
 def processData(scaffs, contigs, options):
    scaffs.sort(reverse = True)
    contigs.sort(reverse = True)
-   pScaffs = { 'values': [],
+   pScaffs = { 'name' : 'scaffolds',
+               'values': [],
                'xData' : [] }
-   pContigs = { 'values': [],
+   pContigs = { 'name' : 'contigs',
+                'values': [],
                 'xData' : [] }
 
    cum = 0
