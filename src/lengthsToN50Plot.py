@@ -135,8 +135,9 @@ def drawData(scaffolds, contigs, ax, options):
                                     color=color50,
                                     linewidth= 0.75,
                                     linestyle= ':'))
-         if options.reportN50Values:
-            print '%9s n50: %d' % (d['name'], d['values'][- sum(numpy.array(d['xData']) > 0.5)])
+   if options.reportN50Values:
+      for d in [scaffolds, contigs]:
+         print '%9s n50: %d' % (d['name'], d['values'][- sum(numpy.array(d['xData']) > 0.5)])
    
    p1 = ax.plot(scaffolds['xData'], scaffolds['values'], color='#1f77b4')
    p2 = ax.plot(contigs['xData'], contigs['values'], color='#aec7e8')
