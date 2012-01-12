@@ -130,14 +130,14 @@ def drawData(scaffolds, contigs, ax, options):
       for d in [scaffolds, contigs]:
          # horizontal lines
          ax.add_line(lines.Line2D(xdata=[0.0, 0.5],
-                                    ydata=[d['values'][- sum(numpy.array(d['xData']) > 0.5)],
-                                           d['values'][- sum(numpy.array(d['xData']) > 0.5)]],
+                                    ydata=[nValue(d, 0.5),
+                                           nValue(d, 0.5)],
                                     color=color50,
                                     linewidth= 0.75,
                                     linestyle= ':'))
    if options.reportN50Values:
       for d in [scaffolds, contigs]:
-         print '%9s n50: %d' % (d['name'], d['values'][- sum(numpy.array(d['xData']) > 0.5)])
+         print '%9s n50: %d' % (d['name'], nValue(d, 0.5))
    
    p1 = ax.plot(scaffolds['xData'], scaffolds['values'], color='#1f77b4')
    p2 = ax.plot(contigs['xData'], contigs['values'], color='#aec7e8')
@@ -163,6 +163,18 @@ def drawData(scaffolds, contigs, ax, options):
    
    leg = plt.legend([p1, p2], ['Scaffolds', 'Contigs'])
    leg._drawFrame=False
+
+def nValue(a, x):
+   """ given a dict populated as the processData returned dicts, `a' 
+   and a a float x in the range (0, 1.0) nValue returns the Nx value
+   """
+   if not isinstance(a, dict):
+      raise RuntimeError('Type of `a\' must be dict, not %s' % x.__class__)
+   if not isinstance(x, float):
+      raise RuntimeError('Type of `x\' must be float, not %s' % x.__class__)
+   if not ( 0.0 < x < 1.0):
+      raise RuntimeError('Value of `x\' must be in (0.0, 1.0), not %f' % x)
+   return a['values'][- sum(numpy.array(a['xData']) > x)]
 
 def processData(scaffs, contigs, options):
    scaffs.sort(reverse = True)
