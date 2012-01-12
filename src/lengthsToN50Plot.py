@@ -172,7 +172,7 @@ def nValue(a, x):
       raise RuntimeError('Type of `a\' must be dict, not %s' % x.__class__)
    if not isinstance(x, float):
       raise RuntimeError('Type of `x\' must be float, not %s' % x.__class__)
-   if not ( 0.0 < x < 1.0):
+   if not (0.0 < x < 1.0):
       raise RuntimeError('Value of `x\' must be in (0.0, 1.0), not %f' % x)
    return a['values'][- sum(numpy.array(a['xData']) > x)]
 
