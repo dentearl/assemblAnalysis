@@ -35,6 +35,8 @@ plot of the N statistic for both files.
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##############################
+import matplotlib
+matplotlib.use('Agg')
 import libPlotting as lpt
 import matplotlib.lines as lines
 import matplotlib.patches as patches
